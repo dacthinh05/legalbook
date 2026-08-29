@@ -116,20 +116,30 @@ function formatAdministrativeMasthead(html: string, doc?: Partial<LegalDocument>
     ${placeAndDate ? `<p class="letterhead-date">${placeAndDate}</p>` : ''}
   </section>
 </div>`;
+
   // Case A: Table-based letterhead (common in Word imports & TVPL tables)
   const tableLetterheadRegex = /<table[^>]*>[\s\S]*?(?:CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM|Độc\s+lập\s*[-–—]\s*Tự\s+do\s*[-–—]\s*Hạnh\s+phúc)[\s\S]*?<\/table>/i;
   if (tableLetterheadRegex.test(html)) {
     return html.replace(tableLetterheadRegex, letterheadHtml);
   }
 
-  // Case B: Paragraph-based vertical letterhead
-  const paraLetterheadRegex = /(?:<div class="document-full-body">)?\s*(?:<p[^>]*>[\s\S]*?(?:BỘ|CHÍNH PHỦ|ỦY BAN|TỔNG CỤC|CỤC|SỞ|QUỐC HỘI|TÒA ÁN|VIỆN KIỂM SÁT)[\s\S]*?<\/p>\s*)?<p[^>]*>[\s\S]*?CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM[\s\S]*?<\/p>(?:\s*<p[^>]*>[\s\S]*?Độc\s+lập[\s\S]*?<\/p>)?(?:\s*<p[^>]*>[\s\S]*?Số:[\s\S]*?<\/p>)?(?:\s*<p[^>]*>[\s\S]*?(?:ngày|tháng|năm)[\s\S]*?<\/p>)?/i;
+  // Case B: Boundary-safe paragraph-based vertical letterhead
+  // Find where the document body/title/preamble begins (NEVER search beyond this boundary)
+  const boundaryRegex = /(<(?:h[1-6]|p)[^>]*>\s*(?:<strong>|<b>|<em>|<i>)?\s*(?:Căn cứ|LUẬT|BỘ LUẬT|NGHỊ ĐỊNH|THÔNG TƯ|QUYẾT ĐỊNH|CÔNG VĂN|NGHỊ QUYẾT|CHỈ THỊ|Chương\s+[IVXLCDM\d]+|Điều\s+\d+|Kính gửi))/i;
+  const matchBoundary = html.match(boundaryRegex);
 
-  const match = html.match(paraLetterheadRegex);
-  if (match) {
+  let bodySection = '';
+
+  if (matchBoundary && matchBoundary.index !== undefined && matchBoundary.index > 0) {
+    bodySection = html.slice(matchBoundary.index);
+  }
+
+  if (bodySection) {
     const hasBodyWrapper = html.startsWith('<div class="document-full-body">');
-    const replaced = html.replace(match[0], hasBodyWrapper ? `<div class="document-full-body">\n${letterheadHtml}` : letterheadHtml);
-    return replaced;
+    const cleanBody = bodySection.replace(/<\/div>\s*$/, '');
+    return hasBodyWrapper
+      ? `<div class="document-full-body">\n${letterheadHtml}\n${cleanBody}\n</div>`
+      : `${letterheadHtml}\n${bodySection}`;
   }
 
   return html;
@@ -234,7 +244,7 @@ function formatArticlesAndClauses(html: string): string {
       const trimmed = articleText.trim();
       const numMatch = trimmed.match(/^Điều\s+(\d+[a-z]?)/i);
       const articleId = numMatch ? `dieu-${numMatch[1].toLowerCase()}` : undefined;
-      const idAttr = articleId ? ` id="${articleId}" data-article="${numMatch?.[1]?.toLowerCase()}"` : '';
+      const idAttr = articleId ? ` id="${articleId}"` : '';
       return `<h2 class="legal-article-title"${idAttr}>${trimmed}</h2>`;
     }
   );

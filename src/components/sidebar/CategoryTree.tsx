@@ -232,7 +232,8 @@ function TopicTreeNode({
         </span>
 
         {/* Document Count */}
-        {typeof count === 'number' && (
+        {/* Document Count (Hidden when 0 to avoid noise) */}
+        {typeof count === 'number' && count > 0 && (
           <span
             className={cn(
               'font-mono text-[11px] tabular-nums shrink-0 ml-2 text-right transition-colors',
