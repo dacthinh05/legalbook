@@ -306,6 +306,7 @@ export type MatchLocationType =
 export interface HighlightSegment {
   text: string;
   isHighlight: boolean;
+  highlightLevel?: 'exact' | 'partial';
 }
 
 export interface SearchResultViewModel {
@@ -325,11 +326,14 @@ export interface SearchResultViewModel {
   effectiveDate?: string;
   issuedDate?: string;
   matchType: MatchLocationType;
+  matchScope?: 'document' | 'provision';
   matchTypeLabel?: string;
   locationLabel?: string;
   targetNodeId?: string;
   targetAnchor?: string;
+  actionLabel?: string;
   snippet: string;
+  otherMatchesCount?: number;
   highlightedRanges?: Array<{ start: number; end: number }>;
   score?: number;
   officialSourceUrl?: string | null;
@@ -363,8 +367,7 @@ export interface TocItem {
 }
 
 // ─── Reader: Panel Mode ───────────────────────────────────────────────────────
-export type ReaderPanelMode = 'closed' | 'toc' | 'notes' | 'effects';
-
+export type ReaderPanelMode = 'closed' | 'toc' | 'notes' | 'effects' | 'ai';
 // ─── Reader: Legal Effects & Provisions ──────────────────────────────────────
 
 export type LegalEffectCategory = 'substantive_change' | 'application_support';

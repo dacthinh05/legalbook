@@ -629,9 +629,14 @@ export function scoreIndexedDocument(
   return score;
 }
 
+const VIETNAMESE_STOPWORDS = new Set([
+  'va', 'cua', 'cac', 'trong', 'theo', 've', 'cho', 'la', 'nhung', 'voi', 'khi', 'de', 'duoc', 'tai', 'nhu', 'do', 'ra', 'o', 'co', 'nay', 'khong', 'mot', 'so'
+]);
+
 /**
  * Splits text into safe segments of plain text and highlighted keyword tokens.
- * Caches segments in Map cache to prevent blocking the UI thread during rendering.
+ * Distinguishes exact phrase matches (level 'exact') from secondary tokens (level 'partial'),
+ * preventing excessive stopword highlighting while preserving accent-insensitive matching.
  */
 export function createSafeHighlightSegments(
   text: string | null | undefined,
@@ -647,38 +652,62 @@ export function createSafeHighlightSegments(
   if (cached) return cached;
 
   const rawQuery = query.trim();
-  const searchTerms = [rawQuery];
+  const lowerQuery = rawQuery.toLowerCase();
+  const toneFreeQuery = removeVietnameseTones(lowerQuery);
 
-  const tokens = rawQuery.split(/\s+/).filter((t) => t.length >= 2);
-  for (const t of tokens) {
-    if (!searchTerms.includes(t)) {
-      searchTerms.push(t);
-    }
+  const tokens = lowerQuery.split(/\s+/).filter((t) => t.length >= 2);
+  const isMultiWord = tokens.length > 1;
+
+  interface MatchedSpan {
+    start: number;
+    end: number;
+    level: 'exact' | 'partial';
   }
-  searchTerms.sort((a, b) => b.length - a.length);
 
-  const intervals: Array<{ start: number; end: number }> = [];
+  const spans: MatchedSpan[] = [];
   const lowerText = text.toLowerCase();
   const toneFreeText = removeVietnameseTones(lowerText);
 
-  for (const term of searchTerms) {
-    const lowerTerm = term.toLowerCase();
-    const toneFreeTerm = removeVietnameseTones(lowerTerm);
+  // 1. Exact phrase matching (Top priority -> level 'exact')
+  let pos = 0;
+  while ((pos = lowerText.indexOf(lowerQuery, pos)) !== -1) {
+    spans.push({ start: pos, end: pos + lowerQuery.length, level: 'exact' });
+    pos += lowerQuery.length;
+  }
 
-    let pos = 0;
-    while ((pos = lowerText.indexOf(lowerTerm, pos)) !== -1) {
-      intervals.push({ start: pos, end: pos + lowerTerm.length });
-      pos += lowerTerm.length;
+  pos = 0;
+  while ((pos = toneFreeText.indexOf(toneFreeQuery, pos)) !== -1) {
+    spans.push({ start: pos, end: pos + toneFreeQuery.length, level: 'exact' });
+    pos += toneFreeQuery.length;
+  }
+
+  // 2. Token matches
+  for (const token of tokens) {
+    const toneFreeToken = removeVietnameseTones(token);
+    const isStopWord = VIETNAMESE_STOPWORDS.has(toneFreeToken);
+
+    // When searching multi-word query, skip high-frequency stopwords from noisy standalone highlight
+    if (isMultiWord && isStopWord) {
+      continue;
     }
 
-    pos = 0;
-    while ((pos = toneFreeText.indexOf(toneFreeTerm, pos)) !== -1) {
-      intervals.push({ start: pos, end: pos + toneFreeTerm.length });
-      pos += toneFreeTerm.length;
+    const isDistinctive = token.length >= 4 || /[0-9\/]/.test(token) || (token === token.toUpperCase() && token.length >= 2);
+    const level: 'exact' | 'partial' = isDistinctive || !isMultiWord ? 'exact' : 'partial';
+
+    let tPos = 0;
+    while ((tPos = lowerText.indexOf(token, tPos)) !== -1) {
+      spans.push({ start: tPos, end: tPos + token.length, level });
+      tPos += token.length;
+    }
+
+    tPos = 0;
+    while ((tPos = toneFreeText.indexOf(toneFreeToken, tPos)) !== -1) {
+      spans.push({ start: tPos, end: tPos + toneFreeToken.length, level });
+      tPos += toneFreeToken.length;
     }
   }
 
-  if (intervals.length === 0) {
+  if (spans.length === 0) {
     const res = [{ text, isHighlight: false }];
     if (highlightSegmentsCache.size < MAX_HIGHLIGHT_CACHE_SIZE) {
       highlightSegmentsCache.set(cacheKey, res);
@@ -686,28 +715,31 @@ export function createSafeHighlightSegments(
     return res;
   }
 
-  intervals.sort((a, b) => a.start - b.start || b.end - a.end);
+  // Sort by start ascending, then level ('exact' before 'partial'), then length descending
+  spans.sort((a, b) => a.start - b.start || (a.level === 'exact' ? -1 : 1) || (b.end - a.end));
 
-  const merged: Array<{ start: number; end: number }> = [];
-  let current = intervals[0];
+  // Merge overlapping intervals, keeping higher level
+  const merged: MatchedSpan[] = [];
+  let curr = spans[0];
 
-  for (let i = 1; i < intervals.length; i++) {
-    const next = intervals[i];
-    if (next.start <= current.end) {
-      current.end = Math.max(current.end, next.end);
+  for (let i = 1; i < spans.length; i++) {
+    const next = spans[i];
+    if (next.start <= curr.end) {
+      curr.end = Math.max(curr.end, next.end);
+      if (next.level === 'exact') curr.level = 'exact';
     } else {
-      merged.push(current);
-      current = next;
+      merged.push(curr);
+      curr = next;
     }
   }
-  merged.push(current);
+  merged.push(curr);
 
   const segments: HighlightSegment[] = [];
   let lastIdx = 0;
 
-  for (const interval of merged) {
-    const start = Math.max(0, Math.min(text.length, interval.start));
-    const end = Math.max(start, Math.min(text.length, interval.end));
+  for (const span of merged) {
+    const start = Math.max(0, Math.min(text.length, span.start));
+    const end = Math.max(start, Math.min(text.length, span.end));
 
     if (start > lastIdx) {
       segments.push({
@@ -720,6 +752,7 @@ export function createSafeHighlightSegments(
       segments.push({
         text: text.slice(start, end),
         isHighlight: true,
+        highlightLevel: span.level,
       });
     }
 
@@ -861,6 +894,13 @@ export function buildSearchResultViewModel(
   }
 
   const displayTitle = formatShortTitle(title, indexed.documentType, docNumber);
+  const isProvisionMatch = location.matchType === 'article' || location.matchType === 'chapter' || location.matchType === 'clause' || location.matchType === 'appendix';
+  const matchScope: 'document' | 'provision' = isProvisionMatch ? 'provision' : 'document';
+  const actionLabel = isProvisionMatch ? 'Đến điều khoản →' : 'Mở →';
+
+  let cleanLocationLabel = location.locationLabel || 'Trong văn bản';
+  if (location.matchType === 'title') cleanLocationLabel = 'Trong tiêu đề';
+  if (location.matchType === 'number') cleanLocationLabel = 'Số hiệu văn bản';
 
   return {
     id: indexed.id,
@@ -879,34 +919,45 @@ export function buildSearchResultViewModel(
     effectiveDate: indexed.effectiveDate || undefined,
     issuedDate: indexed.issuedDate || undefined,
     matchType: location.matchType,
-    matchTypeLabel: location.locationLabel,
-    locationLabel: location.locationLabel,
+    matchScope,
+    matchTypeLabel: cleanLocationLabel,
+    locationLabel: cleanLocationLabel,
     targetNodeId: location.targetNodeId,
     targetAnchor: location.targetAnchor,
+    actionLabel,
     snippet,
     score,
     officialSourceUrl: getTvplSourceUrl(indexed.rawDoc),
   };
 }
 
+export interface SearchOptions {
+  typeFilter?: DocumentType | 'all';
+  statusFilter?: EffectiveStatusType | 'all';
+  scopeFilter?: 'all' | 'document' | 'provision';
+  categoryDocIds?: Set<string> | null;
+  sortBy?: SearchSortOption;
+  onlyWithFullText?: boolean;
+}
+
+export interface SearchScopeCounts {
+  all: number;
+  document: number;
+  provision: number;
+}
+
 /**
- * Ultra-Fast Sub-2ms Search Execution Engine.
- * Executes filtering, scoring, location detection, and snippet extraction in a single optimized pass.
+ * Ultra-Fast Sub-2ms Search Execution Engine with Scope Filtering & Scope Counters.
  */
 export function executeSearch(
   documents: Partial<LegalDocument>[],
   query: string,
-  options: {
-    typeFilter?: DocumentType | 'all';
-    statusFilter?: EffectiveStatusType | 'all';
-    categoryDocIds?: Set<string> | null;
-    sortBy?: SearchSortOption;
-    onlyWithFullText?: boolean;
-  } = {}
+  options: SearchOptions = {}
 ): SearchResultViewModel[] {
   const {
     typeFilter = 'all',
     statusFilter = 'all',
+    scopeFilter = 'all',
     categoryDocIds = null,
     sortBy = 'relevance',
     onlyWithFullText = false,
@@ -982,6 +1033,19 @@ export function executeSearch(
       title = indexed.summary.slice(0, 140);
     }
 
+    const displayTitle = formatShortTitle(title, indexed.documentType, docNumber);
+    const isProvisionMatch = location.matchType === 'article' || location.matchType === 'chapter' || location.matchType === 'clause' || location.matchType === 'appendix';
+    const matchScope: 'document' | 'provision' = isProvisionMatch ? 'provision' : 'document';
+
+    // Scope filter gate
+    if (scopeFilter === 'document' && matchScope !== 'document') continue;
+    if (scopeFilter === 'provision' && matchScope !== 'provision') continue;
+
+    const actionLabel = isProvisionMatch ? 'Đến điều khoản →' : 'Mở →';
+    let cleanLocationLabel = location.locationLabel || 'Trong văn bản';
+    if (location.matchType === 'title') cleanLocationLabel = 'Trong tiêu đề';
+    if (location.matchType === 'number') cleanLocationLabel = 'Số hiệu văn bản';
+
     results.push({
       id: indexed.id,
       documentId: indexed.id,
@@ -990,6 +1054,7 @@ export function executeSearch(
       documentTypeColor: docTypeColor,
       documentNumber: docNumber,
       title,
+      displayTitle,
       issuer: indexed.issuer || undefined,
       effectiveStatus: statusInfo.type,
       effectiveStatusLabel: statusInfo.label,
@@ -998,10 +1063,12 @@ export function executeSearch(
       effectiveDate: indexed.effectiveDate || undefined,
       issuedDate: indexed.issuedDate || undefined,
       matchType: location.matchType,
-      matchTypeLabel: location.locationLabel,
-      locationLabel: location.locationLabel,
+      matchScope,
+      matchTypeLabel: cleanLocationLabel,
+      locationLabel: cleanLocationLabel,
       targetNodeId: location.targetNodeId,
       targetAnchor: location.targetAnchor,
+      actionLabel,
       snippet,
       score,
       officialSourceUrl: getTvplSourceUrl(indexed.rawDoc),
@@ -1034,4 +1101,40 @@ export function executeSearch(
   });
 
   return results;
+}
+
+/**
+ * Computes search results and counts across scopes in one unified pass.
+ */
+export function executeSearchWithScopeCounts(
+  documents: Partial<LegalDocument>[],
+  query: string,
+  options: SearchOptions = {}
+): { results: SearchResultViewModel[]; scopeCounts: SearchScopeCounts } {
+  const allResults = executeSearch(documents, query, { ...options, scopeFilter: 'all' });
+
+  let docCount = 0;
+  let provCount = 0;
+  for (const r of allResults) {
+    if (r.matchScope === 'provision') {
+      provCount++;
+    } else {
+      docCount++;
+    }
+  }
+
+  const scopeCounts: SearchScopeCounts = {
+    all: allResults.length,
+    document: docCount,
+    provision: provCount,
+  };
+
+  const filtered = options.scopeFilter && options.scopeFilter !== 'all'
+    ? allResults.filter((r) => r.matchScope === options.scopeFilter)
+    : allResults;
+
+  return {
+    results: filtered,
+    scopeCounts,
+  };
 }

@@ -139,18 +139,41 @@ function cleanHtmlToText(html: string): string {
 
 export interface ExtractedArticle {
   id: string;
+  number?: string;
   label: string;
   title: string;
   body: string;
 }
 
+export interface CrossReferencePair {
+  lawArticleNumber: string;
+  lawArticleTitle: string;
+  lawSnippet: string;
+  guidingArticleNumber: string;
+  guidingArticleTitle: string;
+  guidingSnippet: string;
+  summaryTag: string;
+  citationType: 'citation' | 'title_match' | 'general';
+}
+
+export interface LegalCrossReferenceResult {
+  docLawNumber: string;
+  docLawTitle: string;
+  docGuidingNumber: string;
+  docGuidingTitle: string;
+  totalMappedPairs: number;
+  unmappedLawCount: number;
+  pairs: CrossReferencePair[];
+}
+
 /**
  * Parses all articles and structural sections from legal HTML content.
+ * Robust across H1-H6, P strong, and inner/outer anchor tags.
  */
 export function extractLegalArticles(html: string): ExtractedArticle[] {
   if (!html) return [];
 
-  const headingRegex = /(?:<h[1-6][^>]*>|<p[^>]*>\s*<strong>|<strong>|<p[^>]*>)\s*((?:Điều|Chương|Phần|Mục|Phụ lục)\s+[\dIVXLCDM\w\.\-]+[^<\n]{0,120})/gi;
+  const headingRegex = /(?:<h[1-6][^>]*>|<p[^>]*>)\s*(?:<a[^>]*><\/a>\s*)?(?:<strong>|<b>)?\s*(?:<a[^>]*><\/a>\s*)?((?:Điều|Chương|Phần|Mục|Phụ lục)\s+[\dIVXLCDM\w\.\-]+[^<\n]{0,140})/gi;
   const matches: Array<{ index: number; fullHeading: string; label: string }> = [];
   let match;
 
@@ -188,6 +211,7 @@ export function extractLegalArticles(html: string): ExtractedArticle[] {
 
     articles.push({
       id: semanticId,
+      number: dieuMatch ? `Điều ${dieuMatch[1]}` : m.label,
       label: m.label,
       title: m.fullHeading,
       body: sectionBody,
@@ -195,6 +219,138 @@ export function extractLegalArticles(html: string): ExtractedArticle[] {
   }
 
   return articles;
+}
+
+/**
+ * Extracts structured Articles (specifically "Điều X") for legal matrix mapping.
+ */
+export function extractStructuredArticles(html: string): ExtractedArticle[] {
+  if (!html) return [];
+
+  const regex = /(?:<h[1-6][^>]*>|<p[^>]*>)\s*(?:<a[^>]*><\/a>\s*)?(?:<strong>|<b>)?\s*(?:<a[^>]*><\/a>\s*)?(Điều\s+(\d+[a-z]?)[.:\s][^<]*)/gi;
+  const matches: Array<{ index: number; fullHeading: string; num: string }> = [];
+  let match;
+
+  while ((match = regex.exec(html)) !== null) {
+    const rawHeading = match[1] || '';
+    const cleanHeading = rawHeading.replace(/<[^>]*>/g, '').trim();
+    const num = match[2] || '';
+    matches.push({
+      index: match.index,
+      fullHeading: cleanHeading,
+      num: `Điều ${num}`,
+    });
+  }
+
+  // Fallback if no "Điều X" found
+  if (matches.length === 0) {
+    return extractLegalArticles(html);
+  }
+
+  const articles: ExtractedArticle[] = [];
+  for (let i = 0; i < matches.length; i++) {
+    const m = matches[i];
+    const nextIdx = i + 1 < matches.length ? matches[i + 1].index : html.length;
+    const sectionHtml = html.slice(m.index, nextIdx);
+    const bodyText = cleanHtmlToText(sectionHtml);
+
+    articles.push({
+      id: `dieu-${m.num.replace(/\s+/g, '-').toLowerCase()}`,
+      number: m.num,
+      label: m.num,
+      title: m.fullHeading,
+      body: bodyText,
+    });
+  }
+
+  return articles;
+}
+
+/**
+ * Builds an intelligent 2-column cross-reference mapping matrix between a Law and its Guiding Decree/Circular.
+ * Parses explicit statutory citations (e.g. "khoản 4 Điều 2 của Luật") and title matches.
+ */
+export function buildCrossReferenceMatrix(
+  docLaw: { title: string; document_number?: string | null; html_content?: string | null },
+  docGuiding: { title: string; document_number?: string | null; html_content?: string | null }
+): LegalCrossReferenceResult {
+  const lawArticles = extractStructuredArticles(docLaw.html_content || '');
+  const guidingArticles = extractStructuredArticles(docGuiding.html_content || '');
+
+  const pairs: CrossReferencePair[] = [];
+  let unmappedCount = 0;
+
+  for (const lawArt of lawArticles) {
+    const lawNumDigits = (lawArt.number || lawArt.label).replace(/[^\d]/g, '');
+    const matchedGuiding: ExtractedArticle[] = [];
+    let matchType: 'citation' | 'title_match' | 'general' = 'general';
+
+    if (lawNumDigits) {
+      for (const gArt of guidingArticles) {
+        // 1. Explicit citation in guiding article body (e.g. "Điều 2 của Luật", "khoản 4 Điều 2", "Điều 2 Luật")
+        const citationRegex = new RegExp(
+          `(?:khoản\\s+\\d+[a-z]?\\s*,?\\s*)*(?:điểm\\s+[a-z]\\s*,?\\s*)*Điều\\s+${lawNumDigits}(?:\\s+của\\s+Luật|\\s+Luật|\\s*[,.;])`,
+          'i'
+        );
+        if (citationRegex.test(gArt.body)) {
+          matchedGuiding.push(gArt);
+          matchType = 'citation';
+          continue;
+        }
+
+        // 2. Semantic title similarity
+        const lawCoreTitle = lawArt.title.replace(/^Điều\s+\d+[a-z]?[.:\s]*/i, '').trim().toLowerCase();
+        const gCoreTitle = gArt.title.replace(/^Điều\s+\d+[a-z]?[.:\s]*/i, '').trim().toLowerCase();
+        if (
+          lawCoreTitle.length > 6 &&
+          (gCoreTitle.includes(lawCoreTitle) || lawCoreTitle.includes(gCoreTitle))
+        ) {
+          matchedGuiding.push(gArt);
+          if (matchType === 'general') matchType = 'title_match';
+        }
+      }
+    }
+
+    if (matchedGuiding.length > 0) {
+      const gNums = matchedGuiding.map((g) => g.number || g.label).join(', ');
+      const gTitles = matchedGuiding.map((g) => g.title).join('; ');
+      const gSnippet = matchedGuiding.map((g) => g.body.slice(0, 320)).join('\n\n');
+      const tag = matchedGuiding[0].title.replace(/^Điều\s+\d+[a-z]?[.:\s]*/i, '').slice(0, 60);
+
+      pairs.push({
+        lawArticleNumber: lawArt.number || lawArt.label,
+        lawArticleTitle: lawArt.title,
+        lawSnippet: lawArt.body.slice(0, 260) + (lawArt.body.length > 260 ? '...' : ''),
+        guidingArticleNumber: gNums,
+        guidingArticleTitle: gTitles,
+        guidingSnippet: gSnippet + (matchedGuiding[0].body.length > 320 ? '...' : ''),
+        summaryTag: tag || 'Quy định chi tiết',
+        citationType: matchType,
+      });
+    } else {
+      unmappedCount++;
+      pairs.push({
+        lawArticleNumber: lawArt.number || lawArt.label,
+        lawArticleTitle: lawArt.title,
+        lawSnippet: lawArt.body.slice(0, 260) + (lawArt.body.length > 260 ? '...' : ''),
+        guidingArticleNumber: '—',
+        guidingArticleTitle: 'Thực hiện trực tiếp theo quy định của Luật',
+        guidingSnippet: 'Nội dung áp dụng trực tiếp theo quy định khung tại Luật.',
+        summaryTag: 'Quy định khung',
+        citationType: 'general',
+      });
+    }
+  }
+
+  return {
+    docLawNumber: docLaw.document_number || 'Văn bản gốc',
+    docLawTitle: docLaw.title,
+    docGuidingNumber: docGuiding.document_number || 'Văn bản hướng dẫn',
+    docGuidingTitle: docGuiding.title,
+    totalMappedPairs: pairs.length,
+    unmappedLawCount: unmappedCount,
+    pairs,
+  };
 }
 
 /**

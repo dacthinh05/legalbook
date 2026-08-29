@@ -75,6 +75,8 @@ export function findAnchorRange(
     textNodes.push(node as Text);
   }
 
+  if (textNodes.length === 0) return null;
+
   // Build fullText and character offsets directly from DOM text nodes
   let fullText = '';
   const offsets: { node: Text; start: number }[] = [];
@@ -99,14 +101,28 @@ export function findAnchorRange(
     if (range) return range;
   }
 
-  // 3. Whitespace-tolerant regex search directly against raw fullText
-  const escapedPattern = escapeRegex(targetText).replace(/\s+/g, '\\s+');
+  // 3. Cross-block whitespace-flexible regex search (supports 0 or more whitespace between block elements)
   try {
+    const escapedPattern = escapeRegex(targetText).replace(/\s+/g, '[\\s\\u00a0]*');
     const regex = new RegExp(escapedPattern, 'i');
     const match = fullText.match(regex);
     if (match && match.index !== undefined) {
       const range = buildRange(offsets, match.index, match.index + match[0].length);
       if (range) return range;
+    }
+  } catch {}
+
+  // 4. Token sequence search fallback (words separated by arbitrary non-word chars)
+  try {
+    const words = targetText.split(/\s+/).filter(Boolean);
+    if (words.length >= 2) {
+      const tokenPattern = words.map(w => escapeRegex(w)).join('[\\s\\S]{0,10}?');
+      const tokenRegex = new RegExp(tokenPattern, 'i');
+      const match = fullText.match(tokenRegex);
+      if (match && match.index !== undefined) {
+        const range = buildRange(offsets, match.index, match.index + match[0].length);
+        if (range) return range;
+      }
     }
   } catch {}
 
@@ -121,18 +137,33 @@ function buildRange(
   try {
     const range = document.createRange();
     let startSet = false;
+    let endSet = false;
+
     for (let i = 0; i < offsets.length; i++) {
       const { node, start: nodeStart } = offsets[i];
-      const nodeEnd = nodeStart + (node.nodeValue?.length ?? 0);
+      const nodeLength = node.nodeValue?.length ?? 0;
+      const nodeEnd = nodeStart + nodeLength;
 
-      if (!startSet && start >= nodeStart && start < nodeEnd) {
-        range.setStart(node, start - nodeStart);
+      if (!startSet && start >= nodeStart && (start < nodeEnd || (start === nodeEnd && i === offsets.length - 1))) {
+        range.setStart(node, Math.min(start - nodeStart, nodeLength));
         startSet = true;
       }
+
       if (startSet && end >= nodeStart && end <= nodeEnd) {
-        range.setEnd(node, end - nodeStart);
-        return range;
+        range.setEnd(node, Math.min(end - nodeStart, nodeLength));
+        endSet = true;
+        break;
       }
+    }
+
+    if (startSet && !endSet && offsets.length > 0) {
+      const lastNode = offsets[offsets.length - 1].node;
+      range.setEnd(lastNode, lastNode.nodeValue?.length ?? 0);
+      endSet = true;
+    }
+
+    if (startSet && endSet) {
+      return range;
     }
   } catch {
     // DOM range errors
@@ -216,41 +247,45 @@ function wrapRange(range: Range, ann: DocumentAnnotation) {
     return;
   }
 
-  // Multi-node range wrapper: collect text nodes in range safely
-  const textNodes: Text[] = [];
+  // Multi-node range wrapper: collect all intersecting text nodes safely
+  const textNodes: { node: Text; startOffset: number; endOffset: number }[] = [];
+  const root = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+    ? range.commonAncestorContainer.parentNode || range.commonAncestorContainer
+    : range.commonAncestorContainer;
+
   const walker = document.createTreeWalker(
-    range.commonAncestorContainer,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        if (range.intersectsNode(node)) {
-          return NodeFilter.FILTER_ACCEPT;
-        }
-        return NodeFilter.FILTER_REJECT;
-      },
-    }
+    root,
+    NodeFilter.SHOW_TEXT
   );
 
-  let node: Node | null;
-  while ((node = walker.nextNode())) {
-    textNodes.push(node as Text);
+  let cur: Node | null;
+  while ((cur = walker.nextNode())) {
+    const textNode = cur as Text;
+    try {
+      if (range.intersectsNode(textNode)) {
+        const isStart = textNode === range.startContainer;
+        const isEnd = textNode === range.endContainer;
+        const len = textNode.nodeValue?.length ?? 0;
+        const s = isStart ? Math.min(range.startOffset, len) : 0;
+        const e = isEnd ? Math.min(range.endOffset, len) : len;
+        if (s < e) {
+          textNodes.push({ node: textNode, startOffset: s, endOffset: e });
+        }
+      }
+    } catch {}
   }
 
-  for (const textNode of textNodes) {
-    const nodeRange = document.createRange();
-    const isStart = textNode === range.startContainer;
-    const isEnd = textNode === range.endContainer;
-    const startOffset = isStart ? range.startOffset : 0;
-    const endOffset = isEnd ? range.endOffset : (textNode.nodeValue?.length ?? 0);
-
-    if (startOffset < endOffset) {
+  // Wrap collected nodes
+  for (const { node: textNode, startOffset, endOffset } of textNodes) {
+    try {
+      const nodeRange = document.createRange();
       nodeRange.setStart(textNode, startOffset);
       nodeRange.setEnd(textNode, endOffset);
       const mark = createMark();
       const fragment = nodeRange.extractContents();
       mark.appendChild(fragment);
       nodeRange.insertNode(mark);
-    }
+    } catch {}
   }
 }
 
@@ -293,7 +328,14 @@ export function buildAnnotationFromSelection(
 ): Omit<DocumentAnnotation, 'id' | 'createdAt' | 'updatedAt'> | null {
   if (!selection || selection.isCollapsed) return null;
   const range = selection.getRangeAt(0);
-  if (!container.contains(range.commonAncestorContainer)) return null;
+
+  // Allow selection if commonAncestor is in container OR if start/end intersects container
+  const isInside =
+    container.contains(range.commonAncestorContainer) ||
+    container.contains(range.startContainer) ||
+    container.contains(range.endContainer);
+
+  if (!isInside) return null;
 
   const exactText = selection.toString().trim();
   if (!exactText || exactText.length < 2) return null;
@@ -329,7 +371,12 @@ function getAbsoluteOffset(container: HTMLElement, node: Node, offset: number): 
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   let current: Node | null;
   while ((current = walker.nextNode())) {
-    if (current === node) return total + offset;
+    if (current === node) {
+      return total + offset;
+    }
+    if (node.nodeType !== Node.TEXT_NODE && node.contains?.(current)) {
+      return total;
+    }
     total += (current.nodeValue ?? '').length;
   }
   return total;

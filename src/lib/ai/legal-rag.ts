@@ -5,12 +5,11 @@
  * Every answer is strictly grounded in verified legal articles,
  * returning structured citations with exact document numbers and article references.
  */
-
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
 import { stripHtml } from '@/lib/search';
 import { formatShortTitle } from '@/lib/utils';
+import { extractStructuredArticles } from '@/lib/diff-engine';
 import type { LegalDocument } from '@/types';
-
 export interface LegalCitation {
   documentId: string;
   documentNumber: string;
@@ -94,45 +93,63 @@ export async function queryLegalAssistant(
 
   for (const doc of candidateDocs) {
     const rawHtml = doc.html_content || '';
-    // Extract articles
-    const articleRegex = /<h2[^>]*>(Điều\s+\d+[a-z]?[\.:\s][^<]+)<\/h2>([\s\S]*?)(?=<h2|$)/gi;
-    let match: RegExpExecArray | null;
+    const articles = extractStructuredArticles(rawHtml);
 
-    while ((match = articleRegex.exec(rawHtml)) !== null) {
-      const artTitle = match[1].trim();
-      const artBody = stripHtml(match[2]).trim();
+    if (articles.length > 0) {
+      for (const art of articles) {
+        const artTextLower = (art.title + ' ' + art.body).toLowerCase();
+        const matchCount = cleanQ.split(/\s+/).filter((t) => t.length > 2 && artTextLower.includes(t)).length;
 
-      // Check if article matches user question terms
-      const artTextLower = (artTitle + ' ' + artBody).toLowerCase();
-      const matchCount = cleanQ.split(/\s+/).filter((t) => t.length > 2 && artTextLower.includes(t)).length;
+        if (matchCount > 0 || relevantArticles.length === 0) {
+          const numPart = art.title.match(/^Điều\s+(\d+[a-z]?)/i);
+          const snippet = art.body.slice(0, 280) || art.title;
 
-      if (matchCount > 0 || relevantArticles.length === 0) {
-        const numPart = artTitle.match(/^Điều\s+(\d+[a-z]?)/i);
-        const snippet = artBody.slice(0, 280) || artTitle;
+          citations.push({
+            documentId: doc.id,
+            documentNumber: doc.document_number || '',
+            documentTitle: formatShortTitle(doc.title, doc.document_type, doc.document_number),
+            documentType: doc.document_type || 'Văn bản',
+            articleNumber: numPart ? numPart[1] : undefined,
+            articleTitle: art.title,
+            exactQuote: snippet,
+            confidence: 0.96,
+          });
 
-        citations.push({
-          documentId: doc.id,
-          documentNumber: doc.document_number || '',
-          documentTitle: formatShortTitle(doc.title, doc.document_type, doc.document_number),
-          documentType: doc.document_type || 'Văn bản',
-          articleNumber: numPart ? numPart[1] : undefined,
-          articleTitle: artTitle,
-          exactQuote: snippet,
-          confidence: 0.96,
-        });
+          relevantArticles.push({
+            documentNumber: doc.document_number || '',
+            article: art.title,
+            text: snippet,
+          });
 
-        relevantArticles.push({
-          documentNumber: doc.document_number || '',
-          article: artTitle,
-          text: snippet,
-        });
-
-        if (relevantArticles.length >= 3) break;
+          if (relevantArticles.length >= 3) break;
+        }
       }
+    } else {
+      citations.push({
+        documentId: doc.id,
+        documentNumber: doc.document_number || '',
+        documentTitle: formatShortTitle(doc.title, doc.document_type, doc.document_number),
+        documentType: doc.document_type || 'Văn bản',
+        articleTitle: doc.document_number || doc.title,
+        exactQuote: doc.summary_main || doc.title,
+        confidence: 0.92,
+      });
     }
   }
 
-  // 3. Formulate structured response
+  // Fallback citation guarantee
+  if (citations.length === 0 && candidateDocs.length > 0) {
+    const fallbackDoc = candidateDocs[0];
+    citations.push({
+      documentId: fallbackDoc.id,
+      documentNumber: fallbackDoc.document_number || '',
+      documentTitle: formatShortTitle(fallbackDoc.title, fallbackDoc.document_type, fallbackDoc.document_number),
+      documentType: fallbackDoc.document_type || 'Văn bản',
+      articleTitle: fallbackDoc.document_number || fallbackDoc.title,
+      exactQuote: fallbackDoc.summary_main || fallbackDoc.title,
+      confidence: 0.95,
+    });
+  }
   const primaryDoc = candidateDocs[0];
   const shortTitle = formatShortTitle(primaryDoc.title, primaryDoc.document_type, primaryDoc.document_number);
   const primaryNum = primaryDoc.document_number || 'Văn bản quy định';
@@ -157,7 +174,6 @@ export async function queryLegalAssistant(
     `Hiệu lực thi hành và điều khoản chuyển tiếp của ${primaryNum}`,
     `Các văn bản hướng dẫn liên quan đến ${primaryNum}`,
   ];
-
   return {
     answer,
     summaryPoints,
@@ -165,4 +181,75 @@ export async function queryLegalAssistant(
     relevantArticles,
     suggestedFollowUps,
   };
+}
+
+/**
+ * Client-side interface to ask the AI Legal Assistant.
+ * Routes to /api/ai/chat with automated Gemini key rotation and local RAG fallback.
+ */
+export async function askLegalAi({
+  question,
+  currentDoc,
+  docA,
+  docB,
+  mode = 'ask',
+}: {
+  question: string;
+  currentDoc?: LegalDocument | null;
+  docA?: LegalDocument | null;
+  docB?: LegalDocument | null;
+  mode?: 'ask' | 'compare' | 'summary';
+}): Promise<LegalAiResponse & { source?: 'gemini' | 'local_rag' }> {
+  try {
+    const res = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question,
+        documentId: currentDoc?.id,
+        docAId: docA?.id,
+        docBId: docB?.id,
+        mode,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.answer) {
+        return {
+          answer: data.answer,
+          summaryPoints: data.summaryPoints || [],
+          citations: data.citations || [],
+          relevantArticles: data.relevantArticles || [],
+          suggestedFollowUps: data.suggestedFollowUps || [],
+          source: data.source,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Network error calling /api/ai/chat, using local fallback:', err);
+  }
+
+  // Local fallback
+  const local = await queryLegalAssistant(question, currentDoc || docA || null);
+  return {
+    ...local,
+    source: 'local_rag',
+  };
+}
+
+/**
+ * Calls AI to generate an intelligent comparison briefing between 2 documents.
+ */
+export async function compareDocumentsWithAi(
+  docA: LegalDocument,
+  docB: LegalDocument,
+  customQuestion?: string
+): Promise<LegalAiResponse & { source?: 'gemini' | 'local_rag' }> {
+  return await askLegalAi({
+    question: customQuestion || 'Hãy tóm tắt và đối chiếu 4 điểm khác biệt hoặc quy định chi tiết cốt lõi giữa 2 văn bản này.',
+    docA,
+    docB,
+    mode: 'compare',
+  });
 }

@@ -666,7 +666,7 @@ export function CategoryTree({
         <div
           role="tablist"
           aria-label="Chế độ xem danh mục"
-          className="h-10 p-[3px] bg-slate-200/70 rounded-[10px] flex items-center gap-1 border border-slate-200/50"
+          className="p-1 bg-slate-200/60 rounded-lg flex items-center gap-1 border border-slate-200/50"
         >
           <button
             role="tab"
@@ -674,14 +674,14 @@ export function CategoryTree({
             tabIndex={viewMode === 'topic' ? 0 : -1}
             onClick={() => setViewMode('topic')}
             className={cn(
-              'flex-1 h-[34px] font-semibold rounded-[7px] text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+              'flex-1 h-8 px-2.5 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none',
               viewMode === 'topic'
-                ? 'bg-white text-blue-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-blue-900 font-semibold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
             )}
           >
-            <BookOpen className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-            <span className="truncate">Theo chủ đề</span>
+            <BookOpen className={cn('w-3.5 h-3.5 shrink-0', viewMode === 'topic' ? 'text-blue-600' : 'text-slate-500')} />
+            <span className="truncate">Chủ đề</span>
           </button>
           <button
             role="tab"
@@ -689,14 +689,14 @@ export function CategoryTree({
             tabIndex={viewMode === 'type' ? 0 : -1}
             onClick={() => setViewMode('type')}
             className={cn(
-              'flex-1 h-[34px] font-semibold rounded-[7px] text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+              'flex-1 h-8 px-2.5 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none',
               viewMode === 'type'
-                ? 'bg-white text-blue-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-blue-900 font-semibold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
             )}
           >
-            <Layers className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-            <span className="truncate">Theo loại văn bản</span>
+            <Layers className={cn('w-3.5 h-3.5 shrink-0', viewMode === 'type' ? 'text-blue-600' : 'text-slate-500')} />
+            <span className="truncate">Loại văn bản</span>
           </button>
         </div>
 

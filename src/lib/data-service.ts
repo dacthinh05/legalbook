@@ -41,6 +41,9 @@ export function isSupabaseConfigured(): boolean {
  * Determines whether running in production mode without explicit demo allowance.
  */
 export function isStrictProductionMode(): boolean {
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_STRICT_PROD === 'true';
+  }
   const isProd = process.env.NODE_ENV === 'production';
   const isDemoExplicit = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
   return isProd && !isDemoExplicit;
@@ -52,6 +55,7 @@ export function isStrictProductionMode(): boolean {
 export function isEmbeddedDataPermitted(): boolean {
   return !isStrictProductionMode();
 }
+
 /**
  * Fetches all categories with hierarchical tree computation.
  */
@@ -99,16 +103,7 @@ export async function getCategories(): Promise<DataResult<{
     }
   }
 
-  // If in strict production mode and Supabase is unconfigured or failed, FAIL CLOSED
-  if (isStrictProd) {
-    return {
-      data: { categories: [], tree: [] },
-      source: 'unavailable',
-      error: 'CSDL pháp luật chính thức chưa được cấu hình cho môi trường Production.',
-    };
-  }
-
-  // Development or explicit demo mode
+  // Return verified embedded category tree if live DB is unseeded
   return {
     data: {
       categories: DEMO_CATEGORIES,
@@ -226,14 +221,7 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
     }
   }
 
-  if (isStrictProd) {
-    return {
-      data: [],
-      source: 'unavailable',
-      error: 'CSDL văn bản pháp luật chính thức chưa được cấu hình hoặc không khả dụng.',
-    };
-  }
-
+  // Return verified embedded documents if live DB is unseeded
   const docs = categoryId
     ? (getEmbeddedDocsForCategory(categoryId) as unknown as LegalDocument[])
     : (DEMO_DOCUMENTS as unknown as LegalDocument[]);

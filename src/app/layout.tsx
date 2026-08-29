@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
 export const metadata: Metadata = {
   title: "PACO LegalBook — Ebook & Thư Viện Pháp Luật Số",
@@ -16,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body className={`${inter.className} antialiased`}>
+      <body className="antialiased font-sans">
         {children}
       </body>
     </html>

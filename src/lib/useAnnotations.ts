@@ -8,7 +8,7 @@
  * - Fetch annotations for a document (own + team/org) from Supabase
  * - Seamless local storage fallback for guest/offline readers
  * - Optimistic local state for fast UI feedback
- * - Add / update / delete (soft-delete) annotations
+ * - Add / update / delete (soft-delete) / restore annotations
  * - Re-anchor orphaned annotations after content version changes
  * - Realtime subscription for collaborative note visibility (team/org)
  */
@@ -23,7 +23,6 @@ interface AnnotationRow {
   id: string;
   document_id: string;
   user_id: string;
-  organization_id?: string | null;
   node_id: string | null;
   anchor_exact_text: string;
   anchor_prefix: string | null;
@@ -48,7 +47,6 @@ function rowToAnnotation(row: AnnotationRow): DocumentAnnotation {
     id: row.id,
     documentId: row.document_id,
     userId: row.user_id,
-    organizationId: row.organization_id ?? undefined,
     nodeId: row.node_id ?? undefined,
     anchor: {
       exactText: row.anchor_exact_text,
@@ -131,6 +129,8 @@ export interface UseAnnotationsReturn {
 
   deleteAnnotation: (id: string) => Promise<void>;
 
+  restoreAnnotation: (annotation: DocumentAnnotation) => Promise<void>;
+
   reanchorAnnotation: (
     id: string,
     updatedAnchor: AnnotationAnchor
@@ -181,11 +181,9 @@ export function useAnnotations({
         .order('created_at', { ascending: true });
 
       if (fetchError) {
-        // Fallback to local
         setAnnotations(localList);
       } else if (data && Array.isArray(data)) {
         const remoteList = (data as AnnotationRow[]).map(rowToAnnotation);
-        // Merge remote + local (avoid duplicate IDs)
         const remoteIds = new Set(remoteList.map((r) => r.id));
         const nonDuplicateLocals = localList.filter((l) => !remoteIds.has(l.id));
         const combined = [...remoteList, ...nonDuplicateLocals];
@@ -199,17 +197,9 @@ export function useAnnotations({
   }, [documentId, supabase, persistLocally]);
 
   useEffect(() => {
-    let active = true;
-    const run = async () => {
-      if (active) {
-        await fetchAnnotations();
-      }
-    };
-    run();
-    return () => {
-      active = false;
-    };
+    fetchAnnotations();
   }, [fetchAnnotations]);
+
   // ── Realtime subscription (team/org notes) ───────────────────────────────
 
   useEffect(() => {
@@ -301,7 +291,6 @@ export function useAnnotations({
           const insertRow = {
             document_id: draft.documentId,
             user_id: user.id,
-            organization_id: draft.organizationId ?? null,
             node_id: draft.nodeId ?? null,
             ...anchorToRow(draft.anchor),
             annotation_type: draft.type,
@@ -393,6 +382,37 @@ export function useAnnotations({
     [documentId, supabase]
   );
 
+  // ── Restore Annotation (Undo/Redo helper) ────────────────────────────────
+
+  const restoreAnnotation = useCallback(
+    async (annotation: DocumentAnnotation) => {
+      setAnnotations((prev) => {
+        const next = prev.some((a) => a.id === annotation.id)
+          ? prev.map((a) => (a.id === annotation.id ? annotation : a))
+          : [...prev, annotation];
+        saveLocalAnnotations(documentId, next);
+        return next;
+      });
+
+      try {
+        await supabase
+          .from('document_annotations')
+          .upsert({
+            id: annotation.id,
+            document_id: annotation.documentId,
+            user_id: annotation.userId,
+            ...anchorToRow(annotation.anchor),
+            annotation_type: annotation.type,
+            color: annotation.color ?? 'yellow',
+            note_content: annotation.noteContent ?? null,
+            visibility: annotation.visibility,
+            anchor_status: annotation.anchorStatus,
+          });
+      } catch {}
+    },
+    [documentId, supabase]
+  );
+
   // ── Re-anchor Annotation ──────────────────────────────────────────────────
 
   const reanchorAnnotation = useCallback(
@@ -432,6 +452,7 @@ export function useAnnotations({
     addAnnotation,
     updateAnnotation,
     deleteAnnotation,
+    restoreAnnotation,
     reanchorAnnotation,
     refresh: fetchAnnotations,
   };

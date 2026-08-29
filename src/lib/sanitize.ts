@@ -258,3 +258,22 @@ export function highlightHtml(
     matchCount,
   };
 }
+
+/**
+ * Safely strips HTML markup into clean plain text for AI RAG processing.
+ */
+export function cleanHtmlToText(html: string | null | undefined): string {
+  if (!html) return '';
+  return html
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}

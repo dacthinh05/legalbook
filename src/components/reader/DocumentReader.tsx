@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   ExternalLink,
   RotateCcw,
+  RotateCw,
   SlidersHorizontal,
   FileWarning,
   Maximize2,
@@ -30,6 +31,7 @@ import {
   Info,
   ListTree,
   StickyNote,
+  Sparkles,
   X,
 } from 'lucide-react';
 import {
@@ -55,6 +57,7 @@ import { getDocumentRelations } from '@/lib/demo-data';
 import { extractToc, scrollToTocItem, createTocObserver } from '@/lib/toc-utils';
 import { buildAnnotationFromSelection, sanitizeNoteContent } from '@/lib/annotation-engine';
 import { useAnnotations } from '@/lib/useAnnotations';
+import { DocumentUndoManager } from '@/lib/undo-engine';
 import { ReaderContextPanel } from './ReaderContextPanel';
 import { SelectionToolbar } from './SelectionToolbar';
 import { HighlightLayer } from './HighlightLayer';
@@ -246,13 +249,86 @@ export function DocumentReader({
     error: annotationsError,
     addAnnotation,
     deleteAnnotation,
+    restoreAnnotation,
     reanchorAnnotation: reanchorAnnotationHook,
   } = useAnnotations({ documentId: doc.id, contentVersion });
+
+  // ── Undo / Redo Engine (Ctrl+Z / Ctrl+Y) ──────────────────────────────────
+  const undoManagerRef = useRef<DocumentUndoManager>(new DocumentUndoManager());
+  const [canUndoState, setCanUndoState] = useState(false);
+  const [canRedoState, setCanRedoState] = useState(false);
+  const [undoToast, setUndoToast] = useState<{ message: string; actionText?: string; onAction?: () => void } | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | number | undefined>(undefined);
+
+  const updateUndoRedoState = useCallback(() => {
+    setCanUndoState(undoManagerRef.current.canUndo());
+    setCanRedoState(undoManagerRef.current.canRedo());
+  }, []);
+
+  const showToast = useCallback((message: string, actionText?: string, onAction?: () => void) => {
+    clearTimeout(toastTimeoutRef.current);
+    setUndoToast({ message, actionText, onAction });
+    toastTimeoutRef.current = setTimeout(() => {
+      setUndoToast(null);
+    }, 3500);
+  }, []);
+
+  const executeUndo = useCallback(async () => {
+    const action = undoManagerRef.current.undo();
+    if (!action) return;
+
+    if (action.type === 'add_annotation') {
+      await deleteAnnotation(action.annotation.id);
+    } else if (action.type === 'delete_annotation') {
+      await restoreAnnotation(action.annotation);
+    } else if (action.type === 'update_annotation' && action.previousAnnotation) {
+      await restoreAnnotation(action.previousAnnotation);
+    }
+
+    updateUndoRedoState();
+    showToast(`Đã hoàn tác: ${action.description}`, 'Làm lại', () => executeRedo());
+  }, [deleteAnnotation, restoreAnnotation, updateUndoRedoState, showToast]);
+
+  const executeRedo = useCallback(async () => {
+    const action = undoManagerRef.current.redo();
+    if (!action) return;
+
+    if (action.type === 'add_annotation') {
+      await restoreAnnotation(action.annotation);
+    } else if (action.type === 'delete_annotation') {
+      await deleteAnnotation(action.annotation.id);
+    } else if (action.type === 'update_annotation') {
+      await restoreAnnotation(action.annotation);
+    }
+
+    updateUndoRedoState();
+    showToast(`Đã làm lại: ${action.description}`, 'Hoàn tác', () => executeUndo());
+  }, [deleteAnnotation, restoreAnnotation, updateUndoRedoState, showToast]);
+
+  const handleDeleteAnnotationWithUndo = useCallback(
+    async (id: string) => {
+      const target = annotations.find((a) => a.id === id);
+      if (target) {
+        undoManagerRef.current.pushAction({
+          type: 'delete_annotation',
+          description: target.type === 'note' ? 'Xóa ghi chú' : 'Xóa highlight',
+          annotation: target,
+        });
+        updateUndoRedoState();
+        showToast(
+          target.type === 'note' ? 'Đã xóa ghi chú' : 'Đã xóa highlight',
+          'Hoàn tác (Ctrl+Z)',
+          () => executeUndo()
+        );
+      }
+      await deleteAnnotation(id);
+    },
+    [annotations, deleteAnnotation, updateUndoRedoState, showToast, executeUndo]
+  );
 
   const notesCount = annotations.filter((a) => a.type === 'note').length;
   const highlightCount = annotations.filter((a) => a.type === 'highlight').length;
   const totalAnnotationsCount = notesCount + highlightCount;
-
   // ── Debounce Search Input ───────────────────────────────────────────────
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -517,11 +593,20 @@ export function DocumentReader({
         color,
       });
       if (draft) {
-        await addAnnotation({ ...draft, anchorStatus: 'active' });
+        const created = await addAnnotation({ ...draft, anchorStatus: 'active' });
+        if (created) {
+          undoManagerRef.current.pushAction({
+            type: 'add_annotation',
+            description: 'Tô màu đoạn văn',
+            annotation: created,
+          });
+          updateUndoRedoState();
+          showToast('Đã tô màu đoạn văn', 'Hoàn tác (Ctrl+Z)', () => executeUndo());
+        }
       }
       sel.removeAllRanges();
     },
-    [currentUserId, doc.id, contentVersion, addAnnotation]
+    [currentUserId, doc.id, contentVersion, addAnnotation, updateUndoRedoState, showToast, executeUndo]
   );
 
   const handleAddNoteFromSelection = useCallback(async () => {
@@ -538,10 +623,19 @@ export function DocumentReader({
     });
     if (draft) {
       setPanelMode('notes');
-      await addAnnotation({ ...draft, anchorStatus: 'active' });
+      const created = await addAnnotation({ ...draft, anchorStatus: 'active' });
+      if (created) {
+        undoManagerRef.current.pushAction({
+          type: 'add_annotation',
+          description: 'Tạo ghi chú mới',
+          annotation: created,
+        });
+        updateUndoRedoState();
+        showToast('Đã tạo ghi chú', 'Hoàn tác (Ctrl+Z)', () => executeUndo());
+      }
     }
     sel.removeAllRanges();
-  }, [currentUserId, doc.id, contentVersion, addAnnotation]);
+  }, [currentUserId, doc.id, contentVersion, addAnnotation, updateUndoRedoState, showToast, executeUndo]);
 
   const handleCopySelection = useCallback(() => {
     const sel = window.getSelection();
@@ -605,7 +699,7 @@ export function DocumentReader({
     return () => container.removeEventListener('click', handleMarkClick);
   }, []);
 
-  // Keyboard Shortcut: Press H to immediately highlight selected text
+  // Keyboard Shortcuts: Press H to highlight, Ctrl+Z to undo, Ctrl+Y / Ctrl+Shift+Z to redo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -618,6 +712,25 @@ export function DocumentReader({
         return;
       }
 
+      // Undo: Ctrl+Z / Cmd+Z
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          executeRedo();
+        } else {
+          executeUndo();
+        }
+        return;
+      }
+
+      // Redo: Ctrl+Y / Cmd+Y
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault();
+        executeRedo();
+        return;
+      }
+
+      // Fast Highlight: H
       if (e.key === 'h' || e.key === 'H') {
         const sel = window.getSelection();
         if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
@@ -637,7 +750,7 @@ export function DocumentReader({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleHighlight]);
+  }, [handleHighlight, executeUndo, executeRedo]);
   const handleOrphaned = useCallback((ids: string[]) => {
     console.warn('[Reader] Orphaned annotations:', ids);
   }, []);
@@ -1074,6 +1187,26 @@ export function DocumentReader({
             <Search className="w-3.5 h-3.5" />
           </button>
 
+          {/* Legal AI Q&A Assistant Toggle */}
+          {activeTab === 'noidung' && (
+            <button
+              type="button"
+              onClick={() => togglePanel('ai')}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs',
+                panelMode === 'ai'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                  : 'bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 text-blue-900 border-blue-200/90 hover:border-blue-300 hover:bg-blue-100/70'
+              )}
+              title="Trợ lý Pháp lý AI (Hỏi đáp & Tóm tắt với Gemini 2.5)"
+              aria-label="Trợ lý Pháp lý AI"
+              aria-pressed={panelMode === 'ai'}
+            >
+              <Sparkles className={cn('w-3.5 h-3.5 shrink-0', panelMode === 'ai' ? 'text-white' : 'text-blue-600')} />
+              <span className="hidden sm:inline">Hỏi đáp AI</span>
+            </button>
+          )}
+
           {/* TOC context panel toggle */}
           {activeTab === 'noidung' && (
             <button
@@ -1097,7 +1230,6 @@ export function DocumentReader({
               )}
             </button>
           )}
-
           {/* Notes context panel toggle */}
           {activeTab === 'noidung' && (
             <button
@@ -1121,6 +1253,30 @@ export function DocumentReader({
               )}
             </button>
           )}
+
+          {/* Undo / Redo Toolbar buttons */}
+          <div className="hidden sm:flex items-center bg-white border border-slate-200/90 rounded-md p-0.5 shadow-2xs">
+            <button
+              type="button"
+              onClick={executeUndo}
+              disabled={!canUndoState}
+              className="p-1 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed rounded hover:bg-slate-100 transition-colors cursor-pointer"
+              title="Hoàn tác thao tác trên văn bản (Ctrl + Z)"
+              aria-label="Hoàn tác (Ctrl+Z)"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={executeRedo}
+              disabled={!canRedoState}
+              className="p-1 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed rounded hover:bg-slate-100 transition-colors cursor-pointer"
+              title="Làm lại thao tác trên văn bản (Ctrl + Y)"
+              aria-label="Làm lại (Ctrl+Y)"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
           {/* Unified Typography & Display Popover [Aa] */}
           <div className="relative shrink-0" ref={fontSizeMenuRef}>
@@ -1754,10 +1910,8 @@ export function DocumentReader({
 
           {/* ── TAB: QUAN HỆ ── */}
           {activeTab === 'quanhe' && (
-            <div className="document-page my-4">
-              <div className="p-6 md:p-8">
-                <LegalHierarchyTree document={doc} onSelectDocument={onSelectRelatedDocument} />
-              </div>
+            <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 select-text">
+              <LegalHierarchyTree document={doc} onSelectDocument={onSelectRelatedDocument} />
             </div>
           )}
 
@@ -1839,7 +1993,7 @@ export function DocumentReader({
                 annotationsError={annotationsError}
                 onNoteClick={handleNoteClick}
                 onAddNote={handleAddNoteFromPanel}
-                onDeleteAnnotation={deleteAnnotation}
+                onDeleteAnnotation={handleDeleteAnnotationWithUndo}
                 notesCount={totalAnnotationsCount}
                 hasFullText={hasFullText}
                 currentUserId={currentUserId}
@@ -1866,6 +2020,37 @@ export function DocumentReader({
           </>
         )}
       </div>
+
+      {/* ── Undo / Redo Floating Feedback Toast ── */}
+      {undoToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-2xl flex items-center gap-3 text-xs border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-150 select-none"
+        >
+          <span className="font-medium">{undoToast.message}</span>
+          {undoToast.actionText && undoToast.onAction && (
+            <button
+              type="button"
+              onClick={() => {
+                undoToast.onAction?.();
+                setUndoToast(null);
+              }}
+              className="px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] transition-colors cursor-pointer"
+            >
+              {undoToast.actionText}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setUndoToast(null)}
+            className="p-0.5 text-slate-400 hover:text-white rounded transition-colors ml-1 cursor-pointer"
+            aria-label="Đóng thông báo"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* ── Text Selection Toolbar ── */}
       <SelectionToolbar

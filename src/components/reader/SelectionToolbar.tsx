@@ -79,7 +79,12 @@ export function SelectionToolbar({
       if (!container) return;
 
       const range = sel.getRangeAt(0);
-      if (!container.contains(range.startContainer) && !container.contains(range.endContainer)) {
+      const isInside =
+        container.contains(range.startContainer) ||
+        container.contains(range.endContainer) ||
+        container.contains(range.commonAncestorContainer);
+
+      if (!isInside) {
         hide();
         return;
       }

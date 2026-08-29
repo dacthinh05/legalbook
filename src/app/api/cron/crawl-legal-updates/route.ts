@@ -55,8 +55,68 @@ async function handleCronCrawl(request: NextRequest) {
       { name: 'Cơ sở Dữ liệu Quốc gia', domain: 'vbpl.vn', status: 'scanned_ok' }
     ];
 
-    // Simulated / Discovered Staging Feed for Tax & Audit
+    // Simulated / Discovered Staging Feed for Tax, Overtime & Audit
     const stagedTaxAuditDocs = [
+      {
+        id: `staged-tax-${Date.now()}-06`,
+        document_number: '110/2025/UBTVQH15',
+        title: 'Nghị quyết điều chỉnh mức giảm trừ gia cảnh thuế TNCN lên 15,5 triệu và 6,2 triệu đồng',
+        document_type: 'nghi_quyet',
+        issuing_body: 'Ủy ban Thường vụ Quốc hội',
+        issued_date: '2025-10-17',
+        effective_date: '2026-01-01',
+        category_name: 'Thuế > Thuế TNCN',
+        source: 'vbpl.vn',
+        source_url: 'https://vbpl.vn/botuphap/Pages/vbpq-van-ban-goc.aspx?dvid=13&ItemID=167842',
+        summary_main: 'Tăng mức giảm trừ gia cảnh thuế TNCN từ kỳ tính thuế 2026: Bản thân 15,5 triệu/tháng và người phụ thuộc 6,2 triệu/tháng.',
+        review_status: 'pending_review',
+        discovered_at: timestamp
+      },
+      {
+        id: `staged-tax-${Date.now()}-07`,
+        document_number: '42/2026/TT-BTC',
+        title: 'Thông tư hướng dẫn Luật Thuế TNCN 2025: Miễn 100% thuế tiền lương làm thêm giờ (tăng ca)',
+        document_type: 'thong_tu',
+        issuing_body: 'Bộ Tài chính',
+        issued_date: '2026-04-25',
+        effective_date: '2026-06-01',
+        category_name: 'Thuế > Thuế TNCN',
+        source: 'mof.gov.vn',
+        source_url: 'https://mof.gov.vn/webcenter/portal/vclvcstc/pages_r/l/chi-tiet-tin?dDocName=MOFUCM0249078',
+        summary_main: 'Miễn toàn bộ thuế TNCN đối với tiền lương làm thêm giờ, làm ca đêm; Biểu thuế 5 bậc và quyết toán tự động qua VNeID.',
+        review_status: 'pending_review',
+        discovered_at: timestamp
+      },
+      {
+        id: `staged-labour-${Date.now()}-08`,
+        document_number: '74/2024/NĐ-CP',
+        title: 'Nghị định quy định tiền lương tối thiểu và định mức, tỷ lệ trả lương làm thêm giờ (tăng ca)',
+        document_type: 'nghi_dinh',
+        issuing_body: 'Chính phủ',
+        issued_date: '2024-06-30',
+        effective_date: '2024-07-01',
+        category_name: 'Lao động và tiền lương > Nghị định lao động',
+        source: 'vanban.chinhphu.vn',
+        source_url: 'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209728',
+        summary_main: 'Quy định trần giờ tăng ca 40h/tháng, 200h-300h/năm và mức trả lương làm thêm giờ 150% - 200% - 300%.',
+        review_status: 'pending_review',
+        discovered_at: timestamp
+      },
+      {
+        id: `staged-cv-${Date.now()}-09`,
+        document_number: '4128/TCT-DNNCN',
+        title: 'Công văn hướng dẫn bóc tách thu nhập làm thêm giờ miễn thuế TNCN và ủy quyền quyết toán qua VNeID',
+        document_type: 'cong_van',
+        issuing_body: 'Tổng cục Thuế',
+        issued_date: '2026-05-15',
+        effective_date: '2026-05-15',
+        category_name: 'Công văn > Công văn Thuế',
+        source: 'gdt.gov.vn',
+        source_url: 'https://gdt.gov.vn/wps/portal/home/hotro/vanban/chitietvanban?id=4128TCT-DNNCN',
+        summary_main: 'Hướng dẫn điều kiện chứng từ bóc tách lương làm thêm giờ được miễn thuế TNCN 100% và thủ tục xác thực VNeID.',
+        review_status: 'pending_review',
+        discovered_at: timestamp
+      },
       {
         id: `staged-tax-${Date.now()}-01`,
         document_number: '144/2026/NĐ-CP',
@@ -67,6 +127,7 @@ async function handleCronCrawl(request: NextRequest) {
         effective_date: '2026-05-01',
         category_name: 'Thuế > Thuế GTGT',
         source: 'vanban.chinhphu.vn',
+        source_url: 'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=214820',
         summary_main: 'Hướng dẫn cụ thể điều kiện hoàn thuế GTGT dự án đầu tư theo từng giai đoạn nghiệm thu.',
         review_status: 'pending_review',
         discovered_at: timestamp
@@ -81,6 +142,7 @@ async function handleCronCrawl(request: NextRequest) {
         effective_date: '2025-07-01',
         category_name: 'Kiểm toán > Luật kiểm toán',
         source: 'vbpl.vn',
+        source_url: 'https://vbpl.vn/botuphap/Pages/vbpq-van-ban-goc.aspx?dvid=13&ItemID=170997',
         summary_main: 'Tăng cường trách nhiệm của kiểm toán viên hành nghề, chuẩn hóa việc luân chuyển KTV và kiểm soát chất lượng dịch vụ kiểm toán BCTC đơn vị có lợi ích công chúng.',
         review_status: 'pending_review',
         discovered_at: timestamp
@@ -95,6 +157,7 @@ async function handleCronCrawl(request: NextRequest) {
         effective_date: '2025-08-15',
         category_name: 'Công văn > Công văn Thuế',
         source: 'gdt.gov.vn',
+        source_url: 'https://gdt.gov.vn/wps/portal/home/hotro/vanban/chitietvanban?_page=1&id=3643TNI-QLDN',
         summary_main: 'Hướng dẫn xác định giá đất được trừ khi tính thuế GTGT và lập hóa đơn điều chỉnh doanh thu chuyển nhượng.',
         review_status: 'pending_review',
         discovered_at: timestamp
