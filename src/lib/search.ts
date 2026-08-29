@@ -25,6 +25,7 @@ import {
   DOCUMENT_TYPE_COLORS,
   formatDate,
   getTvplSourceUrl,
+  formatShortTitle,
 } from './utils';
 
 /**
@@ -859,6 +860,8 @@ export function buildSearchResultViewModel(
     title = indexed.summary.slice(0, 140);
   }
 
+  const displayTitle = formatShortTitle(title, indexed.documentType, docNumber);
+
   return {
     id: indexed.id,
     documentId: indexed.id,
@@ -867,6 +870,7 @@ export function buildSearchResultViewModel(
     documentTypeColor: docTypeColor,
     documentNumber: docNumber,
     title,
+    displayTitle,
     issuer: indexed.issuer || undefined,
     effectiveStatus: statusInfo.type,
     effectiveStatusLabel: statusInfo.label,

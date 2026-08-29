@@ -407,7 +407,14 @@ body.is-resizing * {
 .document-content h2.legal-article-title,
 .document-full-body h2.legal-article-title,
 .document-content h2,
-.document-full-body h2 {
+.document-full-body h2,
+.legal-chapter-block,
+[id^="dieu-"],
+[id^="chuong-"],
+[id^="phan-"],
+[id^="muc-"],
+[id^="phu-luc-"],
+[id^="article-"] {
   font-size: 1.12em;
   font-weight: 700;
   line-height: 1.5;
@@ -417,6 +424,7 @@ body.is-resizing * {
   padding-bottom: 0;
   border-bottom: none !important;
   text-align: left;
+  scroll-margin-top: 80px;
 }
 
 .document-content h3,

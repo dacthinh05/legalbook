@@ -184,9 +184,9 @@ const SearchResultCard = React.memo(function SearchResultCard({
         </div>
       </div>
 
-      {/* Row 2: Title */}
+      {/* Row 2: Display Title (Clean without duplicate type/docNumber) */}
       <h4 className="text-xs sm:text-[13px] font-semibold text-slate-900 leading-snug mb-1">
-        <HighlightedText text={item.title} query={searchQuery} />
+        <HighlightedText text={item.displayTitle || item.title} query={searchQuery} />
       </h4>
 
       {/* Row 3: Snippet */}

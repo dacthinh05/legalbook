@@ -52,6 +52,7 @@ export function isStrictProductionMode(): boolean {
 export function isEmbeddedDataPermitted(): boolean {
   return !isStrictProductionMode();
 }
+/**
  * Fetches all categories with hierarchical tree computation.
  */
 export async function getCategories(): Promise<DataResult<{
@@ -185,7 +186,7 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
                 error: `Lỗi truy vấn văn bản: ${error.message}`,
               };
             }
-          } else if (data) {
+          } else if (data && data.length > 0) {
             let docs = data as LegalDocument[];
             if (selectedCat && selectedCat.parent_id && targetType) {
               docs = docs.filter((d) => directDocIds.has(d.id) || d.document_type === targetType);
@@ -195,11 +196,6 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
               source: 'supabase_live',
             };
           }
-        } else {
-          return {
-            data: [],
-            source: 'supabase_live',
-          };
         }
       }
 
@@ -213,7 +209,7 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
             error: `Lỗi truy vấn văn bản: ${error.message}`,
           };
         }
-      } else if (data) {
+      } else if (data && data.length > 0) {
         return {
           data: data as LegalDocument[],
           source: 'supabase_live',
@@ -283,7 +279,7 @@ export async function getDocumentById(id: string): Promise<DataResult<LegalDocum
         return {
           data: null,
           source: 'unavailable',
-          error: `Lỗi kết nối khi tải văn bản: ${err instanceof Error ? err.message : String(err)}`,
+          error: `Không thể kết nối CSDL khi tải văn bản: ${err instanceof Error ? err.message : String(err)}`,
         };
       }
     }
@@ -293,13 +289,13 @@ export async function getDocumentById(id: string): Promise<DataResult<LegalDocum
     return {
       data: null,
       source: 'unavailable',
-      error: 'CSDL chính thức không khả dụng.',
+      error: 'CSDL văn bản pháp luật chính thức chưa được cấu hình.',
     };
   }
 
   const doc = getEmbeddedDocumentById(id);
   return {
-    data: (doc as LegalDocument) || null,
+    data: (doc as unknown as LegalDocument) || null,
     source: 'embedded_repository',
   };
 }

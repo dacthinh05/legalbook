@@ -316,6 +316,7 @@ export interface SearchResultViewModel {
   documentTypeColor: string;
   documentNumber: string;
   title: string;
+  displayTitle?: string;
   issuer?: string;
   effectiveStatus: EffectiveStatusType;
   effectiveStatusLabel: string;

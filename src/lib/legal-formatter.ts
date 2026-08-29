@@ -209,8 +209,12 @@ function formatChapterHeadings(html: string): string {
   return html.replace(chapterPattern, (_match, chapNum, chapTitle) => {
     const cleanNum = chapNum.trim();
     const cleanTitle = chapTitle.trim();
+    const prefixMatch = cleanNum.match(/^([^\s]+)\s+([IVXLCDM\d]+)/i);
+    const id = prefixMatch
+      ? `${prefixMatch[1].toLowerCase()}-${prefixMatch[2].toLowerCase()}`
+      : `chuong-${cleanNum.toLowerCase().replace(/\s+/g, '-')}`;
     return `
-<div class="legal-chapter-block">
+<div class="legal-chapter-block" id="${id}">
   <p class="legal-chapter-num">${cleanNum}</p>
   <h2 class="legal-chapter-title">${cleanTitle}</h2>
 </div>`;
@@ -229,8 +233,8 @@ function formatArticlesAndClauses(html: string): string {
     (_match, articleText) => {
       const trimmed = articleText.trim();
       const numMatch = trimmed.match(/^Điều\s+(\d+[a-z]?)/i);
-      const articleId = numMatch ? `dieu-${numMatch[1]}` : undefined;
-      const idAttr = articleId ? ` id="${articleId}"` : '';
+      const articleId = numMatch ? `dieu-${numMatch[1].toLowerCase()}` : undefined;
+      const idAttr = articleId ? ` id="${articleId}" data-article="${numMatch?.[1]?.toLowerCase()}"` : '';
       return `<h2 class="legal-article-title"${idAttr}>${trimmed}</h2>`;
     }
   );

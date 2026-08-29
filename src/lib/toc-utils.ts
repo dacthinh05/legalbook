@@ -97,10 +97,6 @@ export function extractToc(htmlContent: string | null | undefined): TocItem[] {
 
 /**
  * Find the best DOM element for a TocItem and scroll the viewport to it.
- *
- * Search strategy (in order):
- * 1. Exact text match on heading-like elements (strong, h2, h3, p)
- * 2. Partial match for "Điều X" patterns
  */
 export function scrollToTocItem(
   container: HTMLElement,
@@ -111,73 +107,114 @@ export function scrollToTocItem(
 
   const targetEl = findTocElement(container, item);
   if (targetEl) {
-    // Scroll the container scroll-parent, not the page
-    const scrollParent = getScrollParent(container);
-    if (scrollParent && scrollParent !== document.documentElement) {
+    // Find the scrollable viewport container (reader-viewport)
+    const scrollParent = getScrollParent(targetEl) || getScrollParent(container);
+
+    if (scrollParent && scrollParent !== document.documentElement && scrollParent !== document.body) {
       const containerRect = scrollParent.getBoundingClientRect();
       const elRect = targetEl.getBoundingClientRect();
-      const offset = elRect.top - containerRect.top + scrollParent.scrollTop - 72; // 72px toolbar clearance
-      scrollParent.scrollTo({ top: Math.max(0, offset), behavior });
+      // Leave 72px clearance for the sticky reader toolbar
+      const offsetTop = elRect.top - containerRect.top + scrollParent.scrollTop - 72;
+      scrollParent.scrollTo({
+        top: Math.max(0, offsetTop),
+        behavior,
+      });
     } else {
       targetEl.scrollIntoView({ behavior, block });
     }
 
     // Briefly highlight the target
+    targetEl.classList.remove('toc-scroll-target');
+    void targetEl.offsetWidth; // trigger reflow for smooth re-animation
     targetEl.classList.add('toc-scroll-target');
-    setTimeout(() => targetEl.classList.remove('toc-scroll-target'), 2000);
+    setTimeout(() => targetEl.classList.remove('toc-scroll-target'), 2500);
   }
   return targetEl;
 }
 
-function findTocElement(container: HTMLElement, item: TocItem): HTMLElement | null {
+export function findTocElement(container: HTMLElement, item: TocItem): HTMLElement | null {
+  if (!container || !item) return null;
+
+  // 1. Direct ID lookups for Articles
+  if (item.type === 'article' && item.articleNumber) {
+    const num = item.articleNumber.toLowerCase().trim();
+    const byId =
+      container.querySelector(`#dieu-${num}`) ||
+      container.querySelector(`#article-${num}`) ||
+      container.querySelector(`[id^="dieu-${num}"]`) ||
+      container.querySelector(`[data-article="${num}"]`);
+    if (byId) return byId as HTMLElement;
+  }
+
+  // 2. Direct ID lookups for Chapters / Sections / Appendices
+  if (item.type !== 'article') {
+    const chapMatch = (item.title || item.anchorText).match(/^(Chương|Phần|Mục|Phụ\s+lục)\s+([IVXLCDM\d]+)/i);
+    if (chapMatch) {
+      const prefix = chapMatch[1].toLowerCase().replace(/\s+/g, '-');
+      const num = chapMatch[2].toLowerCase().trim();
+      const byId =
+        container.querySelector(`#${prefix}-${num}`) ||
+        container.querySelector(`[id^="${prefix}-${num}"]`);
+      if (byId) return byId as HTMLElement;
+    }
+  }
+
   const candidates = Array.from(
-    container.querySelectorAll<HTMLElement>('strong, b, h1, h2, h3, h4, p, div')
+    container.querySelectorAll<HTMLElement>(
+      'h1, h2, h3, h4, strong, b, p, div.legal-chapter-block, .legal-article-title, .legal-chapter-title, .legal-chapter-num'
+    )
   );
 
-  const normalize = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
-  const anchorNorm = normalize(item.anchorText);
-
-  // 1. Exact or starts-with match
-  for (const el of candidates) {
-    const text = normalize(el.textContent || '');
-    if (text === anchorNorm || anchorNorm.startsWith(text.slice(0, 20))) {
-      // Avoid containers that hold many children (likely a wrapper div)
-      if (el.children.length < 4) return el;
-    }
-  }
-
-  // 2. For articles: match "Điều X" prefix
+  // 3. Regex match for Articles: "Điều X."
   if (item.type === 'article' && item.articleNumber) {
-    const pattern = new RegExp(`^\\s*Điều\\s+${item.articleNumber}\\b`, 'i');
+    const pattern = new RegExp(`^\\s*Điều\\s+${item.articleNumber}[.:\\s]`, 'i');
     for (const el of candidates) {
       if (pattern.test(el.textContent || '')) {
-        if (el.children.length < 4) return el;
+        return el;
       }
     }
   }
 
-  // 3. For chapters: match the chapter label prefix
+  // 4. Regex match for Chapters / Sections / Appendices
   if (item.type !== 'article') {
-    const titleWords = item.anchorText.split(/\s+/).slice(0, 3).join('\\s+');
-    const chapPattern = new RegExp(`^\\s*${titleWords}`, 'i');
-    for (const el of candidates) {
-      if (chapPattern.test(el.textContent || '')) {
-        if (el.children.length < 4) return el;
+    const chapMatch = (item.title || item.anchorText).match(/^(Chương|Phần|Mục|Phụ\s+lục)\s+([IVXLCDM\d]+)/i);
+    if (chapMatch) {
+      const chapPrefix = new RegExp(`^\\s*${chapMatch[1]}\\s+${chapMatch[2]}\\b`, 'i');
+      for (const el of candidates) {
+        if (chapPrefix.test(el.textContent || '')) {
+          return el;
+        }
       }
+    }
+  }
+
+  // 5. Exact text or starts-with match
+  const normalize = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+  const anchorNorm = normalize(item.anchorText || item.title);
+
+  for (const el of candidates) {
+    const text = normalize(el.textContent || '');
+    if (text === anchorNorm || (anchorNorm.length >= 10 && text.startsWith(anchorNorm.slice(0, 30)))) {
+      return el;
     }
   }
 
   return null;
 }
 
-function getScrollParent(el: HTMLElement): HTMLElement | null {
+export function getScrollParent(el: HTMLElement): HTMLElement | null {
   let parent = el.parentElement;
-  while (parent) {
+  while (parent && parent !== document.body && parent !== document.documentElement) {
     const style = window.getComputedStyle(parent);
-    if (/auto|scroll/.test(style.overflowY)) return parent;
+    const overflowY = style.overflowY;
+    if (overflowY === 'auto' || overflowY === 'scroll' || parent.classList.contains('reader-viewport')) {
+      return parent;
+    }
     parent = parent.parentElement;
   }
-  return null;
+  const viewport = el.closest('.reader-viewport') as HTMLElement | null;
+  if (viewport) return viewport;
+  return document.querySelector('.reader-viewport') as HTMLElement | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

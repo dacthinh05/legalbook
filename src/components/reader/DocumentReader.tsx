@@ -445,13 +445,27 @@ export function DocumentReader({
 
   const handleTocClick = useCallback(
     (item: TocItem) => {
-      if (!contentRef.current) return;
-      scrollToTocItem(contentRef.current, item);
-      if (item.articleNumber) {
-        window.history.pushState(null, '', `#article-${item.articleNumber}`);
+      setActiveTocId(item.id);
+
+      if (activeTab !== 'noidung') {
+        setActiveTab('noidung');
+      }
+
+      const performScroll = () => {
+        if (!contentRef.current) return;
+        scrollToTocItem(contentRef.current, item);
+        if (item.articleNumber) {
+          window.history.pushState(null, '', `#article-${item.articleNumber}`);
+        }
+      };
+
+      if (activeTab !== 'noidung') {
+        setTimeout(performScroll, 80);
+      } else {
+        performScroll();
       }
     },
-    []
+    [activeTab]
   );
 
   // ── Note click ─────────────────────────────────────────────────────────
