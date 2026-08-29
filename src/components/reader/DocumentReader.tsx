@@ -441,12 +441,13 @@ export function DocumentReader({
   useEffect(() => {
     if (!contentReady || !contentRef.current || !viewportRef.current) return;
 
-    // Check targetNodeId, initialSearchQuery, or URL hash
-    const hash = typeof window !== 'undefined' ? window.location.hash.replace(/^#/, '') : '';
-    const effectiveTargetId = targetNodeId || hash;
+    // When no targetNodeId is explicitly provided, start at the top of the new document
+    if (!targetNodeId && !initialSearchQuery) {
+      viewportRef.current.scrollTo({ top: 0, behavior: 'instant' });
+      return;
+    }
 
-    if (!effectiveTargetId && !initialSearchQuery) return;
-
+    const effectiveTargetId = targetNodeId;
     const timeout = setTimeout(() => {
       if (!contentRef.current || !viewportRef.current) return;
       let targetEl: HTMLElement | null = null;
@@ -472,9 +473,13 @@ export function DocumentReader({
       }
 
       if (targetEl && viewportRef.current) {
+        try {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch {}
+
         const containerRect = viewportRef.current.getBoundingClientRect();
         const targetRect = targetEl.getBoundingClientRect();
-        const nextTop = viewportRef.current.scrollTop + targetRect.top - containerRect.top - 16;
+        const nextTop = viewportRef.current.scrollTop + targetRect.top - containerRect.top - 20;
 
         viewportRef.current.scrollTo({
           top: Math.max(0, nextTop),
@@ -484,7 +489,7 @@ export function DocumentReader({
         targetEl.classList.remove('is-navigation-target', 'toc-scroll-target');
         void targetEl.offsetWidth;
         targetEl.classList.add('is-navigation-target', 'toc-scroll-target');
-        setTimeout(() => targetEl?.classList.remove('is-navigation-target', 'toc-scroll-target'), 1500);
+        setTimeout(() => targetEl?.classList.remove('is-navigation-target', 'toc-scroll-target'), 1800);
       }
     }, 150);
     return () => clearTimeout(timeout);
@@ -570,20 +575,43 @@ export function DocumentReader({
         if (!contentRef.current || !viewportRef.current) return;
         const scrolledEl = scrollToTocItem(contentRef.current, item, {
           behavior: 'smooth',
-          stickyOffset: 16,
+          stickyOffset: 20,
         });
 
         if (scrolledEl) {
           setActiveTocId(item.id);
           const hashId = item.targetId || (item.articleNumber ? `dieu-${item.articleNumber}` : item.id);
-          window.history.replaceState(null, '', `#${hashId}`);
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', `#${hashId}`);
+          }
         } else {
-          // Warn gracefully when target provision is not in DOM
-          console.warn(`[TOC Navigation] Không tìm thấy vị trí trong văn bản cho mục: "${item.title}"`);
-          showToast('Không tìm thấy vị trí trong văn bản');
+          // Direct fallback by targetId or text matching
+          const targetId = item.targetId || (item.articleNumber ? `dieu-${item.articleNumber}` : '');
+          const el =
+            (targetId ? contentRef.current.querySelector(`#${targetId}`) : null) ||
+            (targetId ? document.getElementById(targetId) : null) ||
+            (item.articleNumber
+              ? Array.from(contentRef.current.querySelectorAll('h1, h2, h3, p, strong')).find((h) =>
+                  new RegExp(`^\\s*Điều\\s+${item.articleNumber}\\b`, 'i').test(h.textContent || '')
+                )
+              : null);
+
+          if (el && viewportRef.current) {
+            try {
+              (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch {}
+            (el as HTMLElement).classList.add('toc-scroll-target', 'is-navigation-target');
+            setTimeout(() => (el as HTMLElement).classList.remove('toc-scroll-target', 'is-navigation-target'), 1800);
+            setActiveTocId(item.id);
+            if (targetId && typeof window !== 'undefined') {
+              window.history.replaceState(null, '', `#${targetId}`);
+            }
+          } else {
+            console.warn(`[TOC Navigation] Không tìm thấy vị trí trong văn bản cho mục: "${item.title}"`);
+            showToast('Không tìm thấy vị trí trong văn bản');
+          }
         }
       };
-
       if (activeTab !== 'noidung') {
         setTimeout(performScroll, 80);
       } else {

@@ -3859,3 +3859,82 @@ describe('38. Production Readiness, Master Schema, Seed Pipeline & Vercel Deploy
     assert.ok(envExample.includes('CRON_SECRET'));
   });
 });
+
+describe('39. Document Deletion, Batch Quick Delete & Search Synchronous Purge (6 Criteria)', () => {
+  test('1. deleteDocument marks document as deleted in local persistence', async () => {
+    const { deleteDocument, getDeletedDocumentIds, restoreAllDeletedDocuments } = await import('../src/lib/data-service.ts');
+    const testId = 'doc-test-del-01';
+    
+    try {
+      const res = await deleteDocument(testId);
+      assert.strictEqual(res.success, true);
+      const deleted = getDeletedDocumentIds();
+      assert.ok(deleted.has(testId));
+    } finally {
+      restoreAllDeletedDocuments();
+    }
+  });
+
+  test('2. getDocuments automatically excludes deleted documents', async () => {
+    const { deleteDocument, getDocuments, restoreAllDeletedDocuments } = await import('../src/lib/data-service.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const targetDoc = DEMO_DOCUMENTS[0];
+    assert.ok(targetDoc);
+
+    try {
+      await deleteDocument(targetDoc.id);
+      const res = await getDocuments(null);
+      assert.strictEqual(res.data.some((d) => d.id === targetDoc.id), false, 'Deleted document must not appear in getDocuments');
+    } finally {
+      restoreAllDeletedDocuments();
+    }
+  });
+
+  test('3. batchDeleteDocuments purges multiple document IDs simultaneously', async () => {
+    const { batchDeleteDocuments, getDocuments, restoreAllDeletedDocuments } = await import('../src/lib/data-service.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const idsToPurge = [DEMO_DOCUMENTS[0].id, DEMO_DOCUMENTS[1].id];
+
+    try {
+      const res = await batchDeleteDocuments(idsToPurge);
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(res.count, 2);
+
+      const activeDocs = await getDocuments(null);
+      assert.strictEqual(activeDocs.data.some((d) => idsToPurge.includes(d.id)), false);
+    } finally {
+      restoreAllDeletedDocuments();
+    }
+  });
+
+  test('4. restoreAllDeletedDocuments successfully restores all documents back to library', async () => {
+    const { deleteDocument, restoreAllDeletedDocuments, getDeletedDocumentIds } = await import('../src/lib/data-service.ts');
+    await deleteDocument('temp-id-123');
+    restoreAllDeletedDocuments();
+    const deleted = getDeletedDocumentIds();
+    assert.strictEqual(deleted.has('temp-id-123'), false);
+  });
+
+  test('5. searchDocumentsHybrid filters out deleted document IDs from search results', async () => {
+    const { deleteDocument, searchDocumentsHybrid, restoreAllDeletedDocuments } = await import('../src/lib/data-service.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const target = DEMO_DOCUMENTS.find((d) => d.document_number?.includes('118/2026'));
+    assert.ok(target);
+
+    try {
+      await deleteDocument(target.id);
+      const res = await searchDocumentsHybrid({ query: '118/2026' });
+      assert.strictEqual(res.data.documents.some((d) => d.id === target.id), false);
+    } finally {
+      restoreAllDeletedDocuments();
+    }
+  });
+
+  test('6. Admin page.tsx renders batch delete action button when documents are selected', async () => {
+    const fs = await import('fs');
+    const adminCode = fs.readFileSync('src/app/admin/page.tsx', 'utf8');
+    assert.ok(adminCode.includes('batchDeleteDocuments'), 'Admin page must call batchDeleteDocuments');
+    assert.ok(adminCode.includes('Xóa nhanh đã chọn'), 'Admin page must render Xóa nhanh button');
+    assert.ok(adminCode.includes('handleToggleSelectAll'), 'Admin page must support Select All');
+  });
+});

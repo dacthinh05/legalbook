@@ -346,8 +346,28 @@ export default function MainPage() {
     setMobileSidebarOpen(false);
   };
 
-  const handleDocumentSelect = (documentId: string) => {
+  const handleDocumentSelect = (
+    documentId: string,
+    navTarget?: {
+      targetNodeId?: string;
+      locationLabel?: string;
+      query?: string;
+      tab?: 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
+    }
+  ) => {
     setSelectedDocumentId(documentId);
+    setSearchTarget(navTarget || null);
+    if (typeof window !== 'undefined') {
+      if (navTarget?.targetNodeId) {
+        window.history.replaceState(null, '', `#${navTarget.targetNodeId}`);
+      } else if (window.location.hash) {
+        window.history.replaceState(
+          null,
+          '',
+          window.location.pathname + window.location.search
+        );
+      }
+    }
   };
 
   const handleResetHome = useCallback(() => {

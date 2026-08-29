@@ -23,6 +23,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { DEMO_DOCUMENTS, DEMO_CATEGORIES } from '@/lib/demo-data';
+import { getDeletedDocumentIds } from '@/lib/data-service';
 import {
   executeSearchWithScopeCounts,
   createSafeHighlightSegments,
@@ -314,12 +315,19 @@ export function SearchModal({
     }
   }, [initialQuery]);
 
+  // Filter active documents (exclude locally or remotely deleted docs)
+  const activeDocs = useMemo(() => {
+    const deleted = getDeletedDocumentIds();
+    const list = allDocuments && allDocuments.length > 0 ? allDocuments : (DEMO_DOCUMENTS as unknown as LegalDocument[]);
+    return list.filter((d) => !deleted.has(d.id));
+  }, [allDocuments]);
+
   // Pre-index document cache on mount
   useEffect(() => {
-    if (allDocuments.length > 0) {
-      preindexDocuments(allDocuments);
+    if (activeDocs.length > 0) {
+      preindexDocuments(activeDocs);
     }
-  }, [allDocuments]);
+  }, [activeDocs]);
 
   const effectiveQuery = inputValue.trim();
   // Compute category document links if category filter active
@@ -330,7 +338,7 @@ export function SearchModal({
 
     const ids = new Set<string>();
     const catKeywords = removeVietnameseTones(cat.name).toLowerCase();
-    for (const doc of allDocuments) {
+    for (const doc of activeDocs) {
       const title = removeVietnameseTones(doc.title || '').toLowerCase();
       const num = removeVietnameseTones(doc.document_number || '').toLowerCase();
       if (title.includes(catKeywords) || num.includes(catKeywords)) {
@@ -338,7 +346,7 @@ export function SearchModal({
       }
     }
     return ids;
-  }, [categoryFilter, categories, allDocuments]);
+  }, [categoryFilter, categories, activeDocs]);
 
   // Active filter count
   const activeFiltersCount = useMemo(() => {
@@ -368,7 +376,7 @@ export function SearchModal({
   }>(() => {
     try {
       const { results: res, scopeCounts: counts } = executeSearchWithScopeCounts(
-        allDocuments,
+        activeDocs,
         effectiveQuery,
         {
           typeFilter,
@@ -387,7 +395,7 @@ export function SearchModal({
         searchError: 'Đã xảy ra sự cố khi xử lý kết quả tìm kiếm.',
       };
     }
-  }, [allDocuments, effectiveQuery, typeFilter, statusFilter, scopeFilter, categoryDocIds, sortBy]);
+  }, [activeDocs, effectiveQuery, typeFilter, statusFilter, scopeFilter, categoryDocIds, sortBy]);
 
   // Visible slice for DOM performance
   const visibleResults = useMemo(() => {

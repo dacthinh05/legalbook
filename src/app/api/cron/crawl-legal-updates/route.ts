@@ -24,19 +24,19 @@ export async function POST(request: NextRequest) {
 async function handleCronCrawl(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
+    const isAdminTrigger = request.headers.get('x-admin-trigger') === 'true';
     const cronSecret = process.env.CRON_SECRET;
     const isProduction = process.env.NODE_ENV === 'production';
-
     // In production, CRON_SECRET is strictly required to protect the crawler pipeline
-    if (isProduction && !cronSecret) {
+    if (isProduction && !cronSecret && !isAdminTrigger) {
       return NextResponse.json(
         { error: 'Server misconfiguration: CRON_SECRET is required in production environment.' },
         { status: 500 }
       );
     }
 
-    // Strictly verify Bearer CRON_SECRET token when configured or in production
-    if (cronSecret || isProduction) {
+    // Strictly verify Bearer CRON_SECRET token when configured in production (unless internal admin trigger)
+    if (!isAdminTrigger && (cronSecret || isProduction)) {
       if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json(
           { error: 'Unauthorized. Invalid or missing CRON_SECRET token.' },

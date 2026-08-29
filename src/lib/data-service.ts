@@ -56,6 +56,98 @@ export function isEmbeddedDataPermitted(): boolean {
   return !isStrictProductionMode();
 }
 
+
+const STORAGE_KEY_DELETED_DOCS = 'lb_deleted_document_ids';
+
+export function getDeletedDocumentIds(): Set<string> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_DELETED_DOCS);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          return new Set(arr);
+        }
+      }
+    } catch {}
+  }
+  return new Set();
+}
+
+export function markDocumentAsDeleted(id: string): void {
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = getDeletedDocumentIds();
+      existing.add(id);
+      localStorage.setItem(STORAGE_KEY_DELETED_DOCS, JSON.stringify([...existing]));
+    } catch {}
+  }
+}
+
+export function markDocumentsAsDeleted(ids: string[]): void {
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = getDeletedDocumentIds();
+      ids.forEach((id) => existing.add(id));
+      localStorage.setItem(STORAGE_KEY_DELETED_DOCS, JSON.stringify([...existing]));
+    } catch {}
+  }
+}
+
+/**
+ * Permanently deletes a document from Supabase and client persistence.
+ */
+export async function deleteDocument(id: string): Promise<{ success: boolean; error?: string }> {
+  markDocumentAsDeleted(id);
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from('legal_documents').delete().eq('id', id);
+      if (error) {
+        return { success: false, error: error.message };
+      }
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
+  return { success: true };
+}
+
+/**
+ * Batch deletes multiple documents in a single operation.
+ */
+export async function batchDeleteDocuments(ids: string[]): Promise<{ success: boolean; count: number; error?: string }> {
+  if (!ids || ids.length === 0) return { success: true, count: 0 };
+
+  markDocumentsAsDeleted(ids);
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from('legal_documents').delete().in('id', ids);
+      if (error) {
+        return { success: false, count: 0, error: error.message };
+      }
+    } catch (err: unknown) {
+      return { success: false, count: 0, error: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
+  return { success: true, count: ids.length };
+}
+
+/**
+ * Restores all deleted documents (clear local deleted cache).
+ */
+export function restoreAllDeletedDocuments(): void {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(STORAGE_KEY_DELETED_DOCS);
+    } catch {}
+  }
+}
 /**
  * Fetches all categories with hierarchical tree computation.
  */
@@ -205,8 +297,10 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
           };
         }
       } else if (data && data.length > 0) {
+        const deletedIds = getDeletedDocumentIds();
+        const filtered = (data as LegalDocument[]).filter((d) => !deletedIds.has(d.id));
         return {
-          data: data as LegalDocument[],
+          data: filtered,
           source: 'supabase_live',
         };
       }
@@ -221,17 +315,19 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
     }
   }
 
-  // Return verified embedded documents if live DB is unseeded
-  const docs = categoryId
+  // Return verified embedded documents if live DB is unseeded (filtered by deleted IDs)
+  const rawDocs = categoryId
     ? (getEmbeddedDocsForCategory(categoryId) as unknown as LegalDocument[])
     : (DEMO_DOCUMENTS as unknown as LegalDocument[]);
+
+  const deletedIds = getDeletedDocumentIds();
+  const docs = rawDocs.filter((d) => !deletedIds.has(d.id));
 
   return {
     data: docs,
     source: 'embedded_repository',
   };
 }
-
 /**
  * Fetches a single document by ID.
  */

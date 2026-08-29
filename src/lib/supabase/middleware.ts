@@ -40,9 +40,12 @@ export async function updateSession(request: NextRequest) {
         },
       },
     });
-    // Refresh auth session token
-    const { data: { user } } = await supabase.auth.getUser();
-
+    // Refresh auth session token with a fast 1200ms timeout to prevent edge middleware hanging
+    const userPromise = supabase.auth.getUser();
+    const timeoutPromise = new Promise<{ data: { user: null }; error: Error }>((resolve) =>
+      setTimeout(() => resolve({ data: { user: null }, error: new Error('Auth timeout') }), 1200)
+    );
+    const { data: { user } } = await Promise.race([userPromise, timeoutPromise]);
     // Admin route protection on strict production mode
     const pathname = request.nextUrl.pathname;
     const isStrictProd = process.env.NEXT_PUBLIC_STRICT_PROD === 'true';

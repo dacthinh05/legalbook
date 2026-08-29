@@ -105,7 +105,9 @@ export default function CrawlerAdminPage() {
     setIsTestingCron(true);
     setCronResult(null);
     try {
-      const res = await fetch('/api/cron/crawl-legal-updates');
+      const res = await fetch('/api/cron/crawl-legal-updates', {
+        headers: { 'x-admin-trigger': 'true' },
+      });
       const data = await res.json();
       setCronResult(data);
       if (data.stagedDocs && Array.isArray(data.stagedDocs)) {

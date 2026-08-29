@@ -119,16 +119,21 @@ export function scrollToTocItem(
   item: TocItem,
   opts: { behavior?: ScrollBehavior; block?: ScrollLogicalPosition; stickyOffset?: number } = {}
 ): HTMLElement | null {
-  const { behavior = 'smooth', stickyOffset = 72 } = opts;
+  const { behavior = 'smooth', stickyOffset = 20 } = opts;
   const targetEl = findTocElement(container, item);
   if (!targetEl) return null;
 
-  // Find the actual scrollable viewport container (.reader-viewport)
+  // 1. Native scrollIntoView - uses CSS scroll-margin-top (80px) and smoothly centers/starts in scroll container
+  try {
+    targetEl.scrollIntoView({ behavior, block: 'start' });
+  } catch {}
+
+  // 2. Also ensure viewport scrollTop is synced accurately
   const docObj = targetEl.ownerDocument || (typeof document !== 'undefined' ? document : null);
-  let viewport = getScrollParent(targetEl) || getScrollParent(container);
-  if (!viewport || (docObj && (viewport === docObj.body || viewport === docObj.documentElement))) {
-    viewport = docObj?.querySelector('.reader-viewport') as HTMLElement | null;
-  }
+  let viewport =
+    (docObj?.querySelector('.reader-viewport') as HTMLElement | null) ||
+    getScrollParent(targetEl) ||
+    getScrollParent(container);
 
   if (viewport && typeof (viewport as HTMLElement).scrollTo === 'function') {
     const containerRect = viewport.getBoundingClientRect();
@@ -139,16 +144,20 @@ export function scrollToTocItem(
       top: Math.max(0, nextTop),
       behavior,
     });
-  } else if (typeof targetEl.scrollIntoView === 'function') {
-    targetEl.scrollIntoView({ behavior, block: 'start' });
   }
-  // Flash highlight animation on target heading
-  targetEl.classList.remove('is-navigation-target', 'toc-scroll-target');
-  void targetEl.offsetWidth; // trigger reflow for smooth re-animation
-  targetEl.classList.add('is-navigation-target', 'toc-scroll-target');
+
+  // 3. Flash highlight animation on target heading or next sibling element
+  const highlightEl =
+    targetEl.tagName === 'A' && targetEl.nextElementSibling
+      ? (targetEl.nextElementSibling as HTMLElement)
+      : targetEl;
+
+  highlightEl.classList.remove('is-navigation-target', 'toc-scroll-target');
+  void highlightEl.offsetWidth; // trigger reflow for smooth re-animation
+  highlightEl.classList.add('is-navigation-target', 'toc-scroll-target');
   setTimeout(() => {
-    targetEl.classList.remove('is-navigation-target', 'toc-scroll-target');
-  }, 1500);
+    highlightEl.classList.remove('is-navigation-target', 'toc-scroll-target');
+  }, 1800);
 
   return targetEl;
 }
