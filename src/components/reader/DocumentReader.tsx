@@ -36,10 +36,14 @@ import {
   cn,
   DOCUMENT_STATUS_LABELS,
   DOCUMENT_STATUS_COLORS,
+  DOCUMENT_TYPE_LABELS,
   formatDate,
+  formatShortTitle,
   getTvplSourceUrl,
   getVerificationBreakdown,
 } from '@/lib/utils';
+import { getDocumentTopicName } from '@/lib/legal-feed-utils';
+import { DEMO_CATEGORIES } from '@/lib/demo-data';
 import { highlightHtml, isSafeUrl } from '@/lib/sanitize';
 import { formatLegalHtmlContent, normalizeDisplayTitle } from '@/lib/legal-formatter';
 import type { LegalDocument, ReaderPanelMode, TocItem, DocumentRelation } from '@/types';
@@ -191,16 +195,18 @@ export function DocumentReader({
 
   // ── Title Normalization ────────────────────────────────────────────────
   const displayTitle = useMemo(() => {
-    return normalizeDisplayTitle(doc.title, doc.document_number, doc.document_type);
+    return formatShortTitle(doc.title, doc.document_type, doc.document_number);
   }, [doc.title, doc.document_number, doc.document_type]);
 
-  // ── TOC ───────────────────────────────────────────────────────────────
+  const topicName = useMemo(() => {
+    return getDocumentTopicName(doc.id, DEMO_CATEGORIES);
+  }, [doc.id]);
 
+  // ── TOC ───────────────────────────────────────────────────────────────
   const tocItems: TocItem[] = useMemo(
     () => (hasFullText ? extractToc(doc.html_content) : []),
-    [doc.html_content, hasFullText]
+    [hasFullText, doc.html_content]
   );
-
   const [activeTocId, setActiveTocId] = useState<string | null>(null);
 
   // IntersectionObserver-based TOC active tracking
@@ -568,8 +574,8 @@ export function DocumentReader({
       {/* ================================================================
           1. DOCUMENT HEADER (Redesigned into 4 clean rows)
           ================================================================ */}
-      <header className="px-4 sm:px-6 py-3 border-b border-slate-200 bg-white shrink-0 shadow-xs">
-        {/* Dòng 1: Breadcrumb + Actions */}
+      <header className="px-4 sm:px-6 py-3 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
+        {/* Dòng 1: Breadcrumb [Chủ đề] / [Loại VB] bên trái + Actions bên phải */}
         <div className="flex items-center justify-between gap-2.5 mb-1.5 min-w-0">
           {/* Breadcrumb */}
           <div className="flex items-center gap-1.5 text-xs text-slate-500 min-w-0 truncate">
@@ -583,18 +589,12 @@ export function DocumentReader({
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <span className="text-slate-400 hidden xs:inline">Thư viện</span>
-            <span className="text-slate-300 hidden xs:inline">/</span>
-            {doc.issuing_body && (
-              <>
-                <span className="text-slate-700 font-medium truncate max-w-[140px] sm:max-w-[240px]">
-                  {doc.issuing_body}
-                </span>
-                <span className="text-slate-300">/</span>
-              </>
-            )}
-            <span className="font-mono text-slate-900 font-semibold truncate">
-              {doc.document_number || 'Văn bản'}
+            <span className="text-slate-600 font-medium truncate">
+              {topicName || 'Pháp luật'}
+            </span>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-600 font-medium truncate">
+              {DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}
             </span>
           </div>
 
@@ -611,8 +611,7 @@ export function DocumentReader({
               title={isRead ? 'Đã đọc văn bản' : 'Đánh dấu đã đọc'}
             >
               {isRead && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-              <span className="hidden xs:inline">{isRead ? 'Đã đọc' : 'Đánh dấu đã đọc'}</span>
-              <span className="xs:hidden">{isRead ? 'Đã đọc' : 'Chưa đọc'}</span>
+              <span>{isRead ? 'Đã đọc' : 'Chưa đọc'}</span>
             </button>
 
             <button
@@ -635,14 +634,14 @@ export function DocumentReader({
                 className={cn(
                   'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium transition-colors hidden md:inline-flex',
                   isFocusMode
-                    ? 'bg-blue-50 text-blue-800 border-blue-300 font-semibold'
+                    ? 'bg-blue-700 text-white border-blue-700 font-semibold'
                     : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-100'
                 )}
-                title={isFocusMode ? 'Khôi phục thanh bên' : 'Tập trung đọc (Thu gọn 2 thanh bên)'}
-                aria-label={isFocusMode ? 'Khôi phục thanh bên' : 'Tập trung đọc'}
+                title={isFocusMode ? 'Thoát tập trung (Esc)' : 'Tập trung đọc (Thu gọn thanh bên)'}
+                aria-label={isFocusMode ? 'Thoát tập trung đọc' : 'Tập trung đọc'}
               >
-                <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
-                <span>{isFocusMode ? 'Khôi phục thanh bên' : 'Tập trung đọc'}</span>
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>{isFocusMode ? 'Thoát tập trung' : 'Tập trung đọc'}</span>
               </button>
             )}
 
@@ -679,7 +678,7 @@ export function DocumentReader({
                       className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 md:hidden"
                     >
                       <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
-                      <span>{isFocusMode ? 'Khôi phục thanh bên' : 'Tập trung đọc'}</span>
+                      <span>{isFocusMode ? 'Thoát tập trung' : 'Tập trung đọc'}</span>
                     </button>
                   )}
                   <button
@@ -729,15 +728,20 @@ export function DocumentReader({
           </div>
         </div>
 
-        {/* Dòng 2: Tiêu đề văn bản (Tối đa 2-3 dòng, toàn bộ chiều ngang, không bị badge chèn) */}
-        <div className="py-1 min-w-0">
+        {/* Dòng 2: Số hiệu & Tiêu đề văn bản */}
+        <div className="py-1 min-w-0 space-y-0.5">
+          {doc.document_number && (
+            <div className="font-mono text-xs sm:text-sm font-bold text-blue-900">
+              {doc.document_number}
+            </div>
+          )}
           <h1 className="text-base sm:text-lg md:text-xl font-bold text-slate-950 leading-snug break-words">
             {displayTitle}
           </h1>
         </div>
 
-        {/* Dòng 3: Metadata (Wrap theo cụm không tách nhãn khỏi giá trị) */}
-        <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-slate-600 flex-wrap pt-1 leading-relaxed">
+        {/* Dòng 3: Metadata gọn gàng */}
+        <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-slate-600 flex-wrap pt-0.5 leading-relaxed">
           {doc.issued_date && (
             <span className="whitespace-nowrap">
               Ban hành: <strong className="text-slate-800 font-medium">{formatDate(doc.issued_date)}</strong>
@@ -869,9 +873,9 @@ export function DocumentReader({
       {/* ================================================================
           2. STICKY TOOLBAR (48-52px)
           ================================================================ */}
-      <div className="sticky top-0 z-20 px-3.5 sm:px-6 border-b border-slate-200 bg-white flex items-center justify-between gap-2 shrink-0 min-h-[48px] max-h-[52px]">
-        {/* Left: Main content tabs */}
-        <div className="flex items-center gap-1 py-1 overflow-x-auto scrollbar-none min-w-0">
+      <div className="sticky top-0 z-20 px-3 sm:px-5 border-b border-slate-200 bg-white flex items-center justify-between gap-2 shrink-0 min-h-[48px] max-h-[52px]">
+        {/* Left: Main content tabs (shrink-0: NEVER gets squeezed) */}
+        <div className="flex items-center gap-1 py-1 shrink-0">
           {(
             [
               { id: 'noidung', label: 'Nội dung' },
@@ -910,20 +914,10 @@ export function DocumentReader({
           ))}
         </div>
 
-        {/* Right: Panel toggles + flexible search + typography */}
-        <div className="flex items-center gap-1.5 sm:gap-2 py-1 shrink-0">
-          {/* Mobile search toggle */}
-          <button
-            onClick={() => setShowMobileSearch(!showMobileSearch)}
-            className="sm:hidden p-1.5 text-slate-600 hover:text-slate-900 border border-slate-200 rounded hover:bg-slate-100 transition-colors"
-            title="Tìm trong văn bản"
-            aria-label="Tìm trong văn bản"
-          >
-            <Search className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Desktop in-document search (180px - 260px flexible width) */}
-          <div className="relative hidden sm:flex items-center">
+        {/* Right: Search + Panels + Typography Controls */}
+        <div className="flex items-center gap-1 sm:gap-1.5 py-1 shrink-0 ml-auto">
+          {/* Desktop in-document search */}
+          <div className="relative hidden md:flex items-center">
             <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" />
             <input
               type="text"
@@ -933,7 +927,7 @@ export function DocumentReader({
               placeholder="Tìm trong văn bản..."
               className={cn(
                 'pl-7 py-1 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
-                searchInputValue ? 'pr-20 w-48 lg:w-64' : 'pr-2 w-36 md:w-44 lg:w-52'
+                searchInputValue ? 'pr-20 w-44 lg:w-56' : 'pr-2 w-28 lg:w-36 focus:w-48'
               )}
             />
             {/* Match Navigation Controls */}
@@ -977,12 +971,22 @@ export function DocumentReader({
             )}
           </div>
 
+          {/* Search button for mobile / compact view */}
+          <button
+            onClick={() => setShowMobileSearch(!showMobileSearch)}
+            className="md:hidden p-1.5 text-slate-600 hover:text-slate-900 border border-slate-200 rounded hover:bg-slate-100 transition-colors"
+            title="Tìm trong văn bản"
+            aria-label="Tìm trong văn bản"
+          >
+            <Search className="w-3.5 h-3.5" />
+          </button>
+
           {/* TOC context panel toggle */}
           {activeTab === 'noidung' && (
             <button
               onClick={() => togglePanel('toc')}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium transition-colors whitespace-nowrap',
+                'flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-colors whitespace-nowrap shrink-0',
                 panelMode === 'toc'
                   ? 'bg-slate-100 text-blue-800 border-slate-300'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
@@ -991,8 +995,8 @@ export function DocumentReader({
               aria-label={`Mục lục ${tocItems.length > 0 ? `(${tocItems.length})` : ''}`}
               aria-pressed={panelMode === 'toc'}
             >
-              <ListTree className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Mục lục</span>
+              <ListTree className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden xl:inline">Mục lục</span>
               {tocItems.length > 0 && (
                 <span className="text-[10px] font-mono text-slate-500">
                   {tocItems.length}
@@ -1006,7 +1010,7 @@ export function DocumentReader({
             <button
               onClick={() => togglePanel('notes')}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium transition-colors whitespace-nowrap',
+                'flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-colors whitespace-nowrap shrink-0',
                 panelMode === 'notes'
                   ? 'bg-slate-100 text-blue-800 border-slate-300'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
@@ -1015,8 +1019,8 @@ export function DocumentReader({
               aria-label={`Ghi chú ${totalAnnotationsCount > 0 ? `(${totalAnnotationsCount})` : ''}`}
               aria-pressed={panelMode === 'notes'}
             >
-              <StickyNote className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Ghi chú</span>
+              <StickyNote className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden xl:inline">Ghi chú</span>
               {totalAnnotationsCount > 0 && (
                 <span className="text-[10px] font-mono text-amber-600 font-bold">
                   {totalAnnotationsCount}
@@ -1030,7 +1034,7 @@ export function DocumentReader({
             <button
               onClick={() => handleFontSizeChange(-1)}
               disabled={fontSize <= 13}
-              className="px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors"
+              className="px-1.5 sm:px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors"
               title="Giảm cỡ chữ (Ctrl + -)"
               aria-label="Giảm cỡ chữ"
             >
@@ -1038,7 +1042,7 @@ export function DocumentReader({
             </button>
             <button
               onClick={() => setShowFontSizeMenu(!showFontSizeMenu)}
-              className="px-1.5 py-1 text-xs font-mono text-slate-700 hover:bg-slate-50 border-x border-slate-100 transition-colors"
+              className="px-1 sm:px-1.5 py-1 text-xs font-mono text-slate-700 hover:bg-slate-50 border-x border-slate-100 transition-colors"
               aria-label={`Cỡ chữ hiện tại: ${fontSize}px`}
             >
               {fontSize}px
@@ -1046,7 +1050,7 @@ export function DocumentReader({
             <button
               onClick={() => handleFontSizeChange(1)}
               disabled={fontSize >= 24}
-              className="px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors"
+              className="px-1.5 sm:px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors"
               title="Tăng cỡ chữ (Ctrl + +)"
               aria-label="Tăng cỡ chữ"
             >
@@ -1084,13 +1088,13 @@ export function DocumentReader({
           <div className="relative shrink-0" ref={displayMenuRef}>
             <button
               onClick={() => setShowDisplayMenu(!showDisplayMenu)}
-              className="px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-200 rounded flex items-center gap-1 transition-colors whitespace-nowrap"
+              className="px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-200 rounded flex items-center gap-1 transition-colors whitespace-nowrap"
               title="Tùy chỉnh hiển thị"
               aria-label="Tùy chỉnh hiển thị"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500 shrink-0" />
               <span className="hidden sm:inline">Hiển thị</span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
+              <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
             </button>
             {showDisplayMenu && (
               <div className="absolute right-0 top-full mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-xl p-3 z-50 space-y-3 text-xs animate-in fade-in duration-100">
