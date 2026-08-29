@@ -3503,4 +3503,12 @@ describe('33. Complete Removal of Read/Unread Status & Legal Status Distribution
     assert.ok(headerCode.includes('newUpdatesCount'), 'AppHeader must accept newUpdatesCount');
     assert.strictEqual(headerCode.includes('unreadCount'), false, 'AppHeader must not accept unreadCount');
   });
+
+  test('7. AppHeader.tsx notification popover displays recent legal updates with 1-click navigation', async () => {
+    const fs = await import('fs');
+    const headerCode = fs.readFileSync('src/components/layout/AppHeader.tsx', 'utf8');
+    assert.ok(headerCode.includes('notificationsOpen'), 'AppHeader must manage notificationsOpen state');
+    assert.ok(headerCode.includes('Văn bản mới cập nhật'), 'AppHeader must render new updates header');
+    assert.ok(headerCode.includes('Mở Bảng tin Cập nhật pháp luật'), 'AppHeader must provide link to legal updates feed');
+  });
 });

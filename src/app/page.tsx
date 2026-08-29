@@ -439,11 +439,24 @@ export default function MainPage() {
           const threshold = thirtyDaysAgo.toISOString().slice(0, 10);
           return (d.issued_date && d.issued_date >= threshold) || (d.effective_date && d.effective_date >= threshold);
         }).length}
+        recentUpdatedDocs={allDocList
+          .filter((d: LegalDocument) => {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const threshold = thirtyDaysAgo.toISOString().slice(0, 10);
+            return (d.issued_date && d.issued_date >= threshold) || (d.effective_date && d.effective_date >= threshold);
+          })
+          .sort((a: LegalDocument, b: LegalDocument) => {
+            const da = a.effective_date || a.issued_date || '';
+            const db = b.effective_date || b.issued_date || '';
+            return db.localeCompare(da);
+          })}
+        onSelectDocument={handleDocumentSelect}
+        onOpenUpdatesFeed={handleResetHome}
         onMobileSidebarToggle={() => setMobileSidebarOpen(true)}
         onOpenImportModal={() => setImportModalOpen(true)}
         onLogoClick={handleResetHome}
       />
-
       {/* 2. Main 3-Column Workspace */}
       <div className="flex flex-1 overflow-hidden relative min-h-0">
         {/* Mobile drawer overlay */}
