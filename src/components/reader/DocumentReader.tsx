@@ -1075,7 +1075,7 @@ export function DocumentReader({
       {/* ================================================================
           2. STICKY TOOLBAR (Compact 44-48px)
           ================================================================ */}
-      <div className="sticky top-0 z-20 px-3.5 sm:px-6 border-b border-slate-200 bg-white/95 backdrop-blur-xs flex items-center justify-between gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs">
+      <div className="sticky top-0 z-20 px-3.5 sm:px-6 border-b border-slate-200 bg-white/95 backdrop-blur-md flex items-center justify-between gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs">
         {/* Left: Main content tabs */}
         <div className="flex items-center gap-1.5 py-1 overflow-x-auto scrollbar-none min-w-0">
           {isScrolledHeader && doc.document_number && (
