@@ -2578,20 +2578,27 @@ describe('26. Rich Markdown Renderer for AI Chat, Inline Tokens, Headers, Lists 
     assert.ok(element.props.children.length >= 6);
   });
 
-  test('6. Legal citation deduplication removes redundant document number in title', () => {
+  test('6. Legal citation deduplication removes ALL repeated leading prefixes in title', () => {
     const cit = {
       documentNumber: '572/TNG-QLDN2',
-      documentTitle: '572/TNG-QLDN2 Chi tiền mặt trên 5 triệu',
+      documentTitle: '572/TNG-QLDN2 572/TNG-QLDN2 Chi tiền mặt trên 5 triệu',
       articleNumber: '',
       articleTitle: '',
     };
 
     const docNum = cit.documentNumber.trim();
     let title = (cit.articleTitle || cit.documentTitle || '').trim();
-    if (docNum && title.startsWith(docNum)) {
-      title = title.slice(docNum.length).replace(/^[\s:–—.-]+/, '').trim();
+    if (docNum) {
+      const escapedDoc = docNum.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      title = title.replace(new RegExp(`^(?:${escapedDoc}[\\s:–—.-]*)+`, 'i'), '').trim();
     }
 
     assert.strictEqual(title, 'Chi tiền mặt trên 5 triệu');
+  });
+
+  test('7. Compact Search Result Card: omits redundant Khớp tại row while retaining provision highlight badges', async () => {
+    const fs = await import('fs');
+    const searchModalCode = fs.readFileSync('src/components/search/SearchModal.tsx', 'utf8');
+    assert.strictEqual(searchModalCode.includes('Khớp tại:'), false, 'SearchModal must not render redundant Khớp tại: label');
   });
 });

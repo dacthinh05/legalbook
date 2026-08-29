@@ -272,49 +272,58 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
       continue;
     }
 
-    // ── Headings ──
+    // ── Headings (1:1 mapping: #->h1, ##->h2, ###->h3, ####->h4, #####->h5, ######->h6) ──
+    if (trimmed.startsWith('###### ')) {
+      if (currentList) flushList(`list-${i}`);
+      blocks.push(
+        <h6 key={`h6-${i}`} className="font-semibold text-slate-700 text-xs mt-1.5 mb-1">
+          {renderInlineMarkdown(trimmed.slice(7), `h6-${i}`)}
+        </h6>
+      );
+      continue;
+    }
     if (trimmed.startsWith('##### ')) {
       if (currentList) flushList(`list-${i}`);
       blocks.push(
-        <h6 key={`h5-${i}`} className="font-bold text-slate-800 text-xs mt-2 mb-1 flex items-center gap-1">
+        <h5 key={`h5-${i}`} className="font-bold text-slate-800 text-xs mt-2 mb-1 flex items-center gap-1">
           {renderInlineMarkdown(trimmed.slice(6), `h5-${i}`)}
-        </h6>
+        </h5>
       );
       continue;
     }
     if (trimmed.startsWith('#### ')) {
       if (currentList) flushList(`list-${i}`);
       blocks.push(
-        <h5 key={`h4-${i}`} className="font-bold text-slate-900 text-xs mt-2.5 mb-1 flex items-center gap-1">
+        <h4 key={`h4-${i}`} className="font-bold text-slate-900 text-xs mt-2.5 mb-1 flex items-center gap-1">
           {renderInlineMarkdown(trimmed.slice(5), `h4-${i}`)}
-        </h5>
+        </h4>
       );
       continue;
     }
     if (trimmed.startsWith('### ')) {
       if (currentList) flushList(`list-${i}`);
       blocks.push(
-        <h4 key={`h3-${i}`} className="font-bold text-slate-950 text-xs mt-3 mb-1.5 flex items-center gap-1.5 text-blue-950">
+        <h3 key={`h3-${i}`} className="font-bold text-slate-950 text-xs mt-3 mb-1.5 flex items-center gap-1.5 text-blue-950">
           {renderInlineMarkdown(trimmed.slice(4), `h3-${i}`)}
-        </h4>
+        </h3>
       );
       continue;
     }
     if (trimmed.startsWith('## ')) {
       if (currentList) flushList(`list-${i}`);
       blocks.push(
-        <h3 key={`h2-${i}`} className="font-bold text-slate-950 text-sm mt-3.5 mb-2 flex items-center gap-1.5 text-blue-900 border-b border-slate-200/70 pb-1">
+        <h2 key={`h2-${i}`} className="font-bold text-slate-950 text-sm mt-3.5 mb-2 flex items-center gap-1.5 text-blue-900 border-b border-slate-200/70 pb-1">
           {renderInlineMarkdown(trimmed.slice(3), `h2-${i}`)}
-        </h3>
+        </h2>
       );
       continue;
     }
     if (trimmed.startsWith('# ')) {
       if (currentList) flushList(`list-${i}`);
       blocks.push(
-        <h2 key={`h1-${i}`} className="font-bold text-slate-950 text-base mt-4 mb-2 flex items-center gap-1.5 text-blue-950 border-b border-slate-200 pb-1">
+        <h1 key={`h1-${i}`} className="font-bold text-slate-950 text-base mt-4 mb-2 flex items-center gap-1.5 text-blue-950 border-b border-slate-200 pb-1">
           {renderInlineMarkdown(trimmed.slice(2), `h1-${i}`)}
-        </h2>
+        </h1>
       );
       continue;
     }

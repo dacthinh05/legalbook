@@ -168,13 +168,13 @@ const SearchResultCard = React.memo(function SearchResultCard({
           onSelect(item, e.ctrlKey || e.metaKey);
         }
       }}
-      className={`p-3.5 sm:p-4 cursor-pointer transition-colors select-text relative border-l-3 border-b border-b-slate-100/80 ${
+      className={`px-3.5 py-2.5 sm:px-4 sm:py-3 cursor-pointer transition-colors select-text relative border-l-3 border-b border-b-slate-100/80 ${
         isSelected
           ? 'bg-blue-50/70 border-l-blue-700 shadow-2xs'
           : 'border-l-transparent hover:bg-slate-50/80'
       }`}
     >
-      {/* Row 1: Document Metadata (Type + Number + Issuing Body / Status + Effective Date) */}
+      {/* Row 1: Document Metadata (Type + Number + Provision / Status + Effective Date) */}
       <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
         <div className="flex items-center gap-1.5 min-w-0 flex-wrap text-xs">
           <span
@@ -186,10 +186,23 @@ const SearchResultCard = React.memo(function SearchResultCard({
           <span className="font-mono text-xs font-bold text-slate-900 truncate">
             <HighlightedText text={item.documentNumber} query={searchQuery} />
           </span>
+          {item.locationLabel &&
+            item.locationLabel !== 'Toàn văn nội dung' &&
+            item.locationLabel !== 'Trong văn bản' &&
+            item.locationLabel !== 'Tiêu đề văn bản' &&
+            item.locationLabel !== 'Số hiệu văn bản' &&
+            item.locationLabel !== 'Trong tiêu đề' && (
+              <>
+                <span className="text-slate-300">·</span>
+                <span className="font-medium text-[10.5px] text-blue-800 bg-blue-50/90 px-1.5 py-0.2 rounded border border-blue-200/60 truncate max-w-[200px]">
+                  {item.locationLabel}
+                </span>
+              </>
+            )}
           {item.issuer && (
             <>
               <span className="text-slate-300 hidden sm:inline">·</span>
-              <span className="text-[11.5px] text-slate-500 truncate hidden sm:inline max-w-[220px]">
+              <span className="text-[11px] text-slate-500 truncate hidden sm:inline max-w-[220px]">
                 {item.issuer}
               </span>
             </>
@@ -204,61 +217,36 @@ const SearchResultCard = React.memo(function SearchResultCard({
             {item.effectiveStatusLabel}
           </span>
           {item.effectiveDate && (
-            <span className="text-[11px] text-slate-400 font-mono tabular-nums hidden sm:inline">
+            <span className="text-[10.5px] text-slate-400 font-mono tabular-nums hidden sm:inline">
               HL: {formatDate(item.effectiveDate)}
             </span>
           )}
-        </div>
-      </div>
-
-      {/* Row 2: Title (Clean without duplicate docNumber prefix) */}
-      <h4 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-snug mb-1 line-clamp-2">
-        <HighlightedText text={item.displayTitle || item.title} query={searchQuery} />
-      </h4>
-
-      {/* Row 3: Snippet (1-2 lines with context) */}
-      {item.snippet && (
-        <p className="text-[12px] text-slate-600 leading-relaxed font-sans line-clamp-2 bg-slate-50/70 px-2.5 py-1.5 rounded border border-slate-100/90 my-1">
-          <HighlightedText text={item.snippet} query={searchQuery} />
-        </p>
-      )}
-
-      {/* Row 4: Match Location & Action */}
-      <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1.5 pt-1 border-t border-slate-100/70">
-        <div className="flex items-center gap-1.5 min-w-0 truncate">
-          <span className="text-slate-400 shrink-0">Khớp tại:</span>
-          <span
-            className={`font-semibold truncate px-1.5 py-0.2 rounded text-[10.5px] ${
-              item.matchType === 'article' || item.matchType === 'clause'
-                ? 'bg-blue-50 text-blue-900 border border-blue-200/80'
-                : item.matchType === 'number'
-                ? 'bg-emerald-50 text-emerald-900 border border-emerald-200/80 font-mono'
-                : 'text-slate-700 bg-slate-100 border border-slate-200/60'
-            }`}
-          >
-            {item.locationLabel}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
           {item.officialSourceUrl && (
             <a
               href={item.officialSourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-slate-400 hover:text-blue-700 p-0.5 rounded flex items-center gap-0.5 transition-colors"
+              className="text-slate-400 hover:text-blue-700 p-0.5 rounded flex items-center gap-0.5 transition-colors hidden md:inline-flex"
               title="Xem văn bản gốc trên TVPL"
             >
               <ExternalLink className="w-3 h-3" />
-              <span className="hidden md:inline text-[10px]">Nguồn TVPL</span>
             </a>
           )}
-          <span className="text-blue-700 font-semibold text-xs flex items-center gap-0.5 hover:text-blue-900 transition-colors">
-            {item.actionLabel || (item.targetNodeId ? 'Đến điều khoản →' : 'Mở →')}
-          </span>
         </div>
       </div>
+
+      {/* Row 2: Title */}
+      <h4 className="text-[13.5px] sm:text-[14px] font-semibold text-slate-900 leading-snug mb-1 line-clamp-2">
+        <HighlightedText text={item.displayTitle || item.title} query={searchQuery} />
+      </h4>
+
+      {/* Row 3: Snippet (1-2 lines with context) */}
+      {item.snippet && (
+        <p className="text-[11.5px] text-slate-600 leading-relaxed font-sans line-clamp-2 bg-slate-50/70 px-2.5 py-1 rounded border border-slate-100/90 mt-1">
+          <HighlightedText text={item.snippet} query={searchQuery} />
+        </p>
+      )}
     </div>
   );
 });

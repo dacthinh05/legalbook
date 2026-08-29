@@ -235,11 +235,15 @@ export function LegalAiChatPanel({
                       const artNum = c.articleNumber?.trim() || '';
                       let title = (c.articleTitle || c.documentTitle || '').trim();
 
-                      // Clean up duplicate doc number in title if title starts with or equals docNum
-                      if (docNum && title.startsWith(docNum)) {
-                        title = title.slice(docNum.length).replace(/^[\s:–—.-]+/, '').trim();
+                      // Strip ALL repeated leading occurrences of docNum and artNum from title
+                      if (docNum) {
+                        const escapedDoc = docNum.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                        title = title.replace(new RegExp(`^(?:${escapedDoc}[\\s:–—.-]*)+`, 'i'), '').trim();
                       }
-
+                      if (artNum) {
+                        const escapedArt = artNum.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                        title = title.replace(new RegExp(`^(?:${escapedArt}[\\s:–—.-]*)+`, 'i'), '').trim();
+                      }
                       const badgeText = artNum || docNum;
                       const displayText = title || (artNum ? docNum : '');
 
