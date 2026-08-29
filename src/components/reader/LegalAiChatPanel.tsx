@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn, NOTEBOOKLM_URL } from '@/lib/utils';
 import { askLegalAi, type LegalCitation } from '@/lib/ai/legal-rag';
+import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
 import type { LegalDocument } from '@/types';
 
 interface Message {
