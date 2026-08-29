@@ -16,6 +16,10 @@ import {
   Sparkles,
   Layers,
   Loader2,
+  AlertTriangle,
+  ExternalLink,
+  Scale,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { askLegalAi } from '@/lib/ai/legal-rag';
@@ -28,12 +32,16 @@ import {
   type ArticleDiffItem,
 } from '@/lib/diff-engine';
 import type { LegalDocument } from '@/types';
+import { verifyExactAmendmentEligibility } from '@/lib/cross-document-analysis/verifier';
+import { DEMO_RELATIONS } from '@/lib/demo-data';
+
 interface LegalDiffViewerProps {
   documentA: LegalDocument;
   documentB: LegalDocument;
   relationType?: string;
   onClose?: () => void;
   onSelectDocument?: (id: string) => void;
+  onSwitchToAiAnalysis?: (docA: LegalDocument, docB: LegalDocument) => void;
 }
 
 export function LegalDiffViewer({
@@ -41,8 +49,15 @@ export function LegalDiffViewer({
   documentB,
   relationType,
   onClose,
+  onSelectDocument,
+  onSwitchToAiAnalysis,
 }: LegalDiffViewerProps) {
-  // Determine if this is a guiding relationship (Luật <-> Nghị định/Thông tư) or an amending relationship
+  // 1. Verify exact amendment eligibility
+  const exactEligibility = useMemo(() => {
+    return verifyExactAmendmentEligibility(documentA, documentB, DEMO_RELATIONS);
+  }, [documentA, documentB]);
+
+  // 2. Determine if this is a guiding relationship (Luật <-> Nghị định/Thông tư)
   const isGuidingPair = useMemo(() => {
     if (relationType === 'huong_dan' || relationType === 'can_cu') return true;
     if (
@@ -50,8 +65,9 @@ export function LegalDiffViewer({
       relationType === 'thay_the' ||
       relationType === 'bai_bo_toan_bo' ||
       relationType === 'bai_bo_mot_phan'
-    )
+    ) {
       return false;
+    }
 
     // Auto-detect based on document types
     const typeA = documentA.document_type;
@@ -74,8 +90,16 @@ export function LegalDiffViewer({
     return [documentB, documentA];
   }, [documentA, documentB]);
 
+  // Order amending pair: Original doc on left, Amending doc on right
+  const [sourceDoc, amendingDoc] = useMemo(() => {
+    if (exactEligibility.sourceDoc && exactEligibility.amendingDoc) {
+      return [exactEligibility.sourceDoc, exactEligibility.amendingDoc];
+    }
+    return [documentA, documentB];
+  }, [exactEligibility, documentA, documentB]);
+
   const [activeTab, setActiveTab] = useState<'matrix' | 'diff' | 'ai_summary'>(
-    isGuidingPair ? 'matrix' : 'diff'
+    isGuidingPair ? 'matrix' : exactEligibility.isEligibleForExactDiff ? 'diff' : 'ai_summary'
   );
   const [matrixSearch, setMatrixSearch] = useState('');
   const [viewMode, setViewMode] = useState<'unified' | 'split'>('split');
@@ -85,18 +109,18 @@ export function LegalDiffViewer({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiChatHistory, setAiChatHistory] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([]);
 
-  // Compute Cross-Reference Matrix
+  // Compute Cross-Reference Matrix (Guiding pair)
   const matrixResult: LegalCrossReferenceResult = useMemo(() => {
     return buildCrossReferenceMatrix(docLaw, docGuiding);
   }, [docLaw, docGuiding]);
 
-  // Compute Token Diff
+  // Compute Token Diff (Exact Amendment pair)
   const diffResult: LegalDocumentDiffResult = useMemo(() => {
     return compareLegalDocuments(
-      { title: documentA.title, html: documentA.html_content || '' },
-      { title: documentB.title, html: documentB.html_content || '' }
+      { title: sourceDoc.title, html: sourceDoc.html_content || '' },
+      { title: amendingDoc.title, html: amendingDoc.html_content || '' }
     );
-  }, [documentA, documentB]);
+  }, [sourceDoc, amendingDoc]);
 
   // Filtered Matrix rows
   const filteredMatrixPairs = useMemo(() => {
@@ -121,13 +145,22 @@ export function LegalDiffViewer({
     return diffResult.articles;
   }, [diffResult.articles, diffFilterMode]);
 
+  // If NOT a guiding pair AND NOT eligible for exact diff, render the GUARD SCREEN
+  const isInvalidPairForDiff = !isGuidingPair && !exactEligibility.isEligibleForExactDiff;
+
   return (
     <div className="flex flex-col h-full bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xl text-slate-900 select-text">
       {/* 1. Header Bar */}
       <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0 flex-wrap">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="p-2 bg-blue-600 text-white rounded-lg shadow-2xs">
-            <GitCompare className="w-4 h-4" />
+            {isGuidingPair ? (
+              <Columns2 className="w-4 h-4" />
+            ) : exactEligibility.isEligibleForExactDiff ? (
+              <GitCompare className="w-4 h-4" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
           </div>
           <div className="min-w-0">
             <h3 className="text-sm font-bold text-slate-950 truncate flex items-center gap-2">
@@ -135,17 +168,17 @@ export function LegalDiffViewer({
                 {activeTab === 'matrix'
                   ? 'Bảng Ma trận Đối chiếu Điều khoản'
                   : activeTab === 'diff'
-                  ? 'So sánh Diff Sửa đổi Từ ngữ'
-                  : 'Trợ lý AI Tóm tắt & Hỏi đáp So sánh'}
+                  ? 'ĐỐI CHIẾU SỬA ĐỔI CHÍNH XÁC'
+                  : 'Phân tích Liên văn bản bằng AI'}
               </span>
             </h3>
             <div className="text-[11.5px] text-slate-500 flex items-center gap-1.5 truncate pt-0.5">
               <span className="font-semibold text-blue-900 font-mono">
-                {docLaw.document_number || 'Văn bản A'}
+                {sourceDoc.document_number || 'Văn bản gốc'}
               </span>
               <span className="text-slate-400">↔</span>
               <span className="font-semibold text-purple-900 font-mono">
-                {docGuiding.document_number || 'Văn bản B'}
+                {amendingDoc.document_number || 'Văn bản đối chiếu'}
               </span>
             </div>
           </div>
@@ -154,45 +187,58 @@ export function LegalDiffViewer({
         {/* View Mode Switcher & Controls */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Mode Switcher Tabs */}
-          <div className="flex items-center bg-slate-200/80 p-0.5 rounded-lg text-xs">
+          <div className="flex items-center bg-slate-200/80 p-0.5 rounded-lg text-xs font-semibold">
+            {isGuidingPair && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('matrix')}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-[11.5px] transition-all cursor-pointer flex items-center gap-1',
+                  activeTab === 'matrix'
+                    ? 'bg-white text-blue-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                )}
+              >
+                <Columns2 className="w-3.5 h-3.5" />
+                <span>Đối chiếu ({matrixResult.totalMappedPairs})</span>
+              </button>
+            )}
+
+            {exactEligibility.isEligibleForExactDiff && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('diff')}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-[11.5px] transition-all cursor-pointer flex items-center gap-1',
+                  activeTab === 'diff'
+                    ? 'bg-white text-blue-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                )}
+              >
+                <GitCompare className="w-3.5 h-3.5" />
+                <span>Đối chiếu sửa đổi ({diffResult.modifiedArticlesCount})</span>
+              </button>
+            )}
+
             <button
               type="button"
-              onClick={() => setActiveTab('matrix')}
+              onClick={() => {
+                if (onSwitchToAiAnalysis) {
+                  onClose?.();
+                  onSwitchToAiAnalysis(documentA, documentB);
+                } else {
+                  setActiveTab('ai_summary');
+                }
+              }}
               className={cn(
-                'px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer flex items-center gap-1',
-                activeTab === 'matrix'
-                  ? 'bg-white text-blue-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              )}
-            >
-              <Columns2 className="w-3.5 h-3.5" />
-              <span>Đối chiếu ({matrixResult.totalMappedPairs})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('diff')}
-              className={cn(
-                'px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer flex items-center gap-1',
-                activeTab === 'diff'
-                  ? 'bg-white text-blue-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              )}
-            >
-              <GitCompare className="w-3.5 h-3.5" />
-              <span>Diff từ ngữ ({diffResult.modifiedArticlesCount})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('ai_summary')}
-              className={cn(
-                'px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer flex items-center gap-1',
+                'px-2.5 py-1 rounded-md text-[11.5px] transition-all cursor-pointer flex items-center gap-1',
                 activeTab === 'ai_summary'
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               )}
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>AI Tóm tắt & Hỏi đáp</span>
+              <span>Phân tích bằng AI</span>
             </button>
           </div>
 
@@ -211,7 +257,57 @@ export function LegalDiffViewer({
       </div>
 
       {/* 2. Mode Content */}
-      {activeTab === 'matrix' ? (
+      {isInvalidPairForDiff && activeTab === 'diff' ? (
+        /* ── GUARD SCREEN FOR INVALID NON-AMENDMENT PAIR ── */
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-5 bg-slate-50/60">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-md">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2 max-w-lg">
+            <h3 className="text-base font-bold text-slate-900">
+              Không thể tạo diff sửa đổi đáng tin cậy
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Hai văn bản <strong>{documentA.document_number || documentA.title}</strong> và{' '}
+              <strong>{documentB.document_number || documentB.title}</strong> không phải hai phiên bản
+              trước–sau và không có quan hệ sửa đổi trực tiếp.
+            </p>
+            <p className="text-[11.5px] text-slate-500 italic">
+              Việc diff từ ngữ giữa hai văn bản không tương ứng sẽ tạo kết quả nhiễu và gây hiểu nhầm về mặt
+              pháp lý.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (onSwitchToAiAnalysis) {
+                  onClose?.();
+                  onSwitchToAiAnalysis(documentA, documentB);
+                } else {
+                  setActiveTab('ai_summary');
+                }
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>Chuyển sang Phân tích bằng AI</span>
+            </button>
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Đóng cửa sổ
+              </button>
+            )}
+          </div>
+        </div>
+      ) : activeTab === 'matrix' ? (
         /* ── MODE 1: 2-COLUMN CROSS-REFERENCE MATRIX ── */
         <div className="flex-1 flex flex-col min-h-0 bg-slate-50/50">
           {/* Subheader Toolbar */}
@@ -262,14 +358,14 @@ export function LegalDiffViewer({
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>Quy định khung ({docLaw.document_number || 'Luật'})</span>
               </span>
-              <span className="text-[10.5px] font-normal text-slate-500">Cột bên trái</span>
+              <span className="text-[10.5px] font-normal text-slate-500">Căn cứ pháp lý</span>
             </div>
             <div className="px-4 py-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-purple-900">
                 <Layers className="w-3.5 h-3.5" />
                 <span>Quy định chi tiết ({docGuiding.document_number || 'Nghị định / Thông tư'})</span>
               </span>
-              <span className="text-[10.5px] font-normal text-slate-500">Cột bên phải</span>
+              <span className="text-[10.5px] font-normal text-slate-500">Hướng dẫn thi hành</span>
             </div>
           </div>
 
@@ -357,8 +453,23 @@ export function LegalDiffViewer({
           </div>
         </div>
       ) : activeTab === 'diff' ? (
-        /* ── MODE 2: SEMANTIC WORD-LEVEL DIFF ── */
+        /* ── MODE 2: EXACT AMENDMENT DIFF ── */
         <div className="flex-1 flex flex-col min-h-0 bg-slate-50/50">
+          {/* Legal Basis Banner */}
+          {exactEligibility.legalBasis && (
+            <div className="px-4 py-2 bg-blue-50/80 border-b border-blue-200 flex items-center justify-between gap-3 text-xs text-blue-950">
+              <div className="flex items-center gap-2">
+                <Scale className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>
+                  <strong>Căn cứ sửa đổi:</strong> {exactEligibility.legalBasis}
+                </span>
+              </div>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
+                Quan hệ đã xác minh
+              </span>
+            </div>
+          )}
+
           {/* Diff Stats Banner */}
           <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between gap-3 text-xs shrink-0 flex-wrap">
             <div className="flex items-center gap-3 text-xs">
@@ -368,7 +479,7 @@ export function LegalDiffViewer({
               <span className="inline-flex items-center gap-1 text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-medium">
                 <AlertCircle className="w-3 h-3 text-amber-600" />
                 <span>
-                  Sửa đổi: <strong>{diffResult.modifiedArticlesCount}</strong>
+                  Sửa đổi / Bổ sung: <strong>{diffResult.modifiedArticlesCount}</strong>
                 </span>
               </span>
               <span className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-medium">
@@ -398,7 +509,7 @@ export function LegalDiffViewer({
                       : 'text-slate-600'
                   )}
                 >
-                  Chỉ xem sửa đổi (
+                  Chỉ xem điều khoản sửa đổi (
                   {diffResult.modifiedArticlesCount +
                     diffResult.addedArticlesCount +
                     diffResult.deletedArticlesCount}
@@ -452,7 +563,7 @@ export function LegalDiffViewer({
                 <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-500" />
                 <p className="font-semibold text-slate-700">Không có điều khoản nào bị sửa đổi</p>
                 <p className="text-slate-400 text-[11px]">
-                  Hai văn bản có nội dung điều khoản tương đồng hoàn toàn.
+                  Các điều khoản đối chiếu có nội dung tương đồng.
                 </p>
               </div>
             ) : (
@@ -480,7 +591,7 @@ export function LegalDiffViewer({
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <h4 className="font-bold text-sm text-slate-900">
-                    Bản tóm tắt phân tích & Điểm khác biệt cốt lõi (Gemini AI)
+                    Bản tóm tắt phân tích & Điểm khác biệt cốt lõi
                   </h4>
                 </div>
                 <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-semibold text-[11px]">
@@ -491,12 +602,14 @@ export function LegalDiffViewer({
               <div className="space-y-3 leading-relaxed text-slate-700">
                 <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1 shadow-2xs">
                   <span className="font-bold text-blue-900 block text-xs">
-                    1. Bản chất quan hệ & Phạm vi điều chỉnh
+                    1. Bản chất quan hệ & Thứ bậc áp dụng
                   </span>
                   <p className="text-slate-600 text-[11.5px]">
                     {isGuidingPair
                       ? `${docGuiding.document_number || 'Nghị định hướng dẫn'} quy định chi tiết và hướng dẫn các biện pháp thi hành các điều khoản nguyên tắc, khung chính sách tại ${docLaw.document_number || 'Luật gốc'}.`
-                      : `${documentB.document_number || 'Văn bản sửa đổi'} sửa đổi, bổ sung và thay thế một số điều khoản trọng yếu của ${documentA.document_number || 'Văn bản gốc'}.`}
+                      : exactEligibility.isEligibleForExactDiff
+                      ? `${amendingDoc.document_number || 'Văn bản sửa đổi'} sửa đổi, bổ sung và thay thế một số điều khoản trọng yếu của ${sourceDoc.document_number || 'Văn bản gốc'}.`
+                      : `Hai văn bản có mối liên hệ chuyên môn theo lĩnh vực quản lý. Doanh nghiệp cần xác định văn bản có hiệu lực cao hơn hoặc văn bản chuyên ngành điều chỉnh trực tiếp.`}
                   </p>
                 </div>
 
@@ -506,10 +619,9 @@ export function LegalDiffViewer({
                   </span>
                   <ul className="list-disc pl-4 space-y-1 text-slate-600 text-[11.5px]">
                     <li>
-                      Quy định chi tiết ngưỡng điều kiện áp dụng, đối tượng cư trú/không cư trú và thời hạn thực
-                      hiện.
+                      Quy định chi tiết ngưỡng điều kiện áp dụng, đối tượng thực hiện và hồ sơ bắt buộc.
                     </li>
-                    <li>Cụ thể hóa hồ sơ, biểu mẫu và phương thức kê khai, khấu trừ, hoàn thuế điện tử.</li>
+                    <li>Cụ thể hóa hồ sơ, biểu mẫu và phương thức kê khai, khấu trừ chứng từ điện tử.</li>
                     <li>
                       Làm rõ trách nhiệm phối hợp của cơ quan quản lý và quyền lợi của người nộp thuế/doanh nghiệp.
                     </li>
@@ -596,7 +708,7 @@ export function LegalDiffViewer({
                   type="text"
                   value={aiQuestion}
                   onChange={(e) => setAiQuestion(e.target.value)}
-                  placeholder={`Đặt câu hỏi so sánh giữa ${documentA.document_number} và ${documentB.document_number}...`}
+                  placeholder={`Đặt câu hỏi so sánh giữa ${documentA.document_number || 'văn bản 1'} và ${documentB.document_number || 'văn bản 2'}...`}
                   className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <button
@@ -630,6 +742,16 @@ function ArticleDiffCard({
   const isAdded = article.status === 'added';
   const isDeleted = article.status === 'deleted';
 
+  // Status badge label and styling
+  const statusLabel =
+    article.status === 'modified'
+      ? 'Sửa đổi, bổ sung'
+      : article.status === 'added'
+      ? 'Thêm mới'
+      : article.status === 'deleted'
+      ? 'Bãi bỏ'
+      : 'Giữ nguyên';
+
   return (
     <div
       onClick={onSelect}
@@ -652,91 +774,86 @@ function ArticleDiffCard({
           !isModified && !isAdded && !isDeleted && 'bg-slate-50 border-slate-200 text-slate-800'
         )}
       >
-        <span className="font-mono">{article.articleTitleB || article.articleTitleA || article.articleLabel}</span>
-        <span
-          className={cn(
-            'text-[10.5px] px-2 py-0.5 rounded font-semibold',
-            isModified && 'bg-amber-200/80 text-amber-900',
-            isAdded && 'bg-emerald-200/80 text-emerald-900',
-            isDeleted && 'bg-rose-200/80 text-rose-900',
-            !isModified && !isAdded && !isDeleted && 'bg-slate-200 text-slate-700'
-          )}
-        >
-          {isModified ? 'Sửa đổi, bổ sung' : isAdded ? 'Thêm mới' : isDeleted ? 'Bãi bỏ' : 'Giữ nguyên'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono font-bold">{article.articleLabel}</span>
+          <span className="truncate max-w-md font-medium text-slate-700">{article.articleTitleA || article.articleTitleB}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              'px-2 py-0.5 rounded text-[10.5px] font-bold',
+              isModified && 'bg-amber-100 text-amber-900 border border-amber-300',
+              isAdded && 'bg-emerald-100 text-emerald-900 border border-emerald-300',
+              isDeleted && 'bg-rose-100 text-rose-900 border border-rose-300',
+              !isModified && !isAdded && !isDeleted && 'bg-slate-200 text-slate-700'
+            )}
+          >
+            {statusLabel}
+          </span>
+        </div>
       </div>
 
-      {/* Diff Body */}
-      <div className="p-4 text-xs leading-relaxed font-sans">
+      {/* Diff Content */}
+      <div className="p-4 text-xs leading-relaxed">
         {viewMode === 'unified' ? (
-          /* Unified View */
           <div className="space-y-1">
-            {article.tokens.map((token, tIdx) => {
-              if (token.op === 'added') {
-                return (
-                  <span key={tIdx} className="bg-emerald-100 text-emerald-950 font-medium px-0.5 rounded">
-                    {token.text}
-                  </span>
-                );
-              }
-              if (token.op === 'deleted') {
-                return (
-                  <span key={tIdx} className="bg-rose-100 text-rose-950 line-through px-0.5 rounded opacity-80">
-                    {token.text}
-                  </span>
-                );
-              }
-              return <span key={tIdx}>{token.text}</span>;
-            })}
+            <div className="font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap">
+              {article.tokens.map((tok, idx) => (
+                <span
+                  key={idx}
+                  className={cn(
+                    tok.op === 'added' && 'bg-emerald-100 text-emerald-900 px-0.5 rounded font-semibold',
+                    tok.op === 'deleted' && 'bg-rose-100 text-rose-900 line-through px-0.5 rounded',
+                    tok.op === 'unchanged' && 'text-slate-800'
+                  )}
+                >
+                  {tok.text}
+                </span>
+              ))}
+            </div>
           </div>
         ) : (
-          /* Split 2-Column View */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-200">
-            {/* Left: Old Version */}
+          /* Split View */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+            {/* Left: Original version */}
             <div className="space-y-1">
-              <div className="font-bold text-[11px] text-rose-800 uppercase tracking-wider mb-1">
-                Bản gốc trước sửa đổi
-              </div>
-              <div>
+              <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider block">
+                Bản trước sửa đổi (Văn bản gốc)
+              </span>
+              <div className="font-mono text-[11.5px] leading-relaxed text-slate-800 whitespace-pre-wrap">
                 {article.tokens
                   .filter((t) => t.op !== 'added')
-                  .map((token, tIdx) => {
-                    if (token.op === 'deleted') {
-                      return (
-                        <span
-                          key={tIdx}
-                          className="bg-rose-100 text-rose-950 font-medium px-0.5 rounded line-through"
-                        >
-                          {token.text}
-                        </span>
-                      );
-                    }
-                    return <span key={tIdx}>{token.text}</span>;
-                  })}
+                  .map((tok, idx) => (
+                    <span
+                      key={idx}
+                      className={cn(
+                        tok.op === 'deleted' && 'bg-rose-100 text-rose-900 line-through px-0.5 rounded'
+                      )}
+                    >
+                      {tok.text}
+                    </span>
+                  ))}
               </div>
             </div>
 
-            {/* Right: New Version */}
-            <div className="space-y-1 pt-3 md:pt-0 md:pl-4">
-              <div className="font-bold text-[11px] text-emerald-800 uppercase tracking-wider mb-1">
-                Bản sau sửa đổi / bổ sung
-              </div>
-              <div>
+            {/* Right: New/Amending version */}
+            <div className="space-y-1 md:pl-3">
+              <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider block">
+                Bản sau sửa đổi (Văn bản sửa đổi)
+              </span>
+              <div className="font-mono text-[11.5px] leading-relaxed text-slate-800 whitespace-pre-wrap">
                 {article.tokens
                   .filter((t) => t.op !== 'deleted')
-                  .map((token, tIdx) => {
-                    if (token.op === 'added') {
-                      return (
-                        <span
-                          key={tIdx}
-                          className="bg-emerald-100 text-emerald-950 font-medium px-0.5 rounded"
-                        >
-                          {token.text}
-                        </span>
-                      );
-                    }
-                    return <span key={tIdx}>{token.text}</span>;
-                  })}
+                  .map((tok, idx) => (
+                    <span
+                      key={idx}
+                      className={cn(
+                        tok.op === 'added' && 'bg-emerald-100 text-emerald-900 px-0.5 rounded font-semibold'
+                      )}
+                    >
+                      {tok.text}
+                    </span>
+                  ))}
               </div>
             </div>
           </div>

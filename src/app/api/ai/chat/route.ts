@@ -12,7 +12,9 @@ interface ChatRequestBody {
   documentId?: string;
   docAId?: string;
   docBId?: string;
-  mode?: 'ask' | 'compare' | 'summary';
+  selectedDocIds?: string[];
+  objective?: string;
+  mode?: 'ask' | 'compare' | 'summary' | 'cross_analysis';
 }
 
 /**
@@ -94,6 +96,52 @@ Nhiệm vụ của bạn:
 2. BẮT BUỘC TRÍCH DẪN RÕ RÀNG: Mọi khẳng định, hướng dẫn, mức thuế, thời hạn đều phải ghi rõ [Căn cứ Điều X, Khoản Y số hiệu văn bản ...].
 3. TUYỆT ĐỐI KHÔNG TỰ BỊA ĐẶT (ZERO-HALLUCINATION): Chỉ trả lời dựa trên 100% nội dung pháp lý được cung cấp trong phần [VĂN BẢN QUY PHẠM]. Nếu trong văn bản không quy định nội dung người dùng hỏi, hãy nói rõ: "Văn bản này không có quy định về nội dung bạn hỏi. Bạn vui lòng tra cứu thêm tại các văn bản liên quan khác."
 4. Trình bày định dạng Markdown sạch đẹp, có các gạch đầu dòng rõ ràng, bảng số liệu (nếu có).`;
+    // ── Mode: CROSS_ANALYSIS (Phân tích liên văn bản AI đa văn bản) ───────────
+    if (mode === 'cross_analysis' && (targetDoc || (body.selectedDocIds && body.selectedDocIds.length > 0))) {
+      const primary = targetDoc || allDocs.find((d) => d.id === body.selectedDocIds?.[0]);
+      const otherIds = (body.selectedDocIds || []).filter((id) => id !== primary?.id);
+      const otherDocs = allDocs.filter((d) => otherIds.includes(d.id)).slice(0, 4);
+      const docsToAnalyze = primary ? [primary, ...otherDocs] : otherDocs.slice(0, 5);
+
+      const docSectionsText = docsToAnalyze.map((d, idx) => {
+        const text = d.html_content ? cleanHtmlToText(d.html_content).slice(0, 10000) : '';
+        return `[VĂN BẢN ${idx + 1}]: ${d.document_number || '---'} | ${d.title} | Cơ quan: ${d.issuing_body || 'N/A'} | Hiệu lực: ${d.effective_date || 'N/A'} | Trạng thái: ${d.status}\nNội dung trích đoạn:\n${text}\n`;
+      }).join('\n');
+
+      const crossPrompt = `Hãy thực hiện phân tích liên văn bản chuyên sâu cho ${docsToAnalyze.length} văn bản pháp luật sau:
+
+${docSectionsText}
+
+MỤC TIÊU PHÂN TÍCH: ${body.objective || 'Tổng quan điểm giống và khác'}
+CÂU HỎI CỤ THỂ / YÊU CẦU: ${question || 'Hãy đối chiếu và phân tích toàn diện mối quan hệ, vai trò và tác động thực tế của các văn bản trên.'}
+
+BẮT BUỘC TRẢ LỜI CÓ CẤU TRÚC JSON HOẶC MARKDOWN RÕ RÀNG VỚI 6 PHẦN:
+1. KẾT LUẬN NGẮN (Trả lời trực diện câu hỏi hoặc tóm tắt bản chất quan hệ)
+2. VAI TRÒ CỦA TỪNG VĂN BẢN (Phân cấp thứ bậc, phạm vi)
+3. ĐIỂM GIỐNG VÀ KHÁC (So sánh chi tiết các tiêu chí)
+4. TÁC ĐỘNG THỰC TẾ (Đối tượng, điều kiện, hồ sơ, rủi ro)
+5. ĐIỂM CHƯA CHẮC CHẮN & CẢNH BÁO (Quan hệ chưa xác minh, văn bản hết hiệu lực)
+6. NGUỒN DẪN CHIẾU (Số hiệu, Điều, Khoản cụ thể)`;
+
+      const aiResult = await callGeminiApi(crossPrompt, systemInstruction);
+      if (aiResult) {
+        return NextResponse.json({
+          success: true,
+          source: 'gemini',
+          keyUsed: aiResult.keyUsed,
+          answer: aiResult.text,
+          executiveConclusion: aiResult.text.slice(0, 500),
+          citations: docsToAnalyze.map((d) => ({
+            id: `cit-${d.id}`,
+            documentId: d.id,
+            documentNumber: d.document_number || d.title,
+            documentTitle: d.title,
+            snippet: d.title,
+            fullCitationText: `${d.document_number || d.title}`,
+          })),
+        });
+      }
+    }
 
     // ── Mode: COMPARE (So sánh 2 văn bản) ───────────────────────────────────
     if (mode === 'compare' && (docA || docB)) {

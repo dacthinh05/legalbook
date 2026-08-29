@@ -449,7 +449,7 @@ export default function MainPage() {
   const listCategoryTitle = activeCategory?.name || (selectedDocType ? (DOCUMENT_TYPE_LABELS[selectedDocType] || selectedDocType) : 'Tất cả văn bản');
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 overflow-hidden select-text">
+    <div className="flex flex-col h-screen bg-slate-100 overflow-hidden select-text min-h-0">
       {/* 1. Global App Header */}
       <AppHeader
         onSearchClick={() => setSearchOpen(true)}
@@ -460,7 +460,7 @@ export default function MainPage() {
       />
 
       {/* 2. Main 3-Column Workspace */}
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-1 overflow-hidden relative min-h-0">
         {/* Mobile drawer overlay */}
         {mobileSidebarOpen && (
           <div
@@ -602,7 +602,7 @@ export default function MainPage() {
           </div>
         )}
         {/* COLUMN 3: Main Workspace (Cập nhật pháp luật or Document Reader >= 680px) */}
-        <main className={`flex-1 overflow-hidden flex flex-col min-w-0 bg-white ${
+        <main className={`flex-1 overflow-hidden flex flex-col min-w-0 min-h-0 bg-white ${
           selectedDocumentId ? 'flex' : 'hidden md:flex'
         }`}>
           {dataError && (

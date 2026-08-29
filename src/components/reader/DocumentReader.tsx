@@ -68,6 +68,7 @@ import { LegalEffectOverlay } from './LegalEffectOverlay';
 import { getDocumentLegalEffects } from '@/lib/legal-effects/demo-effects';
 import { calculatePointInTimeStats } from '@/lib/legal-effects/timeline-engine';
 import { AiSummaryModal } from './AiSummaryModal';
+import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
 import { createClient } from '@/lib/supabase/client';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -154,6 +155,7 @@ export function DocumentReader({
   const [quickViewDocId, setQuickViewDocId] = useState<string | null>(null);
   const showQuickViewPdf = quickViewDocId === doc.id;
   const [showAiSummaryModal, setShowAiSummaryModal] = useState(false);
+  const [showCrossDocAnalysisModal, setShowCrossDocAnalysisModal] = useState(false);
 
   // ── Refs ───────────────────────────────────────────────────────────────
 
@@ -961,6 +963,13 @@ export function DocumentReader({
                       <span>{isFullscreen ? 'Thu nhỏ cửa sổ đọc' : 'Toàn màn hình trình duyệt'}</span>
                     </button>
                   )}
+                  <button
+                    onClick={() => { setShowCrossDocAnalysisModal(true); setShowMoreMenu(false); }}
+                    className="w-full px-3 py-2 text-left text-blue-800 hover:bg-blue-50 flex items-center gap-2 cursor-pointer font-semibold"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Phân tích với văn bản khác</span>
+                  </button>
                   <button
                     onClick={() => { window.print(); setShowMoreMenu(false); }}
                     className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
@@ -2120,6 +2129,25 @@ export function DocumentReader({
               );
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
+        }}
+      />
+      {/* ── Cross-Document AI Analysis Modal ── */}
+      <CrossDocAnalysisModal
+        primaryDocument={doc}
+        isOpen={showCrossDocAnalysisModal}
+        onClose={() => setShowCrossDocAnalysisModal(false)}
+        onSelectDocument={(id, targetNodeId) => {
+          setShowCrossDocAnalysisModal(false);
+          onSelectRelatedDocument(id);
+          if (targetNodeId) {
+            setTimeout(() => {
+              const target = document.getElementById(targetNodeId);
+              target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          }
+        }}
+        onOpenExactDiff={() => {
+          setShowCrossDocAnalysisModal(false);
         }}
       />
 

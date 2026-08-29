@@ -10,6 +10,7 @@ import {
   Columns2,
   ChevronsUp,
   ChevronsDown,
+  Sparkles,
 } from 'lucide-react';
 import { buildDocumentHierarchy, type HierarchyNode } from '@/lib/hierarchy';
 import {
@@ -19,6 +20,7 @@ import {
   formatDate,
 } from '@/lib/utils';
 import { LegalDiffViewer } from './LegalDiffViewer';
+import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
 import type { LegalDocument } from '@/types';
 
 interface LegalHierarchyTreeProps {
@@ -35,6 +37,8 @@ export function LegalHierarchyTree({
   const hierarchy = useMemo(() => buildDocumentHierarchy(doc.id), [doc.id]);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set([doc.id]));
   const [compareTargetDoc, setCompareTargetDoc] = useState<LegalDocument | null>(null);
+  const [aiAnalysisTargetDoc, setAiAnalysisTargetDoc] = useState<LegalDocument | null>(null);
+  const [showAiAnalysisModal, setShowAiAnalysisModal] = useState(false);
   const [relationFilter, setRelationFilter] = useState<string>('all');
 
   // Count total nodes in tree
@@ -171,30 +175,44 @@ export function LegalHierarchyTree({
               {/* Action Buttons: Compare diff & Add dispatch */}
               <div className="flex items-center gap-1.5 shrink-0">
                 {!isCurrent && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCompareTargetDoc(node.document);
-                    }}
-                    className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                    title={
-                      doc.document_type === 'luat' && node.document.document_type !== 'luat'
-                        ? `Đối chiếu điều khoản quy định chi tiết với ${node.document.document_number}`
-                        : `So sánh điều khoản sửa đổi với ${node.document.document_number}`
-                    }
-                  >
-                    {doc.document_type === 'luat' && node.document.document_type !== 'luat' ? (
-                      <>
-                        <Columns2 className="w-3 h-3 text-purple-600" />
-                        <span>Đối chiếu</span>
-                      </>
-                    ) : (
-                      <>
-                        <GitCompare className="w-3 h-3 text-blue-600" />
-                        <span>So sánh</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCompareTargetDoc(node.document);
+                      }}
+                      className="px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                      title={
+                        doc.document_type === 'luat' && node.document.document_type !== 'luat'
+                          ? `Đối chiếu điều khoản quy định chi tiết với ${node.document.document_number}`
+                          : `Đối chiếu sửa đổi với ${node.document.document_number}`
+                      }
+                    >
+                      {doc.document_type === 'luat' && node.document.document_type !== 'luat' ? (
+                        <>
+                          <Columns2 className="w-3 h-3 text-purple-600" />
+                          <span>Đối chiếu</span>
+                        </>
+                      ) : (
+                        <>
+                          <GitCompare className="w-3 h-3 text-blue-600" />
+                          <span>Đối chiếu</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAiAnalysisTargetDoc(node.document);
+                        setShowAiAnalysisModal(true);
+                      }}
+                      className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                      title={`Phân tích liên văn bản bằng AI với ${node.document.document_number}`}
+                    >
+                      <Sparkles className="w-3 h-3 text-blue-600" />
+                      <span>Phân tích AI</span>
+                    </button>
+                  </div>
                 )}
 
                 {onAddDispatch && node.tier <= 3 && (
@@ -261,9 +279,32 @@ export function LegalHierarchyTree({
               relationType={doc.document_type === 'luat' ? 'huong_dan' : undefined}
               onClose={() => setCompareTargetDoc(null)}
               onSelectDocument={onSelectDocument}
+              onSwitchToAiAnalysis={(docA, docB) => {
+                setCompareTargetDoc(null);
+                setAiAnalysisTargetDoc(docB);
+                setShowAiAnalysisModal(true);
+              }}
             />
           </div>
         </div>
+      )}
+
+      {/* Cross-Document AI Analysis Modal */}
+      {showAiAnalysisModal && (
+        <CrossDocAnalysisModal
+          primaryDocument={doc}
+          initialSelectedDocuments={aiAnalysisTargetDoc ? [aiAnalysisTargetDoc] : []}
+          isOpen={showAiAnalysisModal}
+          onClose={() => {
+            setShowAiAnalysisModal(false);
+            setAiAnalysisTargetDoc(null);
+          }}
+          onSelectDocument={onSelectDocument}
+          onOpenExactDiff={(docA, docB) => {
+            setShowAiAnalysisModal(false);
+            setCompareTargetDoc(docB);
+          }}
+        />
       )}
 
       {/* 1. Compact Header Summary & Filter Bar (Height ~40px) */}

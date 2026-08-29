@@ -170,10 +170,21 @@ function TopicTreeNode({
   const count = categoryCounts.get(category.id);
   const isRoot = depth === 0;
   const isLevel1 = depth === 1;
-  const paddingLeft = getTreeIndentation(depth);
+  const isLevel2Plus = depth >= 2;
 
-  // Heights: Level 0: 42px, Level 1: 38px, Level 2+: 36px
-  const heightClass = isRoot ? 'h-[42px]' : isLevel1 ? 'h-[38px]' : 'h-[36px]';
+  // Subtle indentation: Level 0: 6px, Level 1: 18px, Level 2: 30px, Level 3+: max 42px
+  const indentPx = isRoot ? 6 : isLevel1 ? 18 : isLevel2Plus ? Math.min(42, 28 + (depth - 2) * 8) : 6;
+
+  // Heights & Typography per standardized specifications:
+  // Root (Level 0): h-[44px], font 15px, weight 600, icon 20px, count 13px
+  // Level 1: h-[40px], font 14px, weight 500
+  // Level 2+: h-[38px], font 13.5px, weight 400
+  const heightClass = isRoot ? 'h-[44px]' : isLevel1 ? 'h-[40px]' : 'h-[38px]';
+  const textClass = isRoot
+    ? 'text-[15px] font-semibold text-slate-900 tracking-tight'
+    : isLevel1
+    ? 'text-[14px] font-medium text-slate-800'
+    : 'text-[13.5px] font-normal text-slate-700';
 
   return (
     <div key={category.id} className="select-none">
@@ -185,70 +196,90 @@ function TopicTreeNode({
         aria-expanded={hasChildren ? isExpanded : undefined}
         aria-selected={isSelected}
         onClick={() => onSelectCategory(category.id)}
-        style={{ paddingLeft: `${paddingLeft}px` }}
+        style={{ paddingLeft: `${indentPx}px` }}
         title={count !== undefined ? `${category.name} (${count} văn bản)` : category.name}
         className={cn(
-          'group flex items-center pr-2.5 rounded-lg text-xs cursor-pointer transition-colors text-left justify-start relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
+          'group grid grid-cols-[20px_24px_minmax(0,1fr)_28px] items-center gap-x-2 pr-2.5 rounded-lg cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
           heightClass,
           isSelected
-            ? 'bg-blue-50 text-blue-900 font-semibold shadow-[inset_3px_0_0_#2563eb]'
-            : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900',
-          isRoot && 'font-medium text-slate-800'
+            ? 'bg-blue-50/90 text-blue-900 font-semibold shadow-[inset_3px_0_0_#2563eb]'
+            : 'hover:bg-slate-100/70 hover:text-slate-900'
         )}
       >
-        {/* Chevron Button or Spacer */}
-        {hasChildren ? (
-          <button
-            type="button"
-            onClick={(e) => onToggleExpand(category.id, e)}
-            className="w-6 h-6 -ml-1.5 mr-1 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-200/60 transition-colors shrink-0 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
-            aria-label={isExpanded ? `Thu gọn ${category.name}` : `Mở rộng ${category.name}`}
-          >
-            <ChevronRight
+        {/* Column 1: Chevron Button (20px) or Spacer */}
+        <div className="w-5 h-5 flex items-center justify-center shrink-0">
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={(e) => onToggleExpand(category.id, e)}
+              className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded hover:bg-slate-200/60 transition-colors cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+              aria-label={isExpanded ? `Thu gọn ${category.name}` : `Mở rộng ${category.name}`}
+            >
+              <ChevronRight
+                className={cn(
+                  'w-3.5 h-3.5 transition-transform duration-150',
+                  isExpanded && 'rotate-90 text-slate-600'
+                )}
+              />
+            </button>
+          ) : (
+            <span className="w-5 h-5 block" aria-hidden="true" />
+          )}
+        </div>
+
+        {/* Column 2: Category Icon / Bullet Indicator (24px) */}
+        <div className="w-6 h-6 flex items-center justify-center shrink-0">
+          {isRoot ? (
+            renderRootCategoryIcon(
+              category,
+              cn(
+                'w-5 h-5 transition-colors',
+                isSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
+              )
+            )
+          ) : isLevel1 ? (
+            <span
               className={cn(
-                'w-3.5 h-3.5 transition-transform duration-150',
-                isExpanded && 'rotate-90'
+                'w-1.5 h-1.5 rounded-full transition-colors',
+                isSelected ? 'bg-blue-600 ring-2 ring-blue-200' : 'bg-slate-300 group-hover:bg-slate-400'
               )}
             />
-          </button>
-        ) : (
-          <span className="w-6 h-6 -ml-1.5 mr-1 shrink-0" aria-hidden="true" />
-        )}
-
-        {/* Level 0 Category Icon */}
-        {isRoot &&
-          renderRootCategoryIcon(
-            category,
-            cn(
-              'w-4 h-4 mr-2 shrink-0 transition-colors',
-              isSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
-            )
+          ) : (
+            <span
+              className={cn(
+                'w-1 h-1 rounded-full transition-colors',
+                isSelected ? 'bg-blue-500' : 'bg-slate-300 group-hover:bg-slate-400'
+              )}
+            />
           )}
+        </div>
 
-        {/* Category Label */}
-        <span className="flex-1 min-w-0 text-left truncate leading-tight">
+        {/* Column 3: Category Label (minmax(0, 1fr)) */}
+        <span className={cn('truncate leading-tight', textClass, isSelected && 'text-blue-950 font-semibold')}>
           <HighlightedLabel text={category.name} query={filterText} />
         </span>
 
-        {/* Document Count */}
-        {/* Document Count (Hidden when 0 to avoid noise) */}
-        {typeof count === 'number' && count > 0 && (
-          <span
-            className={cn(
-              'font-mono text-[11px] tabular-nums shrink-0 ml-2 text-right transition-colors',
-              isSelected
-                ? 'text-blue-700 font-semibold'
-                : 'text-slate-400 group-hover:text-slate-600'
-            )}
-          >
-            {count}
-          </span>
-        )}
+        {/* Column 4: Document Count (28px) */}
+        <div className="w-7 text-right shrink-0">
+          {typeof count === 'number' && count > 0 ? (
+            <span
+              className={cn(
+                'font-mono text-right tabular-nums transition-colors block text-[12px]',
+                isRoot && 'text-[12.5px] font-medium',
+                isSelected
+                  ? 'text-blue-700 font-semibold'
+                  : 'text-slate-400 group-hover:text-slate-600'
+              )}
+            >
+              {count}
+            </span>
+          ) : null}
+        </div>
       </div>
 
-      {/* Children Subtree with subtle hierarchical guide */}
+      {/* Children Subtree with 2px spacing */}
       {hasChildren && isExpanded && category.children && (
-        <div className="space-y-[2px] relative">
+        <div className="space-y-[2px] relative mt-[2px]">
           {category.children.map((child) => {
             const isChildExpanded = expandedIds.has(child.id) || filterText.length > 0;
             const isChildSelected = selectedCategoryId === child.id;
@@ -758,7 +789,7 @@ export function CategoryTree({
         aria-label="Cây phân cấp danh mục pháp luật"
         className="flex-1 overflow-y-auto p-2 pr-1.5 space-y-[2px] focus:outline-none"
       >
-        {/* All documents root item: Standardized 42px height, left-aligned, matching tree Level 0 */}
+        {/* All documents root item: Standardized 44px height, matching 4-column grid */}
         <div
           id="category-node-all"
           tabIndex={0}
@@ -767,39 +798,54 @@ export function CategoryTree({
           aria-selected={isAllSelected}
           onClick={() => handleSelectCategoryAndExpandAncestors(null)}
           title={`${totalDocsCount} văn bản thuộc tất cả chủ đề`}
-          style={{ paddingLeft: '12px' }}
+          style={{ paddingLeft: '6px' }}
           className={cn(
-            'group flex items-center pr-2.5 h-[42px] rounded-lg text-xs cursor-pointer transition-colors text-left justify-start relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset mb-1.5',
+            'group grid grid-cols-[20px_24px_minmax(0,1fr)_28px] items-center gap-x-2 pr-2.5 h-[44px] rounded-lg cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset mb-1',
             isAllSelected
-              ? 'bg-blue-50 text-blue-900 font-semibold shadow-[inset_3px_0_0_#2563eb]'
-              : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-medium'
+              ? 'bg-blue-50/90 text-blue-900 font-semibold shadow-[inset_3px_0_0_#2563eb]'
+              : 'hover:bg-slate-100/70 hover:text-slate-900'
           )}
         >
-          {/* Spacer to match chevron column */}
-          <span className="w-6 h-6 -ml-1.5 mr-1 shrink-0" aria-hidden="true" />
+          {/* Column 1: Spacer (20px) */}
+          <div className="w-5 h-5 flex items-center justify-center shrink-0" aria-hidden="true">
+            <span className="w-5 h-5 block" />
+          </div>
 
-          <BookOpen
-            className={cn(
-              'w-4 h-4 mr-2 shrink-0 transition-colors',
-              isAllSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
-            )}
-          />
-          <span className="flex-1 min-w-0 text-left truncate leading-tight">
-            {viewMode === 'topic' ? 'Tất cả chủ đề' : 'Tất cả văn bản'}
-          </span>
+          {/* Column 2: Root Icon (24px) */}
+          <div className="w-6 h-6 flex items-center justify-center shrink-0">
+            <BookOpen
+              className={cn(
+                'w-5 h-5 transition-colors',
+                isAllSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
+              )}
+            />
+          </div>
+
+          {/* Column 3: Label */}
           <span
             className={cn(
-              'font-mono text-[11px] tabular-nums shrink-0 ml-2 text-right transition-colors',
-              isAllSelected ? 'text-blue-700 font-semibold' : 'text-slate-400 group-hover:text-slate-600'
+              'truncate leading-tight text-[15px] font-semibold text-slate-900',
+              isAllSelected && 'text-blue-950 font-semibold'
             )}
           >
-            {totalDocsCount}
+            {viewMode === 'topic' ? 'Tất cả chủ đề' : 'Tất cả văn bản'}
           </span>
-        </div>
 
+          {/* Column 4: Count */}
+          <div className="w-7 text-right shrink-0">
+            <span
+              className={cn(
+                'font-mono text-right tabular-nums transition-colors block text-[12.5px] font-medium',
+                isAllSelected ? 'text-blue-700 font-semibold' : 'text-slate-400 group-hover:text-slate-600'
+              )}
+            >
+              {totalDocsCount}
+            </span>
+          </div>
+        </div>
         {viewMode === 'topic' ? (
           /* ── View 1: Hierarchical Category Tree ── */
-          <div className="space-y-1.5">
+          <div className="space-y-[2px]">
             {filteredCategories.map((cat) => {
               const isExpanded = expandedIds.has(cat.id) || filterText.length > 0;
               const isSelected = selectedCategoryId === cat.id;
@@ -843,37 +889,32 @@ export function CategoryTree({
                     }
                   }}
                   className={cn(
-                    'group flex items-center justify-between p-2 rounded-lg text-xs cursor-pointer transition-all border',
+                    'group grid grid-cols-[28px_minmax(0,1fr)_32px] items-center gap-x-2.5 px-2.5 h-[42px] rounded-lg text-xs cursor-pointer transition-all border',
                     isSelected
-                      ? 'bg-blue-50 text-blue-900 font-semibold border-blue-200 shadow-[inset_3px_0_0_#2563eb]'
-                      : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-800'
+                      ? 'bg-blue-50/90 text-blue-900 font-semibold border-blue-200 shadow-[inset_3px_0_0_#2563eb]'
+                      : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 text-slate-800'
                   )}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className={cn('p-1.5 rounded-md shrink-0', item.iconBg)}>
-                      <IconComp className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <div
-                        className={cn(
-                          'font-semibold text-xs truncate leading-tight',
-                          isSelected ? 'text-blue-900' : 'text-slate-900'
-                        )}
-                      >
-                        {item.label}
-                      </div>
-                      <div className="text-[10px] text-slate-400 truncate mt-0.5">
-                        {item.sublabel}
-                      </div>
-                    </div>
+                  <div className={cn('w-7 h-7 rounded-md flex items-center justify-center shrink-0', item.iconBg)}>
+                    <IconComp className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex items-center">
+                    <span
+                      className={cn(
+                        'font-medium text-[13.5px] truncate',
+                        isSelected ? 'text-blue-950 font-semibold' : 'text-slate-900'
+                      )}
+                    >
+                      {item.label}
+                    </span>
                   </div>
 
                   <span
                     className={cn(
-                      'text-[11px] font-mono font-medium px-2 py-0.5 rounded-md shrink-0 ml-1',
+                      'text-[11.5px] font-mono text-right tabular-nums shrink-0',
                       isSelected
-                        ? 'bg-blue-600 text-white font-semibold'
-                        : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                        ? 'text-blue-700 font-bold'
+                        : 'text-slate-400 group-hover:text-slate-600'
                     )}
                   >
                     {item.count}
