@@ -3301,3 +3301,102 @@ describe('29. AI Summary Redesign: Concise Legal Overview, Verified Citations & 
     assert.ok(routeCode.includes('KHÔNG dùng từ ngữ phóng đại'));
   });
 });
+
+describe('30. Crawler Source Link Resolution & Multi-Source Cross-Verification Architecture (8 Criteria)', () => {
+  test('1. getSafeSourceUrl resolves valid TVPL deep link for document with valid ID', async () => {
+    const { getSafeSourceUrl } = await import('../src/lib/utils.ts');
+    const validDoc = {
+      document_number: '253/2026/NĐ-CP',
+      title: 'Nghị định 253/2026/NĐ-CP',
+      official_source_url: 'https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-dinh-253-2026-ND-CP-699193.aspx',
+    };
+    const url = getSafeSourceUrl(validDoc);
+    assert.strictEqual(url, 'https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-dinh-253-2026-ND-CP-699193.aspx');
+  });
+
+  test('2. getSafeSourceUrl generates safe targeted search for non-TVPL/broken URLs', async () => {
+    const { getSafeSourceUrl } = await import('../src/lib/utils.ts');
+    const doc110 = {
+      document_number: '110/2025/UBTVQH15',
+      title: 'Nghị quyết giảm trừ gia cảnh thuế TNCN',
+      official_source_url: 'https://vbpl.vn/quochoi/Pages/vbpq-toanvan.aspx?ItemID=172810',
+    };
+    const url = getSafeSourceUrl(doc110);
+    assert.ok(url.includes('google.com/search'));
+    assert.ok(url.includes('site%3Athuvienphapluat.vn'));
+    assert.ok(url.includes('110%2F2025%2FUBTVQH15'));
+  });
+
+  test('3. getMultiSourceLookupUrls returns 5 prioritized official portals', async () => {
+    const { getMultiSourceLookupUrls } = await import('../src/lib/utils.ts');
+    const options = getMultiSourceLookupUrls({
+      document_number: '42/2026/TT-BTC',
+      title: 'Thông tư thuế TNCN 2025',
+    });
+
+    assert.ok(options.length >= 5);
+    const gdt = options.find((o) => o.id === 'gdt');
+    const mof = options.find((o) => o.id === 'mof');
+    const vbpl = options.find((o) => o.id === 'vbpl');
+    const chinhphu = options.find((o) => o.id === 'chinhphu');
+
+    assert.ok(gdt && gdt.url.includes('gdt.gov.vn'));
+    assert.ok(mof && mof.url.includes('mof.gov.vn'));
+    assert.ok(vbpl && vbpl.url.includes('vbpl.vn'));
+    assert.ok(chinhphu && chinhphu.url.includes('vanban.chinhphu.vn'));
+  });
+
+  test('4. crawler/page.tsx renders safe source link and Multi-Source modal trigger', async () => {
+    const fs = await import('fs');
+    const crawlerCode = fs.readFileSync('src/app/admin/crawler/page.tsx', 'utf8');
+    assert.ok(crawlerCode.includes('getSafeSourceUrl'));
+    assert.ok(crawlerCode.includes('getMultiSourceLookupUrls'));
+    assert.ok(crawlerCode.includes('Mở nguồn gốc'));
+    assert.ok(crawlerCode.includes('Tra cứu Đa Nguồn Chính Thức'));
+    assert.ok(crawlerCode.includes('target="_blank"'));
+    assert.ok(crawlerCode.includes('rel="noopener noreferrer"'));
+  });
+});
+describe('31. Authentic Original Documents (.doc/.docx prioritized) Attachment Audit & Viewer (6 Criteria)', () => {
+  test('1. 100% of documents in DEMO_DOCUMENTS have authentic files attached', async () => {
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    assert.ok(DEMO_DOCUMENTS.length >= 58);
+    const missingFiles = DEMO_DOCUMENTS.filter((d) => !d.files || d.files.length === 0);
+    assert.strictEqual(missingFiles.length, 0, `All documents must have files attached, found ${missingFiles.length} missing`);
+  });
+
+  test('2. TT 200/2014/TT-BTC has authentic .docx attachment linked', async () => {
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc200 = DEMO_DOCUMENTS.find((d) => d.document_number === '200/2014/TT-BTC');
+    assert.ok(doc200, 'Doc 200/2014/TT-BTC must exist');
+    assert.ok(doc200.files && doc200.files.length > 0, 'Doc 200 must have files');
+    const docxFile = doc200.files.find((f) => f.file_type === 'docx' || f.file_type === 'doc');
+    assert.ok(docxFile, 'Doc 200 must have a .docx/.doc file');
+    assert.ok(docxFile.file_url.includes('200.2014.TT-BTC') || docxFile.original_filename.includes('200'));
+  });
+
+  test('3. Word .doc/.docx files are strictly prioritized over PDF (>= 50 docs)', async () => {
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const docxDocs = DEMO_DOCUMENTS.filter((d) =>
+      d.files?.some((f) => f.file_type === 'docx' || f.file_type === 'doc')
+    );
+    assert.ok(docxDocs.length >= 50, `Expected >= 50 docs with Word files, got ${docxDocs.length}`);
+  });
+
+  test('4. DocumentReader.tsx has DOCX tab badge and download support', async () => {
+    const fs = await import('fs');
+    const readerCode = fs.readFileSync('src/components/reader/DocumentReader.tsx', 'utf8');
+    assert.ok(readerCode.includes('hasDocxUrl'));
+    assert.ok(readerCode.includes('DOCX'));
+    assert.ok(readerCode.includes('Tải Word (.docx)'));
+  });
+
+  test('5. Static files in public/documents/ are non-empty valid files', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const doc200File = path.resolve('public/documents/TT 200.2014.TT-BTC - 200-2014-TT-BTC hướng dẫn Chế độ kế toán Doanh nghiệp.docx');
+    assert.ok(fs.existsSync(doc200File), 'TT 200 docx file must exist on disk');
+    const stats = fs.statSync(doc200File);
+    assert.ok(stats.size > 1000, `TT 200 file size (${stats.size} bytes) must be > 1KB`);
+  });
+});

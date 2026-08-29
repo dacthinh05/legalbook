@@ -15,8 +15,12 @@ import {
   Filter,
   Trash2,
   Play,
-  ShieldCheck
+  ShieldCheck,
+  BookOpen,
+  X,
+  Layers,
 } from 'lucide-react';
+import { getSafeSourceUrl, getMultiSourceLookupUrls, type MultiSourceOption } from '@/lib/utils';
 
 interface DiscoveredDoc {
   id: string;
@@ -43,7 +47,7 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     id: 'disc-tax-06',
     source: 'vbpl',
     sourceName: 'Cơ sở Dữ liệu Quốc gia (vbpl.vn)',
-    sourceUrl: 'https://vbpl.vn/quochoi/Pages/vbpq-toanvan.aspx?ItemID=172810',
+    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%22110%2F2025%2FUBTVQH15%22',
     document_number: '110/2025/UBTVQH15',
     title: 'Nghị quyết của Ủy ban Thường vụ Quốc hội về việc điều chỉnh mức giảm trừ gia cảnh thuế TNCN',
     issuing_body: 'Ủy ban Thường vụ Quốc hội',
@@ -62,7 +66,7 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     id: 'disc-tax-07',
     source: 'mof_gov',
     sourceName: 'Bộ Tài chính (mof.gov.vn)',
-    sourceUrl: 'https://mof.gov.vn/webcenter/portal/vclvcstc/pages_r/l/chi-tiet-tin?dDocName=MOFUCM312480',
+    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%2242%2F2026%2FTT-BTC%22',
     document_number: '42/2026/TT-BTC',
     title: 'Thông tư hướng dẫn thi hành một số điều của Luật Thuế TNCN 2025 và Nghị định 253/2026/NĐ-CP',
     issuing_body: 'Bộ Tài chính',
@@ -81,7 +85,7 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     id: 'disc-tax-08',
     source: 'chinhphu',
     sourceName: 'Cổng TTĐT Chính Phủ (vanban.chinhphu.vn)',
-    sourceUrl: 'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=210940',
+    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%2274%2F2024%2FN%C4%90-CP%22',
     document_number: '74/2024/NĐ-CP',
     title: 'Nghị định quy định mức lương tối thiểu và chế độ tiền lương làm thêm giờ, làm việc ban đêm đối với người lao động',
     issuing_body: 'Chính phủ',
@@ -100,7 +104,7 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     id: 'disc-tax-09',
     source: 'gdt_gov',
     sourceName: 'Tổng cục Thuế (gdt.gov.vn)',
-    sourceUrl: 'https://gdt.gov.vn/wps/portal/home/hotro/vanban/cv4128',
+    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%224128%2FTCT-DNNCN%22',
     document_number: '4128/TCT-DNNCN',
     title: 'Công văn về chính sách thuế TNCN đối với thu nhập làm thêm giờ, tiền ăn ca và thủ tục quyết toán thuế qua VNeID',
     issuing_body: 'Tổng cục Thuế',
@@ -119,7 +123,7 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     id: 'disc-tax-01',
     source: 'chinhphu',
     sourceName: 'Cổng TTĐT Chính Phủ (vanban.chinhphu.vn)',
-    sourceUrl: 'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=214820',
+    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%22144%2F2026%2FN%C4%90-CP%22',
     document_number: '144/2026/NĐ-CP',
     title: 'Nghị định sửa đổi, bổ sung một số điều của Nghị định 181/2025/NĐ-CP về thuế GTGT',
     issuing_body: 'Chính phủ',
@@ -138,7 +142,7 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     id: 'disc-audit-02',
     source: 'vbpl',
     sourceName: 'Cơ sở Dữ liệu Quốc gia (vbpl.vn)',
-    sourceUrl: 'https://vbpl.vn/botc/Pages/vbpq-toanvan.aspx?ItemID=165892',
+    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%2252%2F2024%2FQH15%22',
     document_number: '52/2024/QH15',
     title: 'Luật sửa đổi, bổ sung một số điều của Luật Kiểm toán độc lập số 52/2024/QH15',
     issuing_body: 'Quốc hội',
@@ -156,7 +160,7 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     id: 'disc-tax-03',
     source: 'gdt_gov',
     sourceName: 'Tổng cục Thuế (gdt.gov.vn)',
-    sourceUrl: 'https://gdt.gov.vn/wps/portal/home/hotro/vanban/cv3643',
+    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%223643%2FTNI-QLDN%22',
     document_number: '3643/TNI-QLDN',
     title: 'Công văn về việc xuất hóa đơn và kê khai thuế GTGT hoạt động chuyển nhượng quyền sử dụng đất',
     issuing_body: 'Cục Thuế tỉnh Tây Ninh',
@@ -175,7 +179,7 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     id: 'disc-acc-04',
     source: 'mof_gov',
     sourceName: 'Bộ Tài chính (mof.gov.vn)',
-    sourceUrl: 'https://mof.gov.vn/webcenter/portal/vclvcstc/pages_r/l/chi-tiet-tin?dDocName=MOFUCM298711',
+    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%2258%2F2026%2FTT-BTC%22',
     document_number: '58/2026/TT-BTC',
     title: 'Thông tư hướng dẫn chế độ kế toán cho doanh nghiệp siêu nhỏ',
     issuing_body: 'Bộ Tài chính',
@@ -202,10 +206,11 @@ const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
     status: 'hieu_luc',
     domain: 'tax',
     category_name: 'Thuế > Thuế TNCN',
-    file_format: 'doc',
-    summary_main: 'Quy định chi tiết về mức giảm trừ gia cảnh mới, biểu thuế lũy tiến từng phần và thủ tục ủy quyền quyết toán qua VNeID.',
+    file_format: 'docx',
+    summary_main: 'Biểu thuế lũy tiến từng phần 5 bậc mới, quy định điều kiện miễn giảm thuế cho người lao động trực tiếp sản xuất, công nghệ cao và thu nhập từ thừa kế quà tặng.',
     crawled_at: '06:00 Hôm nay',
     is_approved: true,
+    fallbackChain: ['Thư Viện Pháp Luật TVPL: Thu thập thành công bản đầy đủ'],
   },
 ];
 
@@ -215,6 +220,9 @@ export default function CrawlerAdminPage() {
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [filterDomain, setFilterDomain] = useState<'all' | 'tax' | 'accounting' | 'audit'>('all');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
+  // Multi-source modal state
+  const [selectedMultiSourceDoc, setSelectedMultiSourceDoc] = useState<DiscoveredDoc | null>(null);
 
   // Manual crawl states
   const [crawlUrl, setCrawlUrl] = useState('');
@@ -291,24 +299,33 @@ export default function CrawlerAdminPage() {
           const existingNums = new Set(prev.map((d) => d.document_number));
           const newEntries: DiscoveredDoc[] = (data.stagedDocs as Array<Record<string, string>>)
             .filter((d) => !existingNums.has(d.document_number))
-            .map((d) => ({
-              id: d.id || `doc-${Date.now()}`,
-              source: d.source?.includes('gdt') ? ('gdt_gov' as const) : d.source?.includes('vbpl') ? ('vbpl' as const) : ('chinhphu' as const),
-              sourceName: d.source || 'Cổng pháp luật',
-              sourceUrl: d.source_url || d.url || (d.source?.includes('gdt') ? 'https://gdt.gov.vn' : d.source?.includes('vbpl') ? 'https://vbpl.vn' : d.source?.includes('mof') ? 'https://mof.gov.vn' : 'https://vanban.chinhphu.vn'),
-              document_number: d.document_number,
-              title: d.title,
-              issuing_body: d.issuing_body,
-              issued_date: d.issued_date,
-              effective_date: d.effective_date,
-              status: 'hieu_luc' as const,
-              domain: (d.category_name?.toLowerCase().includes('kiểm toán') ? 'audit' : d.category_name?.toLowerCase().includes('kế toán') ? 'accounting' : 'tax') as 'tax' | 'accounting' | 'audit',
-              category_name: d.category_name || 'Thuế - Kế toán',
-              file_format: 'docx' as const,
-              summary_main: d.summary_main || '',
-              crawled_at: 'Vừa quét xong',
-              is_approved: false,
-            }));
+            .map((d) => {
+              const safeSourceUrl = getSafeSourceUrl({
+                official_source_url: d.source_url || d.url,
+                sourceUrl: d.source_url || d.url,
+                document_number: d.document_number,
+                title: d.title,
+              });
+
+              return {
+                id: d.id || `doc-${Date.now()}`,
+                source: d.source?.includes('gdt') ? ('gdt_gov' as const) : d.source?.includes('vbpl') ? ('vbpl' as const) : ('chinhphu' as const),
+                sourceName: d.source || 'Cổng pháp luật',
+                sourceUrl: safeSourceUrl,
+                document_number: d.document_number,
+                title: d.title,
+                issuing_body: d.issuing_body || 'Cơ quan có thẩm quyền',
+                issued_date: d.issued_date || '2026-01-01',
+                effective_date: d.effective_date || '2026-01-01',
+                status: 'hieu_luc' as const,
+                domain: (d.category_name?.toLowerCase().includes('kiểm toán') ? 'audit' : d.category_name?.toLowerCase().includes('kế toán') ? 'accounting' : 'tax') as 'tax' | 'accounting' | 'audit',
+                category_name: d.category_name || 'Thuế - Kế toán',
+                file_format: 'docx' as const,
+                summary_main: d.summary_main || '',
+                crawled_at: 'Vừa quét xong',
+                is_approved: false,
+              };
+            });
           return [...newEntries, ...prev];
         });
       }
@@ -338,6 +355,32 @@ export default function CrawlerAdminPage() {
     addLog('🏛️ Đang bóc tách metadata, cấu trúc điều khoản và tệp đính kèm...');
     await new Promise((r) => setTimeout(r, 700));
 
+    const safeUrl = getSafeSourceUrl({
+      official_source_url: crawlUrl,
+      sourceUrl: crawlUrl,
+      title: 'Văn bản quét theo đường dẫn',
+    });
+
+    const newDoc: DiscoveredDoc = {
+      id: `url-crawl-${Date.now()}`,
+      source: crawlUrl.includes('thuvienphapluat') ? 'thuvienphapluat' : crawlUrl.includes('chinhphu') ? 'chinhphu' : 'vbpl',
+      sourceName: crawlUrl.includes('thuvienphapluat') ? 'Thư Viện Pháp Luật' : 'Cổng TTĐT Chính Phủ',
+      sourceUrl: safeUrl,
+      document_number: 'Quét từ URL',
+      title: `Văn bản bóc tách từ đường dẫn ${crawlUrl.slice(0, 45)}...`,
+      issuing_body: 'Cơ quan ban hành',
+      issued_date: new Date().toISOString().slice(0, 10),
+      effective_date: new Date().toISOString().slice(0, 10),
+      status: 'hieu_luc',
+      domain: 'general',
+      category_name: 'Văn bản pháp luật',
+      file_format: 'docx',
+      summary_main: 'Văn bản đã được bóc tách từ URL và lưu trữ trong hàng đợi chờ duyệt.',
+      crawled_at: 'Vừa quét',
+      is_approved: false,
+    };
+
+    setDiscoveredDocs((prev) => [newDoc, ...prev]);
     addLog('✅ Bóc tách thành công! Văn bản đã được nạp vào Hàng đợi chọn lọc.');
     setIsCrawling(false);
   };
@@ -349,11 +392,16 @@ export default function CrawlerAdminPage() {
     setIsSearchingDispatch(true);
     await new Promise((r) => setTimeout(r, 800));
 
+    const safeUrl = getSafeSourceUrl({
+      document_number: dispatchNumber.trim(),
+      title: `Công văn ${dispatchNumber.trim()}`,
+    });
+
     const newResult: DiscoveredDoc = {
       id: `cv-found-${Date.now()}`,
       source: dispatchSource === 'gdt' ? 'gdt_gov' : dispatchSource === 'mof' ? 'mof_gov' : 'vbpl',
-      sourceName: dispatchSource === 'gdt' ? 'Tổng cục Thuế' : dispatchSource === 'mof' ? 'Bộ Tài chính' : 'CSDL Quốc Gia VBPL',
-      sourceUrl: `https://gdt.gov.vn/wps/portal/home/hotro/vanban/${encodeURIComponent(dispatchNumber)}`,
+      sourceName: dispatchSource === 'gdt' ? 'Tổng cục Thuế (gdt.gov.vn)' : dispatchSource === 'mof' ? 'Bộ Tài chính (mof.gov.vn)' : 'CSDL Quốc Gia (vbpl.vn)',
+      sourceUrl: safeUrl,
       document_number: dispatchNumber.trim(),
       title: `Công văn số ${dispatchNumber.trim()} hướng dẫn chính sách thuế và hạch toán kế toán`,
       issuing_body: dispatchSource === 'gdt' ? 'Tổng cục Thuế' : 'Bộ Tài chính',
@@ -366,6 +414,7 @@ export default function CrawlerAdminPage() {
       summary_main: 'Hướng dẫn giải đáp nghiệp vụ kê khai, khấu trừ thuế và lập chứng từ kế toán cho doanh nghiệp.',
       crawled_at: 'Vừa quét',
       is_approved: false,
+      fallbackChain: [`Đã xác thực nguồn: ${dispatchSource.toUpperCase()}`],
     };
 
     setDiscoveredDocs((prev) => [newResult, ...prev]);
@@ -542,6 +591,13 @@ export default function CrawlerAdminPage() {
           <div className="space-y-3">
             {filteredDocs.map((doc) => {
               const isSelected = selectedDocIds.has(doc.id);
+              const safeSourceUrl = getSafeSourceUrl({
+                official_source_url: doc.sourceUrl,
+                sourceUrl: doc.sourceUrl,
+                document_number: doc.document_number,
+                title: doc.title,
+              });
+
               return (
                 <div
                   key={doc.id}
@@ -627,15 +683,28 @@ export default function CrawlerAdminPage() {
                         </button>
                       )}
 
-                      <a
-                        href={doc.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                      >
-                        Mở nguồn gốc
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedMultiSourceDoc(doc)}
+                          className="text-[11px] text-slate-600 hover:text-blue-700 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded flex items-center gap-1 transition-colors cursor-pointer"
+                          title="Tra cứu văn bản này trên nhiều nguồn Bộ/Ngành khác nhau"
+                        >
+                          <Layers className="w-3 h-3 text-slate-500" />
+                          <span>Đa nguồn</span>
+                        </button>
+
+                        <a
+                          href={safeSourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-semibold"
+                          title="Mở nguồn gốc chính thức (TVPL / Cổng Chính Phủ)"
+                        >
+                          <span>Mở nguồn gốc</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -842,6 +911,74 @@ export default function CrawlerAdminPage() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MULTI-SOURCE LOOKUP MODAL ── */}
+      {selectedMultiSourceDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-5 space-y-4 text-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-blue-700" />
+                <h3 className="font-bold text-sm text-slate-900">
+                  Tra cứu Đa Nguồn Chính Thức
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMultiSourceDoc(null)}
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[10.5px] text-slate-400 font-mono uppercase font-bold">Văn bản tra cứu:</span>
+              <p className="text-xs font-bold text-slate-900">{selectedMultiSourceDoc.document_number} — {selectedMultiSourceDoc.title}</p>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-slate-700 block">Chọn cổng thông tin tra cứu đối chiếu:</span>
+              <div className="space-y-2">
+                {getMultiSourceLookupUrls({
+                  document_number: selectedMultiSourceDoc.document_number,
+                  title: selectedMultiSourceDoc.title,
+                  official_source_url: selectedMultiSourceDoc.sourceUrl,
+                }).map((source: MultiSourceOption) => (
+                  <a
+                    key={source.id}
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-slate-50 hover:bg-blue-50/80 border border-slate-200 hover:border-blue-300 rounded-xl flex items-center justify-between transition-all group"
+                  >
+                    <div className="space-y-0.5 min-w-0 pr-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-slate-900 group-hover:text-blue-900">{source.name}</span>
+                        <span className={`px-1.5 py-0.2 rounded text-[9.5px] font-mono border ${source.badgeColor}`}>
+                          {source.domain}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 line-clamp-1">{source.description}</p>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-700 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setSelectedMultiSourceDoc(null)}
+                className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -41,6 +41,7 @@ import {
   DOCUMENT_TYPE_LABELS,
   getEffectiveStatus,
   formatDate,
+  formatFileSize,
   formatShortTitle,
   getTvplSourceUrl,
   getVerificationBreakdown,
@@ -200,10 +201,10 @@ export function DocumentReader({
   const relationsRaw = getDocumentRelations(doc.id);
   const asSource: DocumentRelation[] = Array.isArray(relationsRaw)
     ? relationsRaw.filter((r) => r.source_document_id === doc.id)
-    : relationsRaw?.as_source || [];
+    : [];
   const asTarget: DocumentRelation[] = Array.isArray(relationsRaw)
     ? relationsRaw.filter((r) => r.target_document_id === doc.id)
-    : relationsRaw?.as_target || [];
+    : [];
   const relationsCount = asSource.length + asTarget.length;
   const replacementSource = asSource.find((r) => r.relation_type === 'thay_the');
 
@@ -801,8 +802,9 @@ export function DocumentReader({
   );
 
   const tvplUrl = getTvplSourceUrl(doc);
+  const hasDocxUrl = Boolean(doc.files?.some((f) => f.file_type === 'docx'));
   const hasPdfUrl = Boolean(doc.files?.some((f) => f.file_type === 'pdf'));
-
+  const hasOriginalFile = Boolean(doc.files && doc.files.length > 0);
   // ─────────────────────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
@@ -1126,8 +1128,10 @@ export function DocumentReader({
               {
                 id: 'banggoc',
                 label: 'Bản gốc',
-                badge: hasPdfUrl ? 'PDF' : undefined,
-                badgeClass: 'text-blue-700 bg-blue-50 px-1 py-0.2 rounded text-[9.5px] border border-blue-200 font-sans',
+                badge: hasDocxUrl ? 'DOCX' : hasPdfUrl ? 'PDF' : undefined,
+                badgeClass: hasDocxUrl
+                  ? 'text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded text-[9.5px] border border-emerald-200 font-sans font-bold'
+                  : 'text-blue-700 bg-blue-50 px-1 py-0.2 rounded text-[9.5px] border border-blue-200 font-sans font-bold',
               },
               {
                 id: 'quanhe',
@@ -1702,12 +1706,19 @@ export function DocumentReader({
             </div>
           </div>
           {/* ── TAB: BẢN GỐC (PDF / TỆP GỐC) ── */}
+          {/* ── TAB: BẢN GỐC (DOCX / PDF / TỆP GỐC) ── */}
           {activeTab === 'banggoc' && (() => {
-            const pdfFiles = doc.files?.filter((f) => f.file_type === 'pdf') ?? [];
             const allFiles = doc.files ?? [];
+            const pdfFiles = allFiles.filter((f) => f.file_type === 'pdf');
+            const docxFiles = allFiles.filter((f) => f.file_type === 'docx');
             const hasPdf = pdfFiles.length > 0;
+            const hasDocx = docxFiles.length > 0;
+            const currentDocx = docxFiles[0];
             const currentPdf = pdfFiles[selectedPdfFileIndex] || pdfFiles[0];
             const primaryPdfUrl = currentPdf?.file_url;
+            const primaryDocxUrl = currentDocx?.file_url;
+            const primaryFile = currentPdf || currentDocx || allFiles[0];
+
             const pdfHashParam = pdfZoomMode === 'FitH'
               ? '#view=FitH'
               : pdfZoomMode === 'Fit'
@@ -1716,14 +1727,23 @@ export function DocumentReader({
             const finalPdfUrl = primaryPdfUrl ? `${primaryPdfUrl}${pdfHashParam}` : '';
 
             return (
-              <div className="flex-1 flex flex-col h-full w-full bg-slate-900/5 overflow-hidden">
+              <div className="flex-1 flex flex-col h-full w-full bg-slate-100 overflow-hidden">
+                {/* Top Control Header */}
                 <div className="bg-slate-900 text-white px-3 sm:px-4 py-2 flex items-center justify-between gap-2 text-xs shrink-0 flex-wrap z-10 shadow-sm border-b border-slate-800">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-mono uppercase text-[10.5px] font-bold shrink-0">
-                      {currentPdf?.file_type?.toUpperCase() || 'PDF'}
+                    <span
+                      className={cn(
+                        'px-2 py-0.5 rounded font-mono uppercase text-[10.5px] font-bold shrink-0',
+                        hasDocx && !hasPdf ? 'bg-emerald-600 text-white' : 'bg-blue-600 text-white'
+                      )}
+                    >
+                      {primaryFile?.file_type?.toUpperCase() || (hasDocx ? 'DOCX' : 'PDF')}
                     </span>
-                    <span className="text-slate-200 font-medium truncate max-w-[200px] sm:max-w-[320px]" title={currentPdf?.original_filename || doc.title}>
-                      {currentPdf?.original_filename || `${doc.document_number || 'Van-ban'}.pdf`}
+                    <span
+                      className="text-slate-200 font-medium truncate max-w-[200px] sm:max-w-[360px]"
+                      title={primaryFile?.original_filename || doc.title}
+                    >
+                      {primaryFile?.original_filename || `${doc.document_number || 'Van-ban'}.${hasDocx ? 'docx' : 'pdf'}`}
                     </span>
 
                     {pdfFiles.length > 1 && (
@@ -1791,6 +1811,18 @@ export function DocumentReader({
                       </div>
                     )}
 
+                    {primaryDocxUrl && (
+                      <a
+                        href={primaryDocxUrl}
+                        download={currentDocx?.original_filename || `${doc.document_number}.docx`}
+                        className="px-3 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded flex items-center gap-1.5 text-[11px] font-semibold transition-colors shadow-xs"
+                        title="Tải tệp Word (.docx) về máy tính"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Tải Word (.docx)</span>
+                      </a>
+                    )}
+
                     {primaryPdfUrl && isSafeUrl(primaryPdfUrl) && (
                       <a
                         href={primaryPdfUrl}
@@ -1812,7 +1844,7 @@ export function DocumentReader({
                         title="Tải tệp PDF về máy tính"
                       >
                         <Download className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Tải về</span>
+                        <span className="hidden sm:inline">Tải PDF</span>
                       </a>
                     )}
 
@@ -1839,6 +1871,7 @@ export function DocumentReader({
                   </div>
                 </div>
 
+                {/* Secondary metadata sub-bar */}
                 <div className="bg-slate-50 border-b border-slate-200 px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs text-slate-600 shrink-0">
                   <div className="flex items-center gap-2 truncate">
                     <span className="text-[11px] text-slate-500">Nguồn dữ liệu:</span>
@@ -1855,20 +1888,15 @@ export function DocumentReader({
 
                   {allFiles.length > 0 && (
                     <div className="text-[11px] text-slate-500 flex items-center gap-2">
-                      <span>Định dạng: <strong className="text-slate-800 uppercase">{currentPdf?.file_type || 'PDF'}</strong></span>
-                      {allFiles.find(f => f.file_type === 'docx') && (
-                        <a
-                          href={allFiles.find(f => f.file_type === 'docx')?.file_url}
-                          download={allFiles.find(f => f.file_type === 'docx')?.original_filename}
-                          className="text-emerald-700 hover:underline font-semibold flex items-center gap-0.5"
-                        >
-                          <Download className="w-3 h-3" /> Tải Word (.docx)
-                        </a>
+                      <span>Định dạng: <strong className="text-slate-800 uppercase">{primaryFile?.file_type || 'DOCX'}</strong></span>
+                      {primaryFile?.file_size && (
+                        <span className="text-slate-400">({formatFileSize(primaryFile.file_size)})</span>
                       )}
                     </div>
                   )}
                 </div>
 
+                {/* Body: PDF Iframe or Word Doc Document Layout */}
                 {hasPdf ? (
                   <div className="flex-1 w-full h-full min-h-[550px] bg-slate-200 relative overflow-hidden">
                     {isSafeUrl(primaryPdfUrl) ? (
@@ -1882,6 +1910,45 @@ export function DocumentReader({
                     ) : (
                       <p className="text-slate-400 text-center py-8">Tệp PDF không khả dụng</p>
                     )}
+                  </div>
+                ) : hasDocx ? (
+                  /* ── Official Word (.docx) Document Viewer Layout ── */
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-100 flex flex-col items-center">
+                    <div className="w-full max-w-4xl bg-white border border-slate-300 rounded-sm shadow-md p-6 sm:p-10 lg:p-12 mb-8">
+                      {/* Word Document Banner Header */}
+                      <div className="mb-6 p-4 bg-emerald-50/80 border border-emerald-200 rounded-lg flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-emerald-600 text-white rounded-md">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-xs sm:text-sm text-emerald-950">
+                              Bản gốc Word (.docx) — {doc.document_number}
+                            </h3>
+                            <p className="text-[11px] text-emerald-800 mt-0.5">
+                              Văn bản chính thức chuẩn thể thức Nghị định 30/2020/NĐ-CP (Bộ Tài chính / Cơ quan ban hành).
+                            </p>
+                          </div>
+                        </div>
+
+                        {primaryDocxUrl && (
+                          <a
+                            href={primaryDocxUrl}
+                            download={currentDocx?.original_filename || `${doc.document_number}.docx`}
+                            className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                          >
+                            <Download className="w-4 h-4" />
+                            <span>Tải tệp .docx gốc</span>
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Authentic Document Content Presentation */}
+                      <div
+                        className="legal-document-body prose prose-slate max-w-none text-slate-900 leading-relaxed text-sm sm:text-[15px]"
+                        dangerouslySetInnerHTML={{ __html: renderedHtml || '' }}
+                      />
+                    </div>
                   </div>
                 ) : showQuickViewPdf && tvplUrl ? (
                   /* ── Quick-view inline: embed TVPL via Google Docs Viewer ── */

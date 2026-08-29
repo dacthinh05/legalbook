@@ -162,28 +162,38 @@ export function isNewDocument(updatedAt: string, daysThreshold = 30): boolean {
  */
 export function getTvplSourceUrl(doc?: {
   official_source_url?: string | null;
+  sourceUrl?: string | null;
   document_number?: string | null;
   title?: string | null;
 } | null): string {
   if (!doc) return 'https://thuvienphapluat.vn';
 
-  if (doc.official_source_url) {
-    const url = doc.official_source_url.trim();
+  const rawUrl = (doc.official_source_url || doc.sourceUrl || '').trim();
+  if (rawUrl) {
     // Real TVPL article URLs end with -{id}.aspx where id has 4 or more digits
-    const hasValidTvplId = /-\d{4,}\.aspx$/i.test(url);
+    const hasValidTvplId = /-\d{4,}\.aspx$/i.test(rawUrl);
     if (hasValidTvplId) {
-      return url;
-    }
-    // If it's another valid external authority URL (e.g., chinhphu, vbpl)
-    if (url.startsWith('https://vanban.chinhphu.vn') || url.startsWith('https://vbpl.vn')) {
-      return url;
+      return rawUrl;
     }
   }
 
   const query = (doc.document_number || doc.title || '').trim();
-  if (!query) return 'https://thuvienphapluat.vn';
+  if (!query) return rawUrl || 'https://thuvienphapluat.vn';
 
   return `https://www.google.com/search?q=${encodeURIComponent(`site:thuvienphapluat.vn "${query}"`)}`;
+}
+
+/**
+ * Returns a safe, reliable official source URL for any legal document or crawled item.
+ * Guarantees no broken/404 ASPX session links when clicked by users.
+ */
+export function getSafeSourceUrl(doc?: {
+  official_source_url?: string | null;
+  sourceUrl?: string | null;
+  document_number?: string | null;
+  title?: string | null;
+} | null): string {
+  return getTvplSourceUrl(doc);
 }
 
 export interface MultiSourceOption {

@@ -1,4 +1,8 @@
-import type { LegalDocument, Category, DocumentRelation, DocumentCategoryLink } from '@/types';
+/**
+ * demo-data.ts
+ * Single source of truth for all verified legal documents, categories, and relations.
+ */
+import type { LegalDocument, Category, DocumentCategoryLink, DocumentRelation } from '@/types';
 
 export const DEMO_CATEGORIES: Category[] = [
   {
@@ -591,498 +595,55 @@ export const DEMO_CATEGORIES: Category[] = [
   }
 ];
 
-export const DEMO_RELATIONS: DocumentRelation[] = [
-  {
-  "id": "rel-110-109-pit",
-  "source_document_id": "e1102025-ubtv-4c22-92ab-110000000015",
-  "target_document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
-  "relation_type": "sua_doi",
-  "notes": "Nâng mức giảm trừ gia cảnh thuế TNCN lên 15,5 triệu và 6,2 triệu đồng từ năm 2026",
-  "created_at": "2026-08-29T07:49:00+00:00"
-},
-  {
-  "id": "rel-110-112-pit",
-  "source_document_id": "e1102025-ubtv-4c22-92ab-110000000015",
-  "target_document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
-  "relation_type": "thay_the",
-  "notes": "Thay thế quy định mức giảm trừ gia cảnh cũ tại Nghị quyết 954/2020",
-  "created_at": "2026-08-29T07:49:00+00:00"
-},
-  {
-  "id": "rel-042-253-pit",
-  "source_document_id": "e0422026-ttbt-4c22-92ab-110000000042",
-  "target_document_id": "9dc07e8e-8e8b-4f5e-a7be-440f5e68d601",
-  "relation_type": "huong_dan",
-  "notes": "Hướng dẫn chi tiết miễn thuế 100% lương tăng ca và biểu thuế 5 bậc theo Nghị định 253/2026",
-  "created_at": "2026-08-29T07:49:00+00:00"
-},
-  {
-  "id": "rel-042-109-pit",
-  "source_document_id": "e0422026-ttbt-4c22-92ab-110000000042",
-  "target_document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
-  "relation_type": "huong_dan",
-  "notes": "Hướng dẫn thi hành Luật Thuế TNCN 2025",
-  "created_at": "2026-08-29T07:49:00+00:00"
-},
-  {
-  "id": "rel-074-045-labour",
-  "source_document_id": "e0742024-ndcp-4c22-92ab-110000000074",
-  "target_document_id": "bafac4d7-9f1b-46c2-af3b-d40ecc7e3062",
-  "relation_type": "huong_dan",
-  "notes": "Quy định chi tiết tiền lương tối thiểu, trả lương làm thêm giờ và chế độ ca đêm theo BLLĐ 2019",
-  "created_at": "2026-08-29T07:49:00+00:00"
-},
-  {
-  "id": "rel-4128-042-pit",
-  "source_document_id": "e41282026-tctd-4c22-92ab-110000004128",
-  "target_document_id": "e0422026-ttbt-4c22-92ab-110000000042",
-  "relation_type": "huong_dan",
-  "notes": "Giải đáp nghiệp vụ bóc tách thu nhập làm thêm giờ miễn thuế và quyết toán qua VNeID",
-  "created_at": "2026-08-29T07:49:00+00:00"
-},
-  {
-    "id": "9823c7c5-96c3-42a2-aee1-fc009d5964ea",
-    "source_document_id": "0da9c9b5-982a-42a2-a5aa-4cb2c35fb5d1",
-    "target_document_id": "014454e1-43a3-40cf-a95a-8647c8ac5ec2",
-    "relation_type": "sua_doi",
-    "notes": "Sửa đổi quy định về hóa đơn điện tử máy tính tiền",
-    "created_at": "2026-08-28T09:09:13.814581+00:00"
-  },
-  {
-    "id": "cb010241-a015-49e8-abbc-3eb8c4789c81",
-    "source_document_id": "d3dbcfb7-3b72-40e4-afd0-17bd6cc80962",
-    "target_document_id": "19f221e7-d7d2-400c-a470-6ed59271340c",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn chi tiết thi hành Nghị định 181/2025/NĐ-CP",
-    "created_at": "2026-08-28T09:09:13.067671+00:00"
-  },
-  {
-    "id": "b03e2679-0571-4b52-a3ff-8dc076ef6cc4",
-    "source_document_id": "881d4718-b188-432f-a4ad-24101d67ece9",
-    "target_document_id": "19f221e7-d7d2-400c-a470-6ed59271340c",
-    "relation_type": "sua_doi",
-    "notes": "Sửa đổi, bổ sung quy định hoàn thuế dự án đầu tư của Nghị định 181",
-    "created_at": "2026-08-28T09:09:13.201381+00:00"
-  },
-  {
-    "id": "29b32007-e98a-47f9-a4e6-59511ebcdac2",
-    "source_document_id": "22e82ce9-73ea-4b1f-a849-4ee010809730",
-    "target_document_id": "0792f139-c838-432d-a6e6-f1eb9d755144",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn chi tiết thi hành Luật Thuế TNDN 2025",
-    "created_at": "2026-08-28T09:09:13.38084+00:00"
-  },
-  {
-    "id": "a52fd401-07ca-4545-a208-6d8184f62db1",
-    "source_document_id": "6dc5e0af-c0cf-489a-a51d-c317aa4eb941",
-    "target_document_id": "22e82ce9-73ea-4b1f-a849-4ee010809730",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn chi tiết thi hành Nghị định 320/2025/NĐ-CP",
-    "created_at": "2026-08-28T09:09:13.509134+00:00"
-  },
-  {
-    "id": "6bfd89d7-bd58-4c5f-a2b6-be2612f9203a",
-    "source_document_id": "8ea00d09-efda-4832-aaf0-7b43e459b9c8",
-    "target_document_id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
-    "relation_type": "sua_doi",
-    "notes": "Sửa đổi NĐ 132/2020 về khống chế chi phí lãi vay và giao dịch liên kết",
-    "created_at": "2026-08-28T09:09:13.683781+00:00"
-  },
-  {
-    "id": "ceace98e-6621-459a-a2ef-24cff0f419ef",
-    "source_document_id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
-    "target_document_id": "0792f139-c838-432d-a6e6-f1eb9d755144",
-    "relation_type": "huong_dan",
-    "notes": "Quản lý thuế đối với doanh nghiệp có giao dịch liên kết",
-    "created_at": "2026-08-29T01:29:46.155235+00:00"
-  },
-  {
-    "id": "b42b1ed7-21e2-4bc8-a079-403b3b0b089c",
-    "source_document_id": "9dc07e8e-8e8b-4f5e-a7be-440f5e68d601",
-    "target_document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn chi tiết thi hành Luật Thuế TNCN 2025",
-    "created_at": "2026-08-28T09:09:13.991638+00:00"
-  },
-  {
-    "id": "6f27fe20-21a8-46db-ab30-f00388c3274a",
-    "source_document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
-    "target_document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
-    "relation_type": "lien_quan",
-    "notes": "Văn bản hợp nhất quy định cũ phục vụ đối chiếu niên độ trước 2026",
-    "created_at": "2026-08-29T01:29:46.687078+00:00"
-  },
-  {
-    "id": "ee33b5e5-3634-45cb-a023-2d1676844b3f",
-    "source_document_id": "ac0dbe6c-7bd5-4dee-a8a6-f06ac501710b",
-    "target_document_id": "014454e1-43a3-40cf-a95a-8647c8ac5ec2",
-    "relation_type": "lien_quan",
-    "notes": "Văn bản hợp nhất xử phạt vi phạm hành chính về thuế và hóa đơn",
-    "created_at": "2026-08-29T01:29:47.413838+00:00"
-  },
-  {
-    "id": "64368366-10ed-4678-a4de-67ffe08d5026",
-    "source_document_id": "142f2bdd-5039-49d0-a5d8-bd00fa0f4164",
-    "target_document_id": "d3dbcfb7-3b72-40e4-afd0-17bd6cc80962",
-    "relation_type": "huong_dan",
-    "notes": "Giải đáp vướng mắc thủ tục hoàn thuế theo Thông tư 69/2025",
-    "created_at": "2026-08-29T01:29:45.431445+00:00"
-  },
-  {
-    "id": "fed00a47-1328-4d31-a5a8-9e9e23759bbb",
-    "source_document_id": "b858330e-57c6-442c-a44b-8b5fb19bb2a9",
-    "target_document_id": "0792f139-c838-432d-a6e6-f1eb9d755144",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn điều kiện chi phí không dùng tiền mặt khi tính thuế TNDN",
-    "created_at": "2026-08-28T09:09:14.298778+00:00"
-  },
-  {
-    "id": "3df7e093-73c3-4a1e-ad78-6d917b76af42",
-    "source_document_id": "53d8a6c0-91f3-44e9-a2fb-02197c03e814",
-    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
-    "relation_type": "huong_dan",
-    "notes": "Chế độ kế toán DN mới ban hành căn cứ Luật Kế toán 2015",
-    "created_at": "2026-08-29T02:08:27.08143+00:00"
-  },
-  {
-    "id": "474cdc9b-f606-472e-a575-25eedd3c9433",
-    "source_document_id": "53d8a6c0-91f3-44e9-a2fb-02197c03e814",
-    "target_document_id": "8ab29a62-2510-4869-a7ea-8ab491af0379",
-    "relation_type": "thay_the",
-    "notes": "Thay thế hoàn toàn Thông tư 200/2014/TT-BTC từ 01/01/2026",
-    "created_at": "2026-08-29T02:08:27.208155+00:00"
-  },
-  {
-    "id": "a69db9f5-84c0-49d7-a8bf-a630295e66f0",
-    "source_document_id": "06b69b8f-b131-4a3c-a3df-66a9a68e60ff",
-    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
-    "relation_type": "huong_dan",
-    "notes": "Chế độ kế toán DN siêu nhỏ căn cứ Luật Kế toán",
-    "created_at": "2026-08-29T02:08:27.351616+00:00"
-  },
-  {
-    "id": "4c2cdd1b-7830-4089-a74f-5d7906b0b61c",
-    "source_document_id": "10f4225a-35ee-4502-af22-f6a61ee8bb51",
-    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
-    "relation_type": "sua_doi",
-    "notes": "Sửa đổi, bổ sung quy định về chứng từ điện tử trong Luật Kế toán",
-    "created_at": "2026-08-29T02:08:27.482224+00:00"
-  },
-  {
-    "id": "9f341c15-869b-4389-adec-ecb2abcb0b6e",
-    "source_document_id": "421a2b29-df81-452b-a528-2e06894e91de",
-    "target_document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn điều kiện hành nghề kiểm toán độc lập",
-    "created_at": "2026-08-29T02:08:27.615577+00:00"
-  },
-  {
-    "id": "cd52f36d-1ff4-4b6f-aed2-e1a18ab6c0a5",
-    "source_document_id": "3a6fa095-5c41-4083-a801-e8767d686f9a",
-    "target_document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
-    "relation_type": "huong_dan",
-    "notes": "Ban hành Hệ thống chuẩn mực kiểm toán Việt Nam (VSA)",
-    "created_at": "2026-08-29T02:08:27.741605+00:00"
-  },
-  {
-    "id": "67fa20e3-2ad9-4a08-ad42-937235227751",
-    "source_document_id": "10f4225a-35ee-4502-af22-f6a61ee8bb51",
-    "target_document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
-    "relation_type": "sua_doi",
-    "notes": "Sửa đổi, bổ sung Luật Kiểm toán độc lập 2011",
-    "created_at": "2026-08-29T02:08:27.867318+00:00"
-  },
-  {
-    "id": "8da352e7-a9fa-4c8c-ac09-924e8d602707",
-    "source_document_id": "19f221e7-d7d2-400c-a470-6ed59271340c",
-    "target_document_id": "c96bac86-85a4-4bf0-a810-0d60236a2855",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn chi tiết thi hành Luật Thuế GTGT 2024",
-    "created_at": "2026-08-29T02:08:27.996154+00:00"
-  },
-  {
-    "id": "76d4cbdc-419d-4f2a-a3e0-a06255a77a69",
-    "source_document_id": "12e08206-35a3-4b6d-a495-d7fc26970e5e",
-    "target_document_id": "c96bac86-85a4-4bf0-a810-0d60236a2855",
-    "relation_type": "huong_dan",
-    "notes": "Nghị định quy định giảm 2% thuế GTGT (8%) 2025 - 2026",
-    "created_at": "2026-08-29T02:08:28.405321+00:00"
-  },
-  {
-    "id": "90fe012d-516e-4dd6-a047-2ff3344caed3",
-    "source_document_id": "142f2bdd-5039-49d0-a5d8-bd00fa0f4164",
-    "target_document_id": "c96bac86-85a4-4bf0-a810-0d60236a2855",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn hoàn thuế xuất khẩu theo Luật Thuế GTGT mới",
-    "created_at": "2026-08-29T02:08:28.544326+00:00"
-  },
-  {
-    "id": "c47ef124-b94c-412c-a7b4-ea4189dbe808",
-    "source_document_id": "5b96715f-dfc2-4422-aee8-7c05accb08f1",
-    "target_document_id": "a1d22beb-60b8-486e-a7d4-9592e07b3fd0",
-    "relation_type": "huong_dan",
-    "notes": "Quy định chi tiết về hóa đơn, chứng từ theo Luật Quản lý thuế",
-    "created_at": "2026-08-29T02:08:29.929994+00:00"
-  },
-  {
-    "id": "866641df-b6e3-4e56-a30d-334d41a5ab7a",
-    "source_document_id": "0da9c9b5-982a-42a2-a5aa-4cb2c35fb5d1",
-    "target_document_id": "5b96715f-dfc2-4422-aee8-7c05accb08f1",
-    "relation_type": "sua_doi",
-    "notes": "Sửa đổi quy định về hóa đơn điện tử khởi tạo từ máy tính tiền",
-    "created_at": "2026-08-29T02:08:30.081607+00:00"
-  },
-  {
-    "id": "dbd491d8-714a-4237-a615-64175d32b84c",
-    "source_document_id": "014454e1-43a3-40cf-a95a-8647c8ac5ec2",
-    "target_document_id": "a1d22beb-60b8-486e-a7d4-9592e07b3fd0",
-    "relation_type": "huong_dan",
-    "notes": "Quy định xử phạt vi phạm hành chính về thuế, hóa đơn",
-    "created_at": "2026-08-29T02:08:30.219422+00:00"
-  },
-  {
-    "id": "aa396522-2a8d-4cc2-a057-e57221e3f142",
-    "source_document_id": "881fba84-36f3-49da-aea0-4da028b2febe",
-    "target_document_id": "5b96715f-dfc2-4422-aee8-7c05accb08f1",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn xuất hóa đơn chuyển nhượng quyền sử dụng đất",
-    "created_at": "2026-08-29T02:08:30.47583+00:00"
-  },
-  {
-    "id": "2694f3a6-0dda-44a3-a1e1-77ac3a0607f5",
-    "source_document_id": "53431a9e-e6cd-4d6b-ae92-fa21f0cbe74f",
-    "target_document_id": "e06f7455-cb19-4251-adde-f305804d759e",
-    "relation_type": "lien_quan",
-    "notes": "Nghị định hướng dẫn chế độ BHXH bắt buộc",
-    "created_at": "2026-08-29T02:08:30.601388+00:00"
-  },
-  {
-    "id": "6aaac518-b1ac-4375-afd6-91aa99e9eb8c",
-    "source_document_id": "bfe460d3-b4eb-4089-aa90-227b04f553b8",
-    "target_document_id": "53431a9e-e6cd-4d6b-ae92-fa21f0cbe74f",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn chi tiết các khoản phụ cấp tính đóng BHXH",
-    "created_at": "2026-08-29T02:08:30.731279+00:00"
-  },
-  {
-    "id": "dbe1cc3c-0244-44b6-a788-f78d9ecc8e1e",
-    "source_document_id": "cf76cbfb-6df5-471d-a195-fd7d611e6645",
-    "target_document_id": "bafac4d7-9f1b-46c2-af3b-d40ecc7e3062",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn chi tiết điều kiện lao động và quan hệ lao động",
-    "created_at": "2026-08-29T02:08:30.869842+00:00"
-  },
-  {
-    "id": "fbc0b23e-057b-48c5-a90b-40c5d8495394",
-    "source_document_id": "be3e3e09-1806-4782-a89d-b2401a33f446",
-    "target_document_id": "bafac4d7-9f1b-46c2-af3b-d40ecc7e3062",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn thực hiện Hợp đồng lao động điện tử theo Bộ luật Lao động",
-    "created_at": "2026-08-29T02:08:31.004876+00:00"
-  },
-  {
-    "id": "fd056434-1560-42ab-a165-96af4c9682c5",
-    "source_document_id": "883462bd-0d7a-48c3-a0ec-d56a1fc66bbd",
-    "target_document_id": "c43343cf-ea54-412f-a31a-88bb5b309ee0",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn tiền sử dụng đất, tiền thuê đất theo Luật Đất đai 2024",
-    "created_at": "2026-08-29T02:08:31.133901+00:00"
-  },
-  {
-    "id": "733939fe-60e8-4c21-a97e-df734a39d708",
-    "source_document_id": "881fba84-36f3-49da-aea0-4da028b2febe",
-    "target_document_id": "c43343cf-ea54-412f-a31a-88bb5b309ee0",
-    "relation_type": "huong_dan",
-    "notes": "Xác định giá đất được trừ khi tính thuế theo Luật Đất đai",
-    "created_at": "2026-08-29T02:08:31.268591+00:00"
-  },
-  {
-    "id": "84e4e7a4-525c-4c77-a118-d92df925b1ca",
-    "source_document_id": "025953eb-2f43-4ce4-a68c-85e6c1bad345",
-    "target_document_id": "86eaef4a-24c1-4bb7-a728-21da78626167",
-    "relation_type": "can_cu",
-    "notes": "Danh mục dự án thu hút đầu tư căn cứ Luật Đầu tư và Nghị quyết 98",
-    "created_at": "2026-08-29T02:08:31.416524+00:00"
-  },
-  {
-    "id": "671d3a81-8454-4dba-a24f-9e9c19e4221f",
-    "source_document_id": "f7a94459-bdf1-41e1-a41b-4842e9942f72",
-    "target_document_id": "a1d22beb-60b8-486e-a7d4-9592e07b3fd0",
-    "relation_type": "huong_dan",
-    "notes": "Quy định về thủ tục hải quan số và quản lý thuế xuất nhập khẩu",
-    "created_at": "2026-08-29T02:08:31.544057+00:00"
-  },
-  {
-    "id": "7217899a-d2e4-4d6c-a86d-941ba600ae1f",
-    "source_document_id": "2cfefbbf-8a2a-40e2-a901-510ecf08f7c2",
-    "target_document_id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
-    "relation_type": "thay_the",
-    "notes": "Thay thế hoàn toàn Nghị định 132/2020/NĐ-CP từ kỳ tính thuế 2026",
-    "created_at": "2026-08-29T02:08:41.406295+00:00"
-  },
-  {
-    "id": "a174dd00-9066-42f3-aa98-47ecb0ff10a7",
-    "source_document_id": "2cfefbbf-8a2a-40e2-a901-510ecf08f7c2",
-    "target_document_id": "8ea00d09-efda-4832-aaf0-7b43e459b9c8",
-    "relation_type": "thay_the",
-    "notes": "Thay thế Nghị định 20/2025/NĐ-CP từ 01/07/2026",
-    "created_at": "2026-08-29T02:08:41.547529+00:00"
-  },
-  {
-    "id": "20c2dae3-dad2-427e-a36a-deaf7a18c32a",
-    "source_document_id": "8a23da83-272f-49e4-a2de-833788861af0",
-    "target_document_id": "8ea00d09-efda-4832-aaf0-7b43e459b9c8",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn kê khai và khống chế trần lãi vay 30% EBITDA",
-    "created_at": "2026-08-29T02:08:41.726791+00:00"
-  },
-  {
-    "id": "fe6410f3-0635-4ca4-a139-20307eb1cfc7",
-    "source_document_id": "1058ebb4-df31-406e-a3e3-77aa64730ba2",
-    "target_document_id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
-    "relation_type": "huong_dan",
-    "notes": "Làm rõ tiêu chí quan hệ liên kết qua ngân hàng thương mại",
-    "created_at": "2026-08-29T02:08:41.854768+00:00"
-  },
-  {
-    "id": "0ef2b807-317c-4508-a296-03b7bc4f5f09",
-    "source_document_id": "ba9cd68b-edb7-42cc-aeda-3d89d12a87cf",
-    "target_document_id": "228983ef-d36a-4e1b-a31c-1d73eb19d939",
-    "relation_type": "sua_doi",
-    "notes": "Sửa đổi, bổ sung Luật Doanh nghiệp 2020 về chủ sở hữu hưởng lợi và đăng ký điện tử",
-    "created_at": "2026-08-29T02:08:42.028894+00:00"
-  },
-  {
-    "id": "3d61a44d-78a6-4dba-ad62-017573192587",
-    "source_document_id": "cf393170-3734-4408-a28e-aa7150eb879b",
-    "target_document_id": "ba9cd68b-edb7-42cc-aeda-3d89d12a87cf",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn chi tiết thi hành Luật Doanh nghiệp về đăng ký kinh doanh",
-    "created_at": "2026-08-29T02:08:42.147669+00:00"
-  },
-  {
-    "id": "cf14c63c-58e4-4eaa-a6d6-fee8a5337bac",
-    "source_document_id": "4b81a97b-2e83-4411-aaee-283add988ca6",
-    "target_document_id": "cf393170-3734-4408-a28e-aa7150eb879b",
-    "relation_type": "huong_dan",
-    "notes": "Ban hành hệ thống biểu mẫu điện tử đăng ký doanh nghiệp",
-    "created_at": "2026-08-29T02:08:42.328561+00:00"
-  },
-  {
-    "id": "6ae9fa16-23e2-4db1-a288-a431f94337dd",
-    "source_document_id": "d654cd54-76be-4315-a72c-e8afce03441a",
-    "target_document_id": "4b81a97b-2e83-4411-aaee-283add988ca6",
-    "relation_type": "sua_doi",
-    "notes": "Sửa đổi, bổ sung biểu mẫu đăng ký kinh doanh xác thực qua VNeID",
-    "created_at": "2026-08-29T02:08:42.454528+00:00"
-  },
-  {
-    "id": "27949454-94b6-49a5-a76a-d70e0c5f4452",
-    "source_document_id": "86297fe8-1d48-4cd0-a342-1ada83ba82f0",
-    "target_document_id": "228983ef-d36a-4e1b-a31c-1d73eb19d939",
-    "relation_type": "huong_dan",
-    "notes": "Quy định đầu tư khởi nghiệp sáng tạo cho doanh nghiệp vừa và nhỏ",
-    "created_at": "2026-08-29T02:08:42.651524+00:00"
-  },
-  {
-    "id": "6338671f-fd30-408e-aa54-80c658a435e9",
-    "source_document_id": "ffd7dab7-2e2d-4ac8-a654-7decea9c348d",
-    "target_document_id": "228983ef-d36a-4e1b-a31c-1d73eb19d939",
-    "relation_type": "huong_dan",
-    "notes": "Quy định lương thưởng người quản lý và đại diện vốn doanh nghiệp",
-    "created_at": "2026-08-29T02:08:42.780807+00:00"
-  },
-  {
-    "id": "6bbb7f3a-d625-45fe-a82a-eb7c91805745",
-    "source_document_id": "e0ddf31b-e16a-49d9-a8a0-221894905fd5",
-    "target_document_id": "421a2b29-df81-452b-a528-2e06894e91de",
-    "relation_type": "sua_doi",
-    "notes": "Siết chặt khung xử phạt vi phạm hành chính trong kiểm toán và kế toán",
-    "created_at": "2026-08-29T02:08:42.957823+00:00"
-  },
-  {
-    "id": "ffdae20e-dc9d-4995-a847-1b1a92e6e8bb",
-    "source_document_id": "53405945-a4bc-4a55-a028-9ed6cd1a69e4",
-    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
-    "relation_type": "huong_dan",
-    "notes": "Hướng dẫn lộ trình áp dụng Chuẩn mực BCTC Quốc tế IFRS tại Việt Nam",
-    "created_at": "2026-08-29T02:08:43.092618+00:00"
-  },
-  {
-    "id": "ca8fb470-f8c1-42d2-aac8-71d063afc3c5",
-    "source_document_id": "53405945-a4bc-4a55-a028-9ed6cd1a69e4",
-    "target_document_id": "53d8a6c0-91f3-44e9-a2fb-02197c03e814",
-    "relation_type": "lien_quan",
-    "notes": "Đối chiếu chuyển đổi số liệu giữa TT 99 và IFRS",
-    "created_at": "2026-08-29T02:08:43.225509+00:00"
-  },
-  {
-    "id": "ce635f63-ff3c-4adb-a692-b9d5fc2e6353",
-    "source_document_id": "bf77f96c-836f-490c-a5d6-3ebcdd0489bd",
-    "target_document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
-    "relation_type": "huong_dan",
-    "notes": "Bãi bỏ 09 thủ tục hành chính trong lĩnh vực kiểm toán độc lập",
-    "created_at": "2026-08-29T02:08:43.347762+00:00"
-  },
-  {
-    "id": "b3dc312d-5c88-4132-a1c9-76da026b02ed",
-    "source_document_id": "91a26d35-c6ec-4261-a4a4-979c1605ba30",
-    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
-    "relation_type": "huong_dan",
-    "notes": "Chế độ kế toán đặc thù cho doanh nghiệp bảo hiểm",
-    "created_at": "2026-08-29T02:08:43.526051+00:00"
-  }
-];
-
 export const DEMO_CATEGORY_LINKS: DocumentCategoryLink[] = [
   {
-  "id": "link-110-tncn-root",
-  "document_id": "e1102025-ubtv-4c22-92ab-110000000015",
-  "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
-  "is_primary": true
-},
+    "id": "link-110-tncn-root",
+    "document_id": "e1102025-ubtv-4c22-92ab-110000000015",
+    "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "is_primary": true
+  },
   {
-  "id": "link-110-tncn-luat",
-  "document_id": "e1102025-ubtv-4c22-92ab-110000000015",
-  "category_id": "d8f3c202-0e23-4d33-a3bc-220000000001",
-  "is_primary": false
-},
+    "id": "link-110-tncn-luat",
+    "document_id": "e1102025-ubtv-4c22-92ab-110000000015",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000001",
+    "is_primary": false
+  },
   {
-  "id": "link-042-tncn-root",
-  "document_id": "e0422026-ttbt-4c22-92ab-110000000042",
-  "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
-  "is_primary": true
-},
+    "id": "link-042-tncn-root",
+    "document_id": "e0422026-ttbt-4c22-92ab-110000000042",
+    "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "is_primary": true
+  },
   {
-  "id": "link-042-tncn-tt",
-  "document_id": "e0422026-ttbt-4c22-92ab-110000000042",
-  "category_id": "d8f3c202-0e23-4d33-a3bc-220000000003",
-  "is_primary": false
-},
+    "id": "link-042-tncn-tt",
+    "document_id": "e0422026-ttbt-4c22-92ab-110000000042",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000003",
+    "is_primary": false
+  },
   {
-  "id": "link-074-labour-root",
-  "document_id": "e0742024-ndcp-4c22-92ab-110000000074",
-  "category_id": "63d88c12-2036-41f3-a3e3-0928b141d68d",
-  "is_primary": true
-},
+    "id": "link-074-labour-root",
+    "document_id": "e0742024-ndcp-4c22-92ab-110000000074",
+    "category_id": "63d88c12-2036-41f3-a3e3-0928b141d68d",
+    "is_primary": true
+  },
   {
-  "id": "link-074-labour-nd",
-  "document_id": "e0742024-ndcp-4c22-92ab-110000000074",
-  "category_id": "c575615d-362b-4cb8-ac7f-014b454cd7ce",
-  "is_primary": false
-},
+    "id": "link-074-labour-nd",
+    "document_id": "e0742024-ndcp-4c22-92ab-110000000074",
+    "category_id": "c575615d-362b-4cb8-ac7f-014b454cd7ce",
+    "is_primary": false
+  },
   {
-  "id": "link-4128-tncn-root",
-  "document_id": "e41282026-tctd-4c22-92ab-110000004128",
-  "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
-  "is_primary": true
-},
+    "id": "link-4128-tncn-root",
+    "document_id": "e41282026-tctd-4c22-92ab-110000004128",
+    "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "is_primary": true
+  },
   {
-  "id": "link-4128-tncn-cv",
-  "document_id": "e41282026-tctd-4c22-92ab-110000004128",
-  "category_id": "d8f3c202-0e23-4d33-a3bc-220000000004",
-  "is_primary": false
-},
+    "id": "link-4128-tncn-cv",
+    "document_id": "e41282026-tctd-4c22-92ab-110000004128",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000004",
+    "is_primary": false
+  },
   {
     "id": "cdb68819-4cbc-4df7-acd6-6d546f75a528",
     "document_id": "53405945-a4bc-4a55-a028-9ed6cd1a69e4",
@@ -2117,6 +1678,449 @@ export const DEMO_CATEGORY_LINKS: DocumentCategoryLink[] = [
   }
 ];
 
+export const DEMO_RELATIONS: DocumentRelation[] = [
+  {
+    "id": "rel-110-109-pit",
+    "source_document_id": "e1102025-ubtv-4c22-92ab-110000000015",
+    "target_document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
+    "relation_type": "sua_doi",
+    "notes": "Nâng mức giảm trừ gia cảnh thuế TNCN lên 15,5 triệu và 6,2 triệu đồng từ năm 2026",
+    "created_at": "2026-08-29T07:49:00+00:00"
+  },
+  {
+    "id": "rel-110-112-pit",
+    "source_document_id": "e1102025-ubtv-4c22-92ab-110000000015",
+    "target_document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
+    "relation_type": "thay_the",
+    "notes": "Thay thế quy định mức giảm trừ gia cảnh cũ tại Nghị quyết 954/2020",
+    "created_at": "2026-08-29T07:49:00+00:00"
+  },
+  {
+    "id": "rel-042-253-pit",
+    "source_document_id": "e0422026-ttbt-4c22-92ab-110000000042",
+    "target_document_id": "9dc07e8e-8e8b-4f5e-a7be-440f5e68d601",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết miễn thuế 100% lương tăng ca và biểu thuế 5 bậc theo Nghị định 253/2026",
+    "created_at": "2026-08-29T07:49:00+00:00"
+  },
+  {
+    "id": "rel-042-109-pit",
+    "source_document_id": "e0422026-ttbt-4c22-92ab-110000000042",
+    "target_document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn thi hành Luật Thuế TNCN 2025",
+    "created_at": "2026-08-29T07:49:00+00:00"
+  },
+  {
+    "id": "rel-074-045-labour",
+    "source_document_id": "e0742024-ndcp-4c22-92ab-110000000074",
+    "target_document_id": "bafac4d7-9f1b-46c2-af3b-d40ecc7e3062",
+    "relation_type": "huong_dan",
+    "notes": "Quy định chi tiết tiền lương tối thiểu, trả lương làm thêm giờ và chế độ ca đêm theo BLLĐ 2019",
+    "created_at": "2026-08-29T07:49:00+00:00"
+  },
+  {
+    "id": "rel-4128-042-pit",
+    "source_document_id": "e41282026-tctd-4c22-92ab-110000004128",
+    "target_document_id": "e0422026-ttbt-4c22-92ab-110000000042",
+    "relation_type": "huong_dan",
+    "notes": "Giải đáp nghiệp vụ bóc tách thu nhập làm thêm giờ miễn thuế và quyết toán qua VNeID",
+    "created_at": "2026-08-29T07:49:00+00:00"
+  },
+  {
+    "id": "9823c7c5-96c3-42a2-aee1-fc009d5964ea",
+    "source_document_id": "0da9c9b5-982a-42a2-a5aa-4cb2c35fb5d1",
+    "target_document_id": "014454e1-43a3-40cf-a95a-8647c8ac5ec2",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi quy định về hóa đơn điện tử máy tính tiền",
+    "created_at": "2026-08-28T09:09:13.814581+00:00"
+  },
+  {
+    "id": "cb010241-a015-49e8-abbc-3eb8c4789c81",
+    "source_document_id": "d3dbcfb7-3b72-40e4-afd0-17bd6cc80962",
+    "target_document_id": "19f221e7-d7d2-400c-a470-6ed59271340c",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết thi hành Nghị định 181/2025/NĐ-CP",
+    "created_at": "2026-08-28T09:09:13.067671+00:00"
+  },
+  {
+    "id": "b03e2679-0571-4b52-a3ff-8dc076ef6cc4",
+    "source_document_id": "881d4718-b188-432f-a4ad-24101d67ece9",
+    "target_document_id": "19f221e7-d7d2-400c-a470-6ed59271340c",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi, bổ sung quy định hoàn thuế dự án đầu tư của Nghị định 181",
+    "created_at": "2026-08-28T09:09:13.201381+00:00"
+  },
+  {
+    "id": "29b32007-e98a-47f9-a4e6-59511ebcdac2",
+    "source_document_id": "22e82ce9-73ea-4b1f-a849-4ee010809730",
+    "target_document_id": "0792f139-c838-432d-a6e6-f1eb9d755144",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết thi hành Luật Thuế TNDN 2025",
+    "created_at": "2026-08-28T09:09:13.38084+00:00"
+  },
+  {
+    "id": "a52fd401-07ca-4545-a208-6d8184f62db1",
+    "source_document_id": "6dc5e0af-c0cf-489a-a51d-c317aa4eb941",
+    "target_document_id": "22e82ce9-73ea-4b1f-a849-4ee010809730",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết thi hành Nghị định 320/2025/NĐ-CP",
+    "created_at": "2026-08-28T09:09:13.509134+00:00"
+  },
+  {
+    "id": "6bfd89d7-bd58-4c5f-a2b6-be2612f9203a",
+    "source_document_id": "8ea00d09-efda-4832-aaf0-7b43e459b9c8",
+    "target_document_id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi NĐ 132/2020 về khống chế chi phí lãi vay và giao dịch liên kết",
+    "created_at": "2026-08-28T09:09:13.683781+00:00"
+  },
+  {
+    "id": "ceace98e-6621-459a-a2ef-24cff0f419ef",
+    "source_document_id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
+    "target_document_id": "0792f139-c838-432d-a6e6-f1eb9d755144",
+    "relation_type": "huong_dan",
+    "notes": "Quản lý thuế đối với doanh nghiệp có giao dịch liên kết",
+    "created_at": "2026-08-29T01:29:46.155235+00:00"
+  },
+  {
+    "id": "b42b1ed7-21e2-4bc8-a079-403b3b0b089c",
+    "source_document_id": "9dc07e8e-8e8b-4f5e-a7be-440f5e68d601",
+    "target_document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết thi hành Luật Thuế TNCN 2025",
+    "created_at": "2026-08-28T09:09:13.991638+00:00"
+  },
+  {
+    "id": "6f27fe20-21a8-46db-ab30-f00388c3274a",
+    "source_document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
+    "target_document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
+    "relation_type": "lien_quan",
+    "notes": "Văn bản hợp nhất quy định cũ phục vụ đối chiếu niên độ trước 2026",
+    "created_at": "2026-08-29T01:29:46.687078+00:00"
+  },
+  {
+    "id": "ee33b5e5-3634-45cb-a023-2d1676844b3f",
+    "source_document_id": "ac0dbe6c-7bd5-4dee-a8a6-f06ac501710b",
+    "target_document_id": "014454e1-43a3-40cf-a95a-8647c8ac5ec2",
+    "relation_type": "lien_quan",
+    "notes": "Văn bản hợp nhất xử phạt vi phạm hành chính về thuế và hóa đơn",
+    "created_at": "2026-08-29T01:29:47.413838+00:00"
+  },
+  {
+    "id": "64368366-10ed-4678-a4de-67ffe08d5026",
+    "source_document_id": "142f2bdd-5039-49d0-a5d8-bd00fa0f4164",
+    "target_document_id": "d3dbcfb7-3b72-40e4-afd0-17bd6cc80962",
+    "relation_type": "huong_dan",
+    "notes": "Giải đáp vướng mắc thủ tục hoàn thuế theo Thông tư 69/2025",
+    "created_at": "2026-08-29T01:29:45.431445+00:00"
+  },
+  {
+    "id": "fed00a47-1328-4d31-a5a8-9e9e23759bbb",
+    "source_document_id": "b858330e-57c6-442c-a44b-8b5fb19bb2a9",
+    "target_document_id": "0792f139-c838-432d-a6e6-f1eb9d755144",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn điều kiện chi phí không dùng tiền mặt khi tính thuế TNDN",
+    "created_at": "2026-08-28T09:09:14.298778+00:00"
+  },
+  {
+    "id": "3df7e093-73c3-4a1e-ad78-6d917b76af42",
+    "source_document_id": "53d8a6c0-91f3-44e9-a2fb-02197c03e814",
+    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
+    "relation_type": "huong_dan",
+    "notes": "Chế độ kế toán DN mới ban hành căn cứ Luật Kế toán 2015",
+    "created_at": "2026-08-29T02:08:27.08143+00:00"
+  },
+  {
+    "id": "474cdc9b-f606-472e-a575-25eedd3c9433",
+    "source_document_id": "53d8a6c0-91f3-44e9-a2fb-02197c03e814",
+    "target_document_id": "8ab29a62-2510-4869-a7ea-8ab491af0379",
+    "relation_type": "thay_the",
+    "notes": "Thay thế hoàn toàn Thông tư 200/2014/TT-BTC từ 01/01/2026",
+    "created_at": "2026-08-29T02:08:27.208155+00:00"
+  },
+  {
+    "id": "a69db9f5-84c0-49d7-a8bf-a630295e66f0",
+    "source_document_id": "06b69b8f-b131-4a3c-a3df-66a9a68e60ff",
+    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
+    "relation_type": "huong_dan",
+    "notes": "Chế độ kế toán DN siêu nhỏ căn cứ Luật Kế toán",
+    "created_at": "2026-08-29T02:08:27.351616+00:00"
+  },
+  {
+    "id": "4c2cdd1b-7830-4089-a74f-5d7906b0b61c",
+    "source_document_id": "10f4225a-35ee-4502-af22-f6a61ee8bb51",
+    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi, bổ sung quy định về chứng từ điện tử trong Luật Kế toán",
+    "created_at": "2026-08-29T02:08:27.482224+00:00"
+  },
+  {
+    "id": "9f341c15-869b-4389-adec-ecb2abcb0b6e",
+    "source_document_id": "421a2b29-df81-452b-a528-2e06894e91de",
+    "target_document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn điều kiện hành nghề kiểm toán độc lập",
+    "created_at": "2026-08-29T02:08:27.615577+00:00"
+  },
+  {
+    "id": "cd52f36d-1ff4-4b6f-aed2-e1a18ab6c0a5",
+    "source_document_id": "3a6fa095-5c41-4083-a801-e8767d686f9a",
+    "target_document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
+    "relation_type": "huong_dan",
+    "notes": "Ban hành Hệ thống chuẩn mực kiểm toán Việt Nam (VSA)",
+    "created_at": "2026-08-29T02:08:27.741605+00:00"
+  },
+  {
+    "id": "67fa20e3-2ad9-4a08-ad42-937235227751",
+    "source_document_id": "10f4225a-35ee-4502-af22-f6a61ee8bb51",
+    "target_document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi, bổ sung Luật Kiểm toán độc lập 2011",
+    "created_at": "2026-08-29T02:08:27.867318+00:00"
+  },
+  {
+    "id": "8da352e7-a9fa-4c8c-ac09-924e8d602707",
+    "source_document_id": "19f221e7-d7d2-400c-a470-6ed59271340c",
+    "target_document_id": "c96bac86-85a4-4bf0-a810-0d60236a2855",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết thi hành Luật Thuế GTGT 2024",
+    "created_at": "2026-08-29T02:08:27.996154+00:00"
+  },
+  {
+    "id": "76d4cbdc-419d-4f2a-a3e0-a06255a77a69",
+    "source_document_id": "12e08206-35a3-4b6d-a495-d7fc26970e5e",
+    "target_document_id": "c96bac86-85a4-4bf0-a810-0d60236a2855",
+    "relation_type": "huong_dan",
+    "notes": "Nghị định quy định giảm 2% thuế GTGT (8%) 2025 - 2026",
+    "created_at": "2026-08-29T02:08:28.405321+00:00"
+  },
+  {
+    "id": "90fe012d-516e-4dd6-a047-2ff3344caed3",
+    "source_document_id": "142f2bdd-5039-49d0-a5d8-bd00fa0f4164",
+    "target_document_id": "c96bac86-85a4-4bf0-a810-0d60236a2855",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn hoàn thuế xuất khẩu theo Luật Thuế GTGT mới",
+    "created_at": "2026-08-29T02:08:28.544326+00:00"
+  },
+  {
+    "id": "c47ef124-b94c-412c-a7b4-ea4189dbe808",
+    "source_document_id": "5b96715f-dfc2-4422-aee8-7c05accb08f1",
+    "target_document_id": "a1d22beb-60b8-486e-a7d4-9592e07b3fd0",
+    "relation_type": "huong_dan",
+    "notes": "Quy định chi tiết về hóa đơn, chứng từ theo Luật Quản lý thuế",
+    "created_at": "2026-08-29T02:08:29.929994+00:00"
+  },
+  {
+    "id": "866641df-b6e3-4e56-a30d-334d41a5ab7a",
+    "source_document_id": "0da9c9b5-982a-42a2-a5aa-4cb2c35fb5d1",
+    "target_document_id": "5b96715f-dfc2-4422-aee8-7c05accb08f1",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi quy định về hóa đơn điện tử khởi tạo từ máy tính tiền",
+    "created_at": "2026-08-29T02:08:30.081607+00:00"
+  },
+  {
+    "id": "dbd491d8-714a-4237-a615-64175d32b84c",
+    "source_document_id": "014454e1-43a3-40cf-a95a-8647c8ac5ec2",
+    "target_document_id": "a1d22beb-60b8-486e-a7d4-9592e07b3fd0",
+    "relation_type": "huong_dan",
+    "notes": "Quy định xử phạt vi phạm hành chính về thuế, hóa đơn",
+    "created_at": "2026-08-29T02:08:30.219422+00:00"
+  },
+  {
+    "id": "aa396522-2a8d-4cc2-a057-e57221e3f142",
+    "source_document_id": "881fba84-36f3-49da-aea0-4da028b2febe",
+    "target_document_id": "5b96715f-dfc2-4422-aee8-7c05accb08f1",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn xuất hóa đơn chuyển nhượng quyền sử dụng đất",
+    "created_at": "2026-08-29T02:08:30.47583+00:00"
+  },
+  {
+    "id": "2694f3a6-0dda-44a3-a1e1-77ac3a0607f5",
+    "source_document_id": "53431a9e-e6cd-4d6b-ae92-fa21f0cbe74f",
+    "target_document_id": "e06f7455-cb19-4251-adde-f305804d759e",
+    "relation_type": "lien_quan",
+    "notes": "Nghị định hướng dẫn chế độ BHXH bắt buộc",
+    "created_at": "2026-08-29T02:08:30.601388+00:00"
+  },
+  {
+    "id": "6aaac518-b1ac-4375-afd6-91aa99e9eb8c",
+    "source_document_id": "bfe460d3-b4eb-4089-aa90-227b04f553b8",
+    "target_document_id": "53431a9e-e6cd-4d6b-ae92-fa21f0cbe74f",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết các khoản phụ cấp tính đóng BHXH",
+    "created_at": "2026-08-29T02:08:30.731279+00:00"
+  },
+  {
+    "id": "dbe1cc3c-0244-44b6-a788-f78d9ecc8e1e",
+    "source_document_id": "cf76cbfb-6df5-471d-a195-fd7d611e6645",
+    "target_document_id": "bafac4d7-9f1b-46c2-af3b-d40ecc7e3062",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết điều kiện lao động và quan hệ lao động",
+    "created_at": "2026-08-29T02:08:30.869842+00:00"
+  },
+  {
+    "id": "fbc0b23e-057b-48c5-a90b-40c5d8495394",
+    "source_document_id": "be3e3e09-1806-4782-a89d-b2401a33f446",
+    "target_document_id": "bafac4d7-9f1b-46c2-af3b-d40ecc7e3062",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn thực hiện Hợp đồng lao động điện tử theo Bộ luật Lao động",
+    "created_at": "2026-08-29T02:08:31.004876+00:00"
+  },
+  {
+    "id": "fd056434-1560-42ab-a165-96af4c9682c5",
+    "source_document_id": "883462bd-0d7a-48c3-a0ec-d56a1fc66bbd",
+    "target_document_id": "c43343cf-ea54-412f-a31a-88bb5b309ee0",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn tiền sử dụng đất, tiền thuê đất theo Luật Đất đai 2024",
+    "created_at": "2026-08-29T02:08:31.133901+00:00"
+  },
+  {
+    "id": "733939fe-60e8-4c21-a97e-df734a39d708",
+    "source_document_id": "881fba84-36f3-49da-aea0-4da028b2febe",
+    "target_document_id": "c43343cf-ea54-412f-a31a-88bb5b309ee0",
+    "relation_type": "huong_dan",
+    "notes": "Xác định giá đất được trừ khi tính thuế theo Luật Đất đai",
+    "created_at": "2026-08-29T02:08:31.268591+00:00"
+  },
+  {
+    "id": "84e4e7a4-525c-4c77-a118-d92df925b1ca",
+    "source_document_id": "025953eb-2f43-4ce4-a68c-85e6c1bad345",
+    "target_document_id": "86eaef4a-24c1-4bb7-a728-21da78626167",
+    "relation_type": "can_cu",
+    "notes": "Danh mục dự án thu hút đầu tư căn cứ Luật Đầu tư và Nghị quyết 98",
+    "created_at": "2026-08-29T02:08:31.416524+00:00"
+  },
+  {
+    "id": "671d3a81-8454-4dba-a24f-9e9c19e4221f",
+    "source_document_id": "f7a94459-bdf1-41e1-a41b-4842e9942f72",
+    "target_document_id": "a1d22beb-60b8-486e-a7d4-9592e07b3fd0",
+    "relation_type": "huong_dan",
+    "notes": "Quy định về thủ tục hải quan số và quản lý thuế xuất nhập khẩu",
+    "created_at": "2026-08-29T02:08:31.544057+00:00"
+  },
+  {
+    "id": "7217899a-d2e4-4d6c-a86d-941ba600ae1f",
+    "source_document_id": "2cfefbbf-8a2a-40e2-a901-510ecf08f7c2",
+    "target_document_id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
+    "relation_type": "thay_the",
+    "notes": "Thay thế hoàn toàn Nghị định 132/2020/NĐ-CP từ kỳ tính thuế 2026",
+    "created_at": "2026-08-29T02:08:41.406295+00:00"
+  },
+  {
+    "id": "a174dd00-9066-42f3-aa98-47ecb0ff10a7",
+    "source_document_id": "2cfefbbf-8a2a-40e2-a901-510ecf08f7c2",
+    "target_document_id": "8ea00d09-efda-4832-aaf0-7b43e459b9c8",
+    "relation_type": "thay_the",
+    "notes": "Thay thế Nghị định 20/2025/NĐ-CP từ 01/07/2026",
+    "created_at": "2026-08-29T02:08:41.547529+00:00"
+  },
+  {
+    "id": "20c2dae3-dad2-427e-a36a-deaf7a18c32a",
+    "source_document_id": "8a23da83-272f-49e4-a2de-833788861af0",
+    "target_document_id": "8ea00d09-efda-4832-aaf0-7b43e459b9c8",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn kê khai và khống chế trần lãi vay 30% EBITDA",
+    "created_at": "2026-08-29T02:08:41.726791+00:00"
+  },
+  {
+    "id": "fe6410f3-0635-4ca4-a139-20307eb1cfc7",
+    "source_document_id": "1058ebb4-df31-406e-a3e3-77aa64730ba2",
+    "target_document_id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
+    "relation_type": "huong_dan",
+    "notes": "Làm rõ tiêu chí quan hệ liên kết qua ngân hàng thương mại",
+    "created_at": "2026-08-29T02:08:41.854768+00:00"
+  },
+  {
+    "id": "0ef2b807-317c-4508-a296-03b7bc4f5f09",
+    "source_document_id": "ba9cd68b-edb7-42cc-aeda-3d89d12a87cf",
+    "target_document_id": "228983ef-d36a-4e1b-a31c-1d73eb19d939",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi, bổ sung Luật Doanh nghiệp 2020 về chủ sở hữu hưởng lợi và đăng ký điện tử",
+    "created_at": "2026-08-29T02:08:42.028894+00:00"
+  },
+  {
+    "id": "3d61a44d-78a6-4dba-ad62-017573192587",
+    "source_document_id": "cf393170-3734-4408-a28e-aa7150eb879b",
+    "target_document_id": "ba9cd68b-edb7-42cc-aeda-3d89d12a87cf",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết thi hành Luật Doanh nghiệp về đăng ký kinh doanh",
+    "created_at": "2026-08-29T02:08:42.147669+00:00"
+  },
+  {
+    "id": "cf14c63c-58e4-4eaa-a6d6-fee8a5337bac",
+    "source_document_id": "4b81a97b-2e83-4411-aaee-283add988ca6",
+    "target_document_id": "cf393170-3734-4408-a28e-aa7150eb879b",
+    "relation_type": "huong_dan",
+    "notes": "Ban hành hệ thống biểu mẫu điện tử đăng ký doanh nghiệp",
+    "created_at": "2026-08-29T02:08:42.328561+00:00"
+  },
+  {
+    "id": "6ae9fa16-23e2-4db1-a288-a431f94337dd",
+    "source_document_id": "d654cd54-76be-4315-a72c-e8afce03441a",
+    "target_document_id": "4b81a97b-2e83-4411-aaee-283add988ca6",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi, bổ sung biểu mẫu đăng ký kinh doanh xác thực qua VNeID",
+    "created_at": "2026-08-29T02:08:42.454528+00:00"
+  },
+  {
+    "id": "27949454-94b6-49a5-a76a-d70e0c5f4452",
+    "source_document_id": "86297fe8-1d48-4cd0-a342-1ada83ba82f0",
+    "target_document_id": "228983ef-d36a-4e1b-a31c-1d73eb19d939",
+    "relation_type": "huong_dan",
+    "notes": "Quy định đầu tư khởi nghiệp sáng tạo cho doanh nghiệp vừa và nhỏ",
+    "created_at": "2026-08-29T02:08:42.651524+00:00"
+  },
+  {
+    "id": "6338671f-fd30-408e-aa54-80c658a435e9",
+    "source_document_id": "ffd7dab7-2e2d-4ac8-a654-7decea9c348d",
+    "target_document_id": "228983ef-d36a-4e1b-a31c-1d73eb19d939",
+    "relation_type": "huong_dan",
+    "notes": "Quy định lương thưởng người quản lý và đại diện vốn doanh nghiệp",
+    "created_at": "2026-08-29T02:08:42.780807+00:00"
+  },
+  {
+    "id": "6bbb7f3a-d625-45fe-a82a-eb7c91805745",
+    "source_document_id": "e0ddf31b-e16a-49d9-a8a0-221894905fd5",
+    "target_document_id": "421a2b29-df81-452b-a528-2e06894e91de",
+    "relation_type": "sua_doi",
+    "notes": "Siết chặt khung xử phạt vi phạm hành chính trong kiểm toán và kế toán",
+    "created_at": "2026-08-29T02:08:42.957823+00:00"
+  },
+  {
+    "id": "ffdae20e-dc9d-4995-a847-1b1a92e6e8bb",
+    "source_document_id": "53405945-a4bc-4a55-a028-9ed6cd1a69e4",
+    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn lộ trình áp dụng Chuẩn mực BCTC Quốc tế IFRS tại Việt Nam",
+    "created_at": "2026-08-29T02:08:43.092618+00:00"
+  },
+  {
+    "id": "ca8fb470-f8c1-42d2-aac8-71d063afc3c5",
+    "source_document_id": "53405945-a4bc-4a55-a028-9ed6cd1a69e4",
+    "target_document_id": "53d8a6c0-91f3-44e9-a2fb-02197c03e814",
+    "relation_type": "lien_quan",
+    "notes": "Đối chiếu chuyển đổi số liệu giữa TT 99 và IFRS",
+    "created_at": "2026-08-29T02:08:43.225509+00:00"
+  },
+  {
+    "id": "ce635f63-ff3c-4adb-a692-b9d5fc2e6353",
+    "source_document_id": "bf77f96c-836f-490c-a5d6-3ebcdd0489bd",
+    "target_document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
+    "relation_type": "huong_dan",
+    "notes": "Bãi bỏ 09 thủ tục hành chính trong lĩnh vực kiểm toán độc lập",
+    "created_at": "2026-08-29T02:08:43.347762+00:00"
+  },
+  {
+    "id": "b3dc312d-5c88-4132-a1c9-76da026b02ed",
+    "source_document_id": "91a26d35-c6ec-4261-a4a4-979c1605ba30",
+    "target_document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
+    "relation_type": "huong_dan",
+    "notes": "Chế độ kế toán đặc thù cho doanh nghiệp bảo hiểm",
+    "created_at": "2026-08-29T02:08:43.526051+00:00"
+  }
+];
+
 export const DEMO_DOCUMENTS: LegalDocument[] = [
   {
     "id": "e1102025-ubtv-4c22-92ab-110000000015",
@@ -2158,7 +2162,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System Admin",
     "verified_at": "2026-08-29T07:45:00.000000+00:00",
-    "files": []
+    "files": [
+      {
+        "id": "file-e1102025-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 110.2025.UBTVQH15 - Nghị quyết số 110-2025-UBTVQH15 về điều chỉnh mức giảm trừ g.docx",
+        "file_size": 10201,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:36.910Z",
+        "is_primary": true,
+        "document_id": "e1102025-ubtv-4c22-92ab-110000000015",
+        "uploaded_by": null,
+        "original_filename": "Luat 110.2025.UBTVQH15 - Nghị quyết số 110-2025-UBTVQH15 về điều chỉnh mức giảm trừ g.docx"
+      }
+    ]
   },
   {
     "id": "e0422026-ttbt-4c22-92ab-110000000042",
@@ -2200,7 +2217,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System Admin",
     "verified_at": "2026-08-29T07:46:00.000000+00:00",
-    "files": []
+    "files": [
+      {
+        "id": "file-e0422026-docx",
+        "version": 1,
+        "file_url": "/documents/TT 42.2026.TT-BTC - 42-2026-TT-BTC hướng dẫn thi hành một số điều của Luật Thuế .docx",
+        "file_size": 10934,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:36.926Z",
+        "is_primary": true,
+        "document_id": "e0422026-ttbt-4c22-92ab-110000000042",
+        "uploaded_by": null,
+        "original_filename": "TT 42.2026.TT-BTC - 42-2026-TT-BTC hướng dẫn thi hành một số điều của Luật Thuế .docx"
+      }
+    ]
   },
   {
     "id": "e0742024-ndcp-4c22-92ab-110000000074",
@@ -2242,7 +2272,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System Admin",
     "verified_at": "2026-08-29T07:47:00.000000+00:00",
-    "files": []
+    "files": [
+      {
+        "id": "file-e0742024-docx",
+        "version": 1,
+        "file_url": "/documents/ND 74.2024.NĐ-CP - 74-2024-NĐ-CP quy định mức lương tối thiểu và chế độ tiền lư.docx",
+        "file_size": 10596,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:36.941Z",
+        "is_primary": true,
+        "document_id": "e0742024-ndcp-4c22-92ab-110000000074",
+        "uploaded_by": null,
+        "original_filename": "ND 74.2024.NĐ-CP - 74-2024-NĐ-CP quy định mức lương tối thiểu và chế độ tiền lư.docx"
+      }
+    ]
   },
   {
     "id": "e41282026-tctd-4c22-92ab-110000004128",
@@ -2284,7 +2327,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System Admin",
     "verified_at": "2026-08-29T07:48:00.000000+00:00",
-    "files": []
+    "files": [
+      {
+        "id": "file-e4128202-docx",
+        "version": 1,
+        "file_url": "/documents/CV 4128.TCT-DNNCN - 4128-TCT-DNNCN về chính sách thuế TNCN đối với thu nhập làm .docx",
+        "file_size": 10573,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:36.954Z",
+        "is_primary": true,
+        "document_id": "e41282026-tctd-4c22-92ab-110000004128",
+        "uploaded_by": null,
+        "original_filename": "CV 4128.TCT-DNNCN - 4128-TCT-DNNCN về chính sách thuế TNCN đối với thu nhập làm .docx"
+      }
+    ]
   },
   {
     "id": "53405945-a4bc-4a55-a028-9ed6cd1a69e4",
@@ -2326,7 +2382,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-53405945-docx",
+        "version": 1,
+        "file_url": "/documents/TT 118.2026.TT-BTC - 118-2026-TT-BTC hướng dẫn đối tượng, phạm vi và lộ trình áp .docx",
+        "file_size": 12118,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:36.979Z",
+        "is_primary": true,
+        "document_id": "53405945-a4bc-4a55-a028-9ed6cd1a69e4",
+        "uploaded_by": null,
+        "original_filename": "TT 118.2026.TT-BTC - 118-2026-TT-BTC hướng dẫn đối tượng, phạm vi và lộ trình áp .docx"
+      }
+    ]
   },
   {
     "id": "d654cd54-76be-4315-a72c-e8afce03441a",
@@ -2368,7 +2437,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-d654cd54-docx",
+        "version": 1,
+        "file_url": "/documents/TT 121.2026.TT-BKHĐT - 121-2026-TT-BKHĐT sửa đổi, bổ sung một số điều của Thông tư .docx",
+        "file_size": 9892,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:36.995Z",
+        "is_primary": true,
+        "document_id": "d654cd54-76be-4315-a72c-e8afce03441a",
+        "uploaded_by": null,
+        "original_filename": "TT 121.2026.TT-BKHĐT - 121-2026-TT-BKHĐT sửa đổi, bổ sung một số điều của Thông tư .docx"
+      }
+    ]
   },
   {
     "id": "2cfefbbf-8a2a-40e2-a901-510ecf08f7c2",
@@ -2410,7 +2492,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-2cfefbbf-docx",
+        "version": 1,
+        "file_url": "/documents/ND 255.2026.NĐ-CP - 255-2026-NĐ-CP quy định về quản lý thuế đối với doanh nghiệp.docx",
+        "file_size": 10148,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.008Z",
+        "is_primary": true,
+        "document_id": "2cfefbbf-8a2a-40e2-a901-510ecf08f7c2",
+        "uploaded_by": null,
+        "original_filename": "ND 255.2026.NĐ-CP - 255-2026-NĐ-CP quy định về quản lý thuế đối với doanh nghiệp.docx"
+      }
+    ]
   },
   {
     "id": "9dc07e8e-8e8b-4f5e-a7be-440f5e68d601",
@@ -2507,7 +2602,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-bf77f96c-docx",
+        "version": 1,
+        "file_url": "/documents/QD 1293.QĐ-BTC - 1293-QĐ-BTC công bố bãi bỏ, đơn giản hóa các thủ tục hành ch.docx",
+        "file_size": 10243,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.022Z",
+        "is_primary": true,
+        "document_id": "bf77f96c-836f-490c-a5d6-3ebcdd0489bd",
+        "uploaded_by": null,
+        "original_filename": "QD 1293.QĐ-BTC - 1293-QĐ-BTC công bố bãi bỏ, đơn giản hóa các thủ tục hành ch.docx"
+      }
+    ]
   },
   {
     "id": "06b69b8f-b131-4a3c-a3df-66a9a68e60ff",
@@ -2604,7 +2712,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-4cdfc989-docx",
+        "version": 1,
+        "file_url": "/documents/ND 145.2026.NĐ-CP - 145-2026-NĐ-CP quy định về quản lý tài chính và xếp loại doa.docx",
+        "file_size": 9742,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.034Z",
+        "is_primary": true,
+        "document_id": "4cdfc989-1200-46a8-a059-cf5552134df1",
+        "uploaded_by": null,
+        "original_filename": "ND 145.2026.NĐ-CP - 145-2026-NĐ-CP quy định về quản lý tài chính và xếp loại doa.docx"
+      }
+    ]
   },
   {
     "id": "e0ddf31b-e16a-49d9-a8a0-221894905fd5",
@@ -2646,7 +2767,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-e0ddf31b-docx",
+        "version": 1,
+        "file_url": "/documents/ND 132.2026.NĐ-CP - 132-2026-NĐ-CP sửa đổi, bổ sung Nghị định 41-2018-NĐ-CP về x.docx",
+        "file_size": 9898,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.048Z",
+        "is_primary": true,
+        "document_id": "e0ddf31b-e16a-49d9-a8a0-221894905fd5",
+        "uploaded_by": null,
+        "original_filename": "ND 132.2026.NĐ-CP - 132-2026-NĐ-CP sửa đổi, bổ sung Nghị định 41-2018-NĐ-CP về x.docx"
+      }
+    ]
   },
   {
     "id": "881d4718-b188-432f-a4ad-24101d67ece9",
@@ -3238,7 +3372,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-277f3c07-docx",
+        "version": 1,
+        "file_url": "/documents/TT 107.2025.TT-BTC - 107-2025-TT-BTC hướng dẫn chế độ kế toán các quỹ tài chính n.docx",
+        "file_size": 9769,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.056Z",
+        "is_primary": true,
+        "document_id": "277f3c07-6097-47d1-a4c4-39cad099e7bb",
+        "uploaded_by": null,
+        "original_filename": "TT 107.2025.TT-BTC - 107-2025-TT-BTC hướng dẫn chế độ kế toán các quỹ tài chính n.docx"
+      }
+    ]
   },
   {
     "id": "22e82ce9-73ea-4b1f-a849-4ee010809730",
@@ -3335,7 +3482,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-91a26d35-docx",
+        "version": 1,
+        "file_url": "/documents/TT 101.2025.TT-BTC - 101-2025-TT-BTC hướng dẫn chế độ kế toán đối với doanh nghiệ.docx",
+        "file_size": 9843,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.065Z",
+        "is_primary": true,
+        "document_id": "91a26d35-c6ec-4261-a4a4-979c1605ba30",
+        "uploaded_by": null,
+        "original_filename": "TT 101.2025.TT-BTC - 101-2025-TT-BTC hướng dẫn chế độ kế toán đối với doanh nghiệ.docx"
+      }
+    ]
   },
   {
     "id": "ffd7dab7-2e2d-4ac8-a654-7decea9c348d",
@@ -3377,7 +3537,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-ffd7dab7-docx",
+        "version": 1,
+        "file_url": "/documents/ND 248.2025.NĐ-CP - 248-2025-NĐ-CP quy định chế độ tiền lương, thù lao, tiền thư.docx",
+        "file_size": 9813,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.074Z",
+        "is_primary": true,
+        "document_id": "ffd7dab7-2e2d-4ac8-a654-7decea9c348d",
+        "uploaded_by": null,
+        "original_filename": "ND 248.2025.NĐ-CP - 248-2025-NĐ-CP quy định chế độ tiền lương, thù lao, tiền thư.docx"
+      }
+    ]
   },
   {
     "id": "86297fe8-1d48-4cd0-a342-1ada83ba82f0",
@@ -3419,7 +3592,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-86297fe8-docx",
+        "version": 1,
+        "file_url": "/documents/ND 210.2025.NĐ-CP - 210-2025-NĐ-CP sửa đổi, bổ sung Nghị định 38-2018-NĐ-CP về đ.docx",
+        "file_size": 9764,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.085Z",
+        "is_primary": true,
+        "document_id": "86297fe8-1d48-4cd0-a342-1ada83ba82f0",
+        "uploaded_by": null,
+        "original_filename": "ND 210.2025.NĐ-CP - 210-2025-NĐ-CP sửa đổi, bổ sung Nghị định 38-2018-NĐ-CP về đ.docx"
+      }
+    ]
   },
   {
     "id": "881fba84-36f3-49da-aea0-4da028b2febe",
@@ -3571,7 +3757,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-1058ebb4-docx",
+        "version": 1,
+        "file_url": "/documents/CV 3058.TCT-CS - 3058-TCT-CS về xác định quan hệ liên kết qua giao dịch vay v.docx",
+        "file_size": 9927,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.094Z",
+        "is_primary": true,
+        "document_id": "1058ebb4-df31-406e-a3e3-77aa64730ba2",
+        "uploaded_by": null,
+        "original_filename": "CV 3058.TCT-CS - 3058-TCT-CS về xác định quan hệ liên kết qua giao dịch vay v.docx"
+      }
+    ]
   },
   {
     "id": "142f2bdd-5039-49d0-a5d8-bd00fa0f4164",
@@ -3668,7 +3867,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-ba9cd68b-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 76.2025.QH15 - số 76-2025-QH15 sửa đổi, bổ sung một số điều của Luật Doanh .docx",
+        "file_size": 9778,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.103Z",
+        "is_primary": true,
+        "document_id": "ba9cd68b-edb7-42cc-aeda-3d89d12a87cf",
+        "uploaded_by": null,
+        "original_filename": "Luat 76.2025.QH15 - số 76-2025-QH15 sửa đổi, bổ sung một số điều của Luật Doanh .docx"
+      }
+    ]
   },
   {
     "id": "cf393170-3734-4408-a28e-aa7150eb879b",
@@ -3710,7 +3922,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-cf393170-docx",
+        "version": 1,
+        "file_url": "/documents/ND 168.2025.NĐ-CP - 168-2025-NĐ-CP quy định về đăng ký doanh nghiệp.docx",
+        "file_size": 9794,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.112Z",
+        "is_primary": true,
+        "document_id": "cf393170-3734-4408-a28e-aa7150eb879b",
+        "uploaded_by": null,
+        "original_filename": "ND 168.2025.NĐ-CP - 168-2025-NĐ-CP quy định về đăng ký doanh nghiệp.docx"
+      }
+    ]
   },
   {
     "id": "12e08206-35a3-4b6d-a495-d7fc26970e5e",
@@ -3807,7 +4032,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-e06f7455-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 41.2024.QH15 - Bảo hiểm xã hội số 41-2024-QH15.docx",
+        "file_size": 10397,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.128Z",
+        "is_primary": true,
+        "document_id": "e06f7455-cb19-4251-adde-f305804d759e",
+        "uploaded_by": null,
+        "original_filename": "Luat 41.2024.QH15 - Bảo hiểm xã hội số 41-2024-QH15.docx"
+      }
+    ]
   },
   {
     "id": "4b81a97b-2e83-4411-aaee-283add988ca6",
@@ -3849,7 +4087,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-4b81a97b-docx",
+        "version": 1,
+        "file_url": "/documents/TT 68.2025.TT-BKHĐT - 68-2025-TT-BKHĐT quy định hệ thống biểu mẫu điện tử sử dụng .docx",
+        "file_size": 10010,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.139Z",
+        "is_primary": true,
+        "document_id": "4b81a97b-2e83-4411-aaee-283add988ca6",
+        "uploaded_by": null,
+        "original_filename": "TT 68.2025.TT-BKHĐT - 68-2025-TT-BKHĐT quy định hệ thống biểu mẫu điện tử sử dụng .docx"
+      }
+    ]
   },
   {
     "id": "c96bac86-85a4-4bf0-a810-0d60236a2855",
@@ -3891,7 +4142,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-c96bac86-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 48.2024.QH15 - Thuế Giá trị gia tăng số 48-2024-QH15.docx",
+        "file_size": 11016,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.148Z",
+        "is_primary": true,
+        "document_id": "c96bac86-85a4-4bf0-a810-0d60236a2855",
+        "uploaded_by": null,
+        "original_filename": "Luat 48.2024.QH15 - Thuế Giá trị gia tăng số 48-2024-QH15.docx"
+      }
+    ]
   },
   {
     "id": "d3dbcfb7-3b72-40e4-afd0-17bd6cc80962",
@@ -4208,7 +4472,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-8a23da83-docx",
+        "version": 1,
+        "file_url": "/documents/CV 1188.TCT-TTKT - 1188-TCT-TTKT hướng dẫn kê khai giao dịch liên kết và xử lý .docx",
+        "file_size": 9665,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.155Z",
+        "is_primary": true,
+        "document_id": "8a23da83-272f-49e4-a2de-833788861af0",
+        "uploaded_by": null,
+        "original_filename": "CV 1188.TCT-TTKT - 1188-TCT-TTKT hướng dẫn kê khai giao dịch liên kết và xử lý .docx"
+      }
+    ]
   },
   {
     "id": "fd1cf384-73c6-4810-ac38-3343587975f3",
@@ -4250,7 +4527,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-fd1cf384-docx",
+        "version": 1,
+        "file_url": "/documents/TT 24.2024.TT-BTC - 24-2024-TT-BTC hướng dẫn Chế độ kế toán hành chính, sự nghiệ.docx",
+        "file_size": 10008,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.167Z",
+        "is_primary": true,
+        "document_id": "fd1cf384-73c6-4810-ac38-3343587975f3",
+        "uploaded_by": null,
+        "original_filename": "TT 24.2024.TT-BTC - 24-2024-TT-BTC hướng dẫn Chế độ kế toán hành chính, sự nghiệ.docx"
+      }
+    ]
   },
   {
     "id": "10f4225a-35ee-4502-af22-f6a61ee8bb51",
@@ -4292,7 +4582,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-10f4225a-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 56.2024.QH15 - số 56-2024-QH15 sửa đổi, bổ sung 9 luật trong lĩnh vực tài c.docx",
+        "file_size": 10135,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.176Z",
+        "is_primary": true,
+        "document_id": "10f4225a-35ee-4502-af22-f6a61ee8bb51",
+        "uploaded_by": null,
+        "original_filename": "Luat 56.2024.QH15 - số 56-2024-QH15 sửa đổi, bổ sung 9 luật trong lĩnh vực tài c.docx"
+      }
+    ]
   },
   {
     "id": "c43343cf-ea54-412f-a31a-88bb5b309ee0",
@@ -4334,7 +4637,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-c43343cf-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 31.2024.QH15 - Đất đai số 31-2024-QH15.docx",
+        "file_size": 10537,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.195Z",
+        "is_primary": true,
+        "document_id": "c43343cf-ea54-412f-a31a-88bb5b309ee0",
+        "uploaded_by": null,
+        "original_filename": "Luat 31.2024.QH15 - Đất đai số 31-2024-QH15.docx"
+      }
+    ]
   },
   {
     "id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
@@ -4431,7 +4747,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-5b96715f-docx",
+        "version": 1,
+        "file_url": "/documents/ND 123.2020.NĐ-CP - 123-2020-NĐ-CP quy định về hóa đơn, chứng từ.docx",
+        "file_size": 10864,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.209Z",
+        "is_primary": true,
+        "document_id": "5b96715f-dfc2-4422-aee8-7c05accb08f1",
+        "uploaded_by": null,
+        "original_filename": "ND 123.2020.NĐ-CP - 123-2020-NĐ-CP quy định về hóa đơn, chứng từ.docx"
+      }
+    ]
   },
   {
     "id": "cf76cbfb-6df5-471d-a195-fd7d611e6645",
@@ -4473,7 +4802,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-cf76cbfb-docx",
+        "version": 1,
+        "file_url": "/documents/ND 145.2020.NĐ-CP - 145-2020-NĐ-CP hướng dẫn chi tiết một số điều của Bộ luật La.docx",
+        "file_size": 10045,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.220Z",
+        "is_primary": true,
+        "document_id": "cf76cbfb-6df5-471d-a195-fd7d611e6645",
+        "uploaded_by": null,
+        "original_filename": "ND 145.2020.NĐ-CP - 145-2020-NĐ-CP hướng dẫn chi tiết một số điều của Bộ luật La.docx"
+      }
+    ]
   },
   {
     "id": "86eaef4a-24c1-4bb7-a728-21da78626167",
@@ -4515,7 +4857,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-86eaef4a-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 61.2020.QH14 - Đầu tư số 61-2020-QH14.docx",
+        "file_size": 10289,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.229Z",
+        "is_primary": true,
+        "document_id": "86eaef4a-24c1-4bb7-a728-21da78626167",
+        "uploaded_by": null,
+        "original_filename": "Luat 61.2020.QH14 - Đầu tư số 61-2020-QH14.docx"
+      }
+    ]
   },
   {
     "id": "228983ef-d36a-4e1b-a31c-1d73eb19d939",
@@ -4557,7 +4912,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-228983ef-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 59.2020.QH14 - Doanh nghiệp số 59-2020-QH14.docx",
+        "file_size": 12484,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.241Z",
+        "is_primary": true,
+        "document_id": "228983ef-d36a-4e1b-a31c-1d73eb19d939",
+        "uploaded_by": null,
+        "original_filename": "Luat 59.2020.QH14 - Doanh nghiệp số 59-2020-QH14.docx"
+      }
+    ]
   },
   {
     "id": "bafac4d7-9f1b-46c2-af3b-d40ecc7e3062",
@@ -4599,7 +4967,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-bafac4d7-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 45.2019.QH14 - Bộ luật Lao động số 45-2019-QH14.docx",
+        "file_size": 10424,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.257Z",
+        "is_primary": true,
+        "document_id": "bafac4d7-9f1b-46c2-af3b-d40ecc7e3062",
+        "uploaded_by": null,
+        "original_filename": "Luat 45.2019.QH14 - Bộ luật Lao động số 45-2019-QH14.docx"
+      }
+    ]
   },
   {
     "id": "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
@@ -4751,7 +5132,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-a1d22beb-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 38.2019.QH14 - Quản lý thuế số 38-2019-QH14.docx",
+        "file_size": 11066,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.267Z",
+        "is_primary": true,
+        "document_id": "a1d22beb-60b8-486e-a7d4-9592e07b3fd0",
+        "uploaded_by": null,
+        "original_filename": "Luat 38.2019.QH14 - Quản lý thuế số 38-2019-QH14.docx"
+      }
+    ]
   },
   {
     "id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
@@ -4793,7 +5187,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-0bb16a68-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 88.2015.QH13 - Kế toán số 88-2015-QH13.docx",
+        "file_size": 12035,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.281Z",
+        "is_primary": true,
+        "document_id": "0bb16a68-bacf-4a95-a5d1-2e4639c512d4",
+        "uploaded_by": null,
+        "original_filename": "Luat 88.2015.QH13 - Kế toán số 88-2015-QH13.docx"
+      }
+    ]
   },
   {
     "id": "421a2b29-df81-452b-a528-2e06894e91de",
@@ -4835,7 +5242,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-421a2b29-docx",
+        "version": 1,
+        "file_url": "/documents/ND 84.2016.NĐ-CP - 84-2016-NĐ-CP quy định về tiêu chuẩn, điều kiện đối với kiểm.docx",
+        "file_size": 9791,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.292Z",
+        "is_primary": true,
+        "document_id": "421a2b29-df81-452b-a528-2e06894e91de",
+        "uploaded_by": null,
+        "original_filename": "ND 84.2016.NĐ-CP - 84-2016-NĐ-CP quy định về tiêu chuẩn, điều kiện đối với kiểm.docx"
+      }
+    ]
   },
   {
     "id": "bfe460d3-b4eb-4089-aa90-227b04f553b8",
@@ -4877,7 +5297,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-bfe460d3-docx",
+        "version": 1,
+        "file_url": "/documents/TT 59.2015.TT-BLĐTBXH - 59-2015-TT-BLĐTBXH quy định chi tiết và hướng dẫn thi hành m.docx",
+        "file_size": 9900,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.302Z",
+        "is_primary": true,
+        "document_id": "bfe460d3-b4eb-4089-aa90-227b04f553b8",
+        "uploaded_by": null,
+        "original_filename": "TT 59.2015.TT-BLĐTBXH - 59-2015-TT-BLĐTBXH quy định chi tiết và hướng dẫn thi hành m.docx"
+      }
+    ]
   },
   {
     "id": "53431a9e-e6cd-4d6b-ae92-fa21f0cbe74f",
@@ -4919,7 +5352,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-53431a9e-docx",
+        "version": 1,
+        "file_url": "/documents/ND 115.2015.NĐ-CP - 115-2015-NĐ-CP quy định chi tiết một số điều của Luật Bảo hi.docx",
+        "file_size": 9747,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.310Z",
+        "is_primary": true,
+        "document_id": "53431a9e-e6cd-4d6b-ae92-fa21f0cbe74f",
+        "uploaded_by": null,
+        "original_filename": "ND 115.2015.NĐ-CP - 115-2015-NĐ-CP quy định chi tiết một số điều của Luật Bảo hi.docx"
+      }
+    ]
   },
   {
     "id": "8ab29a62-2510-4869-a7ea-8ab491af0379",
@@ -4961,7 +5407,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-8ab29a62-docx",
+        "version": 1,
+        "file_url": "/documents/TT 200.2014.TT-BTC - 200-2014-TT-BTC hướng dẫn Chế độ kế toán Doanh nghiệp.docx",
+        "file_size": 10294,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.323Z",
+        "is_primary": true,
+        "document_id": "8ab29a62-2510-4869-a7ea-8ab491af0379",
+        "uploaded_by": null,
+        "original_filename": "TT 200.2014.TT-BTC - 200-2014-TT-BTC hướng dẫn Chế độ kế toán Doanh nghiệp.docx"
+      }
+    ]
   },
   {
     "id": "3a6fa095-5c41-4083-a801-e8767d686f9a",
@@ -5003,7 +5462,20 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-3a6fa095-docx",
+        "version": 1,
+        "file_url": "/documents/TT 214.2012.TT-BTC - 214-2012-TT-BTC ban hành Hệ thống Chuẩn mực kiểm toán Việt N.docx",
+        "file_size": 9736,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.335Z",
+        "is_primary": true,
+        "document_id": "3a6fa095-5c41-4083-a801-e8767d686f9a",
+        "uploaded_by": null,
+        "original_filename": "TT 214.2012.TT-BTC - 214-2012-TT-BTC ban hành Hệ thống Chuẩn mực kiểm toán Việt N.docx"
+      }
+    ]
   },
   {
     "id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
@@ -5045,54 +5517,80 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": null,
     "verified_at": null,
-    "files": []
+    "files": [
+      {
+        "id": "file-9164d272-docx",
+        "version": 1,
+        "file_url": "/documents/Luat 67.2011.QH12 - Kiểm toán độc lập số 67-2011-QH12.docx",
+        "file_size": 10175,
+        "file_type": "docx",
+        "created_at": "2026-08-29T13:08:37.345Z",
+        "is_primary": true,
+        "document_id": "9164d272-359f-4ca4-a1d7-294d03988fb1",
+        "uploaded_by": null,
+        "original_filename": "Luat 67.2011.QH12 - Kiểm toán độc lập số 67-2011-QH12.docx"
+      }
+    ]
   }
 ];
-
-export function buildCategoryTree(categories: Category[]): Category[] {
-  const map = new Map<string, Category>();
-  const roots: Category[] = [];
-  const cloned = (categories || []).map((c) => ({ ...c, children: [] as Category[] }));
-  cloned.forEach((c) => map.set(c.id, c));
-  cloned.forEach((c) => {
-    if (c.parent_id && map.has(c.parent_id)) {
-      const parent = map.get(c.parent_id)!;
-      if (!parent.children) parent.children = [];
-      parent.children.push(c);
-      parent.children.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-    } else {
-      roots.push(c);
-    }
-  });
-  return roots.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-}
 
 export function getDocumentById(id: string): LegalDocument | undefined {
   return DEMO_DOCUMENTS.find((d) => d.id === id);
 }
 
-export function getDocumentsForCategoryTree(categoryId: string): LegalDocument[] {
-  const descendantIds = new Set<string>([categoryId]);
-  const queue: string[] = [categoryId];
-  while (queue.length > 0) {
-    const curr = queue.shift()!;
-    for (const c of DEMO_CATEGORIES) {
-      if (c.parent_id === curr && !descendantIds.has(c.id)) {
-        descendantIds.add(c.id);
-        queue.push(c.id);
-      }
-    }
-  }
-  const links = DEMO_CATEGORY_LINKS.filter((l) => descendantIds.has(l.category_id));
-  const docIds = new Set(links.map((l) => l.document_id));
-  return DEMO_DOCUMENTS.filter((d) => docIds.has(d.id));
+export function getDocumentByNumber(docNumber: string): LegalDocument | undefined {
+  return DEMO_DOCUMENTS.find((d) => d.document_number === docNumber);
 }
 
-export function getDocumentRelations(documentId: string): { as_source: DocumentRelation[]; as_target: DocumentRelation[] } {
-  return {
-    as_source: DEMO_RELATIONS.filter((r) => r.source_document_id === documentId),
-    as_target: DEMO_RELATIONS.filter((r) => r.target_document_id === documentId),
+export function getDocumentRelations(documentId: string): { as_source: DocumentRelation[]; as_target: DocumentRelation[] } & DocumentRelation[] {
+  const as_source = DEMO_RELATIONS.filter((r) => r.source_document_id === documentId);
+  const as_target = DEMO_RELATIONS.filter((r) => r.target_document_id === documentId);
+  const all = [...as_source, ...as_target];
+  return Object.assign(all, { as_source, as_target });
+}
+
+export function buildCategoryTree(categories: Category[] = DEMO_CATEGORIES): Category[] {
+  const map = new Map<string, Category & { children: Category[] }>();
+  const roots: (Category & { children: Category[] })[] = [];
+
+  categories.forEach((cat) => {
+    map.set(cat.id, { ...cat, children: [] });
+  });
+
+  categories.forEach((cat) => {
+    const node = map.get(cat.id)!;
+    if (cat.parent_id && map.has(cat.parent_id)) {
+      map.get(cat.parent_id)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
+}
+
+export function getDocumentsForCategory(categoryId: string): LegalDocument[] {
+  const linkedDocIds = new Set(
+    DEMO_CATEGORY_LINKS.filter((l) => l.category_id === categoryId).map((l) => l.document_id)
+  );
+  return DEMO_DOCUMENTS.filter((d) => linkedDocIds.has(d.id));
+}
+
+export function getDocumentsForCategoryTree(categoryId: string): LegalDocument[] {
+  const allSubIds = new Set<string>([categoryId]);
+  const findChildren = (pid: string) => {
+    DEMO_CATEGORIES.filter((c) => c.parent_id === pid).forEach((c) => {
+      allSubIds.add(c.id);
+      findChildren(c.id);
+    });
   };
+  findChildren(categoryId);
+
+  const linkedDocIds = new Set(
+    DEMO_CATEGORY_LINKS.filter((l) => allSubIds.has(l.category_id)).map((l) => l.document_id)
+  );
+
+  return DEMO_DOCUMENTS.filter((d) => linkedDocIds.has(d.id));
 }
 
 export function getCategoryDocumentCount(categoryId: string): number {
