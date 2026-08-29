@@ -5,6 +5,9 @@ import { cleanHtmlToText } from '@/lib/sanitize.server';
 import { formatShortTitle } from '@/lib/utils';
 import type { LegalDocument } from '@/types';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 interface ChatRequestBody {
   question: string;
   documentId?: string;

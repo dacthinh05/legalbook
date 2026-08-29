@@ -30,21 +30,9 @@ function getServerPurify() {
   return _serverPurify;
 }
 
-serverPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'A') {
-    if (node.getAttribute('target') === '_blank') {
-      node.setAttribute('rel', 'noopener noreferrer');
-    }
-    const href = node.getAttribute('href');
-    if (href && !isSafeUrl(href)) {
-      node.removeAttribute('href');
-    }
-  }
-});
-
 export function sanitizeHtmlServer(rawHtml: string | null | undefined): string {
   if (!rawHtml) return '';
-  return serverPurify.sanitize(rawHtml, {
+  return getServerPurify().sanitize(rawHtml, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ALLOWED_URI_REGEXP,
