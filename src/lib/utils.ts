@@ -2,6 +2,8 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { DocumentType, DocumentStatus, RelationType } from '@/types';
 
+
+export const NOTEBOOKLM_URL = 'https://notebooklm.google.com/notebook/3c577bfd-1460-4b18-a261-5a3fe9a2f5d7';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

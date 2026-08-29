@@ -8,20 +8,16 @@ import {
   Bot,
   User,
   RotateCcw,
-  BookOpen,
-  CheckCircle2,
   ChevronRight,
   Loader2,
   HelpCircle,
-  Globe2,
-  FileCheck2,
-  Table,
-  AlertTriangle,
-  FileText,
+  Compass,
+  Shield,
+  Headphones,
+  ExternalLink,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, NOTEBOOKLM_URL } from '@/lib/utils';
 import { askLegalAi, type LegalCitation } from '@/lib/ai/legal-rag';
-import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
 import type { LegalDocument } from '@/types';
 
 interface Message {
@@ -50,20 +46,17 @@ function getNextChatMsgId(prefix: string) {
 const SMART_ACTION_PROMPTS = [
   {
     id: 'conditions',
-    label: '📊 Bảng điều kiện',
-    icon: Table,
+    label: 'Bảng điều kiện',
     prompt: 'Hãy lập bảng tóm tắt chi tiết các điều kiện áp dụng, đối tượng và thời hạn theo văn bản này.',
   },
   {
     id: 'risks',
-    label: '⚠️ Rủi ro thuế & chi phí',
-    icon: AlertTriangle,
+    label: 'Rủi ro thuế & chi phí',
     prompt: 'Hãy bóc tách các rủi ro pháp lý và nguy cơ bị loại chi phí thuế nếu doanh nghiệp áp dụng sai quy định.',
   },
   {
     id: 'dossier',
-    label: '📁 Hồ sơ & Chứng từ',
-    icon: FileText,
+    label: 'Hồ sơ & Chứng từ',
     prompt: 'Liệt kê danh mục hồ sơ, chứng từ bắt buộc cần lưu trữ để phục vụ giải trình, kiểm tra thuế theo văn bản này.',
   },
 ];
@@ -214,37 +207,35 @@ export function LegalAiChatPanel({
         </div>
       </div>
 
-      {/* ── 2. Scope Selector Bar ── */}
+      {/* ── 2. Scope Selector Bar (Minimal clean segmented control) ── */}
       <div className="px-3 py-1.5 bg-slate-100/80 border-b border-slate-200 text-xs flex items-center justify-between gap-2 shrink-0">
         <div className="flex items-center bg-white p-0.5 rounded-lg border border-slate-200/90 text-[11px] font-semibold w-full">
           <button
             type="button"
             onClick={() => setScope('in_document')}
             className={cn(
-              'flex-1 py-1 px-2 rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer',
+              'flex-1 py-1 px-2 rounded-md transition-all text-center cursor-pointer',
               scope === 'in_document'
                 ? 'bg-blue-50 text-blue-900 font-bold shadow-2xs border border-blue-200'
                 : 'text-slate-600 hover:text-slate-900'
             )}
             title="Chỉ tra cứu trong văn bản đang đọc"
           >
-            <BookOpen className="w-3 h-3 text-blue-600" />
-            <span className="truncate">Trong văn bản này</span>
+            Trong văn bản
           </button>
 
           <button
             type="button"
             onClick={() => setScope('whole_library')}
             className={cn(
-              'flex-1 py-1 px-2 rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer',
+              'flex-1 py-1 px-2 rounded-md transition-all text-center cursor-pointer',
               scope === 'whole_library'
                 ? 'bg-blue-50 text-blue-900 font-bold shadow-2xs border border-blue-200'
                 : 'text-slate-600 hover:text-slate-900'
             )}
             title="Mở rộng tra cứu toàn bộ cơ sở dữ liệu pháp luật"
           >
-            <Globe2 className="w-3 h-3 text-indigo-600" />
-            <span className="truncate">Toàn thư viện</span>
+            Toàn thư viện
           </button>
         </div>
       </div>
@@ -285,8 +276,7 @@ export function LegalAiChatPanel({
               {/* Citations with Deep-Link Navigation */}
               {msg.citations && msg.citations.length > 0 && (
                 <div className="pt-2 border-t border-slate-200/80 space-y-1.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">
                     Căn cứ pháp lý trích dẫn:
                   </span>
                   <div className="space-y-1">
@@ -333,8 +323,7 @@ export function LegalAiChatPanel({
               {/* Follow-up Prompts */}
               {msg.suggestedFollowUps && msg.suggestedFollowUps.length > 0 && (
                 <div className="pt-2 border-t border-slate-200/80 space-y-1">
-                  <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
-                    <HelpCircle className="w-2.5 h-2.5" />
+                  <span className="text-[10px] text-slate-400 font-medium block">
                     Gợi ý câu hỏi tiếp theo:
                   </span>
                   <div className="flex flex-wrap gap-1">
@@ -386,15 +375,26 @@ export function LegalAiChatPanel({
 
       {/* ── 4. Smart Action Prompt Chips & Input Bar ── */}
       <div className="p-3 bg-slate-50 border-t border-slate-200 shrink-0 space-y-2">
-        {/* 3 Quick Action Buttons */}
+        {/* 3 Quick Action Buttons (clean minimal chips without emoji) */}
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+          <a
+            href={NOTEBOOKLM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 rounded-md text-[11px] font-semibold transition-colors shrink-0 cursor-pointer inline-flex items-center gap-1"
+            title="Mở Sổ tay NotebookLM & Nghe Audio Overview"
+          >
+            <Headphones className="w-3 h-3 text-purple-600" />
+            <span>Sổ tay NotebookLM</span>
+            <ExternalLink className="w-2.5 h-2.5 text-purple-400" />
+          </a>
           {SMART_ACTION_PROMPTS.map((act) => (
             <button
               key={act.id}
               type="button"
               onClick={() => handleSendMessage(act.prompt)}
               disabled={isLoading}
-              className="px-2 py-1 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-900 rounded-lg text-[10.5px] font-semibold transition-colors shrink-0 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              className="px-2.5 py-1 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-900 rounded-md text-[11px] font-medium transition-colors shrink-0 cursor-pointer disabled:opacity-50"
             >
               <span>{act.label}</span>
             </button>

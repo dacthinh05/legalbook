@@ -145,18 +145,17 @@ export function CrossDocAnalysisModal({
   const { savedSessionsForDoc, saveSession, deleteSession, exportReport } =
     useAnalysisSessions(primaryDocument.id);
 
-  // Reset when primary document changes
+  // Reset when primary document changes or modal opens
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect */
+    if (!isOpen) return;
     setSelectedDocs(
-      initialSelectedDocuments.length > 0
+      initialSelectedDocuments && initialSelectedDocuments.length > 0
         ? initialSelectedDocuments.filter((d) => d.id !== primaryDocument.id)
         : []
     );
     setAnalysisResult(null);
     setQaMessages([]);
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, [primaryDocument.id, initialSelectedDocuments]);
+  }, [primaryDocument.id, isOpen]);
   // Suggestions based on 8-level signal priority
   const suggestions: DocumentSuggestion[] = useMemo(() => {
     return getRelatedDocumentSuggestions(primaryDocument, DEMO_DOCUMENTS as unknown as LegalDocument[], DEMO_RELATIONS);

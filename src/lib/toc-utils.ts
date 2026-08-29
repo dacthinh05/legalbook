@@ -130,20 +130,18 @@ export function scrollToTocItem(
     viewport = docObj?.querySelector('.reader-viewport') as HTMLElement | null;
   }
 
-  if (viewport) {
+  if (viewport && typeof (viewport as HTMLElement).scrollTo === 'function') {
     const containerRect = viewport.getBoundingClientRect();
     const targetRect = targetEl.getBoundingClientRect();
-
-    const nextTop = viewport.scrollTop + targetRect.top - containerRect.top - stickyOffset;
+    const nextTop = viewport.scrollTop + (targetRect.top - containerRect.top) - stickyOffset;
 
     viewport.scrollTo({
       top: Math.max(0, nextTop),
       behavior,
     });
-  } else {
+  } else if (typeof targetEl.scrollIntoView === 'function') {
     targetEl.scrollIntoView({ behavior, block: 'start' });
   }
-
   // Flash highlight animation on target heading
   targetEl.classList.remove('is-navigation-target', 'toc-scroll-target');
   void targetEl.offsetWidth; // trigger reflow for smooth re-animation

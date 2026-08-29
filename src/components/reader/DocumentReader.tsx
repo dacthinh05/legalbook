@@ -1633,7 +1633,7 @@ export function DocumentReader({
                     {/* Actual document body */}
                     <div
                       ref={contentRef}
-                      className="select-text"
+                      className="select-text min-h-[100vh] pb-[60vh]"
                       style={{
                         fontSize: `var(--reader-font-size)`,
                         lineHeight: `var(--reader-line-height)`,

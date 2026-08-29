@@ -8,6 +8,7 @@ import {
   formatDate,
   formatShortTitle,
   getEffectiveStatus,
+  NOTEBOOKLM_URL,
   cn,
 } from '@/lib/utils';
 import {
@@ -19,8 +20,9 @@ import {
 import {
   Sparkles,
   Filter,
+  Headphones,
+  ExternalLink,
 } from 'lucide-react';
-
 interface LegalUpdatesFeedProps {
   allDocuments: LegalDocument[];
   categoryDocuments: LegalDocument[];
@@ -311,6 +313,38 @@ export function LegalUpdatesFeed({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* ── 1.5. NotebookLM Audio Overview Banner ── */}
+        <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border border-purple-800/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center shrink-0 shadow-inner">
+              <Headphones className="w-5 h-5 text-purple-300 animate-pulse" />
+            </div>
+            <div className="space-y-0.5 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-400/20 text-purple-200 border border-purple-400/30 uppercase tracking-wider">
+                  Google NotebookLM
+                </span>
+                <h3 className="font-bold text-xs sm:text-sm text-white truncate">
+                  Sổ tay Pháp lý &amp; Audio Overview Toàn cảnh
+                </h3>
+              </div>
+              <p className="text-[11.5px] text-purple-200/90 leading-snug">
+                Nghe đàm thoại Audio Podcast tóm tắt đa văn bản Thuế &amp; Kế toán 2026, hỏi đáp tổng hợp trên Google AI.
+              </p>
+            </div>
+          </div>
+
+          <a
+            href={NOTEBOOKLM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-md shrink-0 cursor-pointer"
+          >
+            <span>Mở Sổ tay NotebookLM</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
 
         {/* ── 2. Unified Filter Tabs (Height 38px, Single Count per tab) ── */}

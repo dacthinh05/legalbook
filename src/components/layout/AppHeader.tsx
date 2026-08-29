@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Menu, ChevronDown, CheckSquare, RefreshCw, Database, Layers, Plus, Bell } from 'lucide-react';
+import { Search, Menu, ChevronDown, CheckSquare, RefreshCw, Database, Layers, Plus, Bell, Headphones, ExternalLink } from 'lucide-react';
 import { PacoLogo } from '@/components/common/PacoLogo';
+import { NOTEBOOKLM_URL } from '@/lib/utils';
 interface AppHeaderProps {
   onSearchClick: () => void;
   newUpdatesCount?: number;
@@ -78,6 +79,19 @@ export function AppHeader({
 
       {/* Right Actions */}
       <div className="flex items-center gap-2 ml-auto shrink-0">
+        {/* NotebookLM Audio & Cross-Doc Assistant */}
+        <a
+          href={NOTEBOOKLM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-purple-900 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border border-purple-200/90 rounded-md transition-all cursor-pointer shadow-2xs group"
+          title="Mở Sổ tay NotebookLM & Nghe Audio Overview tổng quan pháp luật"
+        >
+          <Headphones className="w-3.5 h-3.5 text-purple-600 group-hover:scale-110 transition-transform" />
+          <span className="truncate">Sổ tay NotebookLM</span>
+          <ExternalLink className="w-3 h-3 text-purple-400 group-hover:text-purple-700" />
+        </a>
+
         {/* Admin Menu Dropdown */}
         <div className="relative" ref={adminMenuRef}>
           <button
