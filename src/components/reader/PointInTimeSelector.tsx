@@ -4,15 +4,12 @@ import React, { useState } from 'react';
 import {
   Calendar,
   Clock,
-  CheckCircle2,
-  Info,
   HelpCircle,
   Eye,
   EyeOff,
   ChevronDown,
 } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
-import type { LegalEffect } from '@/types';
 
 interface PointInTimeSelectorProps {
   issuedDate?: string | null;

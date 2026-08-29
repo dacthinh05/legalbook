@@ -8,7 +8,7 @@ let content = fs.readFileSync(demoPath, 'utf8');
 const parsedData = JSON.parse(content.match(/export const DEMO_DOCUMENTS: LegalDocument\[\] = (\[[\s\S]*?\]);\n\nexport/)?.[1] || '[]');
 
 if (parsedData.length > 0) {
-  parsedData.forEach((d: any) => {
+  parsedData.forEach((d: { document_type?: string; effective_date?: string | null }) => {
     if (d.document_type === 'cong_van') {
       d.effective_date = null;
     }

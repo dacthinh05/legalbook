@@ -18,7 +18,6 @@ import {
 } from '@/lib/legal-feed-utils';
 import {
   Sparkles,
-  ChevronRight,
   Filter,
 } from 'lucide-react';
 

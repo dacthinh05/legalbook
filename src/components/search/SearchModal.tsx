@@ -14,14 +14,10 @@ import {
   Loader2,
   ChevronDown,
   SlidersHorizontal,
-  ChevronRight,
   ExternalLink,
-  BookOpen,
   FileText,
-  Layers,
   Sparkles,
   History,
-  RotateCcw,
   AlertCircle,
   HelpCircle,
   Clock,
@@ -32,7 +28,6 @@ import {
   createSafeHighlightSegments,
   removeVietnameseTones,
   preindexDocuments,
-  SearchOptions,
   SearchScopeCounts,
 } from '@/lib/search';
 import { formatDate } from '@/lib/utils';
@@ -292,22 +287,21 @@ export function SearchModal({
   // Results & Navigation state
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
-
-  const inputRef = useRef<HTMLInputElement>(null);
-  const resultsContainerRef = useRef<HTMLDivElement>(null);
-  const filterPanelRef = useRef<HTMLDivElement>(null);
-
-  // Load recent searches from localStorage
-  useEffect(() => {
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
     try {
       const saved = localStorage.getItem(STORAGE_KEY_RECENT);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) setRecentSearches(parsed.slice(0, 6));
+        if (Array.isArray(parsed)) return parsed.slice(0, 6);
       }
     } catch {}
-  }, []);
+    return [];
+  });
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const resultsContainerRef = useRef<HTMLDivElement>(null);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
 
   const saveRecentSearch = useCallback((q: string) => {
     const clean = q.trim();

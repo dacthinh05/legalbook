@@ -8,11 +8,10 @@ import {
   BookOpen,
   ArrowRight,
   ShieldCheck,
-  HelpCircle,
-  ExternalLink,
   ChevronRight,
 } from 'lucide-react';
-import { queryLegalAssistant, LegalAiResponse } from '@/lib/ai/legal-rag';
+import { queryLegalAssistant, type LegalAiResponse } from '@/lib/ai/legal-rag';
+import { MarkdownRenderer, renderInlineMarkdown } from '@/components/common/MarkdownRenderer';
 import type { LegalDocument } from '@/types';
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
 
@@ -29,7 +28,7 @@ export function LegalAiAssistant({
   onClose,
   currentDocument,
   onNavigateToNode,
-  onSelectDocument,
+  onSelectDocument: _onSelectDocument,
 }: LegalAiAssistantProps) {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -151,9 +150,7 @@ export function LegalAiAssistant({
                   <ShieldCheck className="w-4 h-4 text-blue-700" />
                   <span>Căn cứ Pháp lý Trích xuất:</span>
                 </div>
-                <p className="text-xs text-slate-800 leading-relaxed font-normal whitespace-pre-line">
-                  {response.answer}
-                </p>
+                <MarkdownRenderer content={response.answer} className="text-xs text-slate-800" />
 
                 {response.summaryPoints.length > 0 && (
                   <div className="pt-2 border-t border-slate-200/70 space-y-1.5">
@@ -161,7 +158,7 @@ export function LegalAiAssistant({
                     <ul className="space-y-1 text-xs text-slate-700 list-disc list-inside">
                       {response.summaryPoints.map((pt, idx) => (
                         <li key={idx} className="leading-relaxed">
-                          {pt}
+                          {renderInlineMarkdown(pt, `pt-${idx}`)}
                         </li>
                       ))}
                     </ul>

@@ -11,8 +11,7 @@ import type { LegalDocument, DocumentType } from '@/types';
  */
 export function normalizeDisplayTitle(
   title: string | null | undefined,
-  docNumber?: string | null,
-  docType?: DocumentType | string | null
+  docNumber?: string | null
 ): string {
   if (!title) return '';
   let clean = title.trim();
@@ -164,7 +163,7 @@ function cleanEmptyParagraphsAndSpacers(html: string): string {
 /**
  * Formats the document title into a semantic title block.
  */
-function formatDocumentTitleBlock(html: string, doc?: Partial<LegalDocument>): string {
+function formatDocumentTitleBlock(html: string, _doc?: Partial<LegalDocument>): string {
   // If title block already structured, return
   if (html.includes('legal-doc-title-block')) {
     return html;

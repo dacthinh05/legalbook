@@ -9,6 +9,7 @@ interface AppHeaderProps {
   unreadCount: number;
   onMobileSidebarToggle: () => void;
   onOpenImportModal?: () => void;
+  onLogoClick?: () => void;
 }
 
 export function AppHeader({
@@ -16,6 +17,7 @@ export function AppHeader({
   unreadCount,
   onMobileSidebarToggle,
   onOpenImportModal,
+  onLogoClick,
 }: AppHeaderProps) {
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
@@ -43,7 +45,16 @@ export function AppHeader({
           <Menu className="w-5 h-5" />
         </button>
 
-        <Link href="/" className="flex items-center group transition-opacity hover:opacity-90">
+        <Link
+          href="/"
+          onClick={(e) => {
+            if (onLogoClick) {
+              onLogoClick();
+            }
+          }}
+          className="flex items-center group transition-opacity hover:opacity-90 cursor-pointer"
+          title="Trang chủ PACO LegalBook"
+        >
           <PacoLogo size="sm" />
         </Link>
       </div>

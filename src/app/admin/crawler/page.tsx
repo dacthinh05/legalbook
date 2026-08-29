@@ -4,28 +4,19 @@ import { useState } from 'react';
 import { 
   Globe, 
   Sparkles, 
-  Download, 
   RefreshCw, 
   CheckCircle2, 
   Clock, 
-  ArrowRight, 
   Cpu, 
   AlertCircle, 
-  Landmark, 
-  FileText, 
   Search, 
   ExternalLink, 
   Check,
   Filter,
   Trash2,
   Play,
-  Layers,
-  Scale,
   ShieldCheck
 } from 'lucide-react';
-import { getMultiSourceLookupUrls } from '@/lib/utils';
-import { DEMO_DOCUMENTS } from '@/lib/demo-data';
-import type { LegalDocument } from '@/types';
 
 interface DiscoveredDoc {
   id: string;
@@ -228,14 +219,12 @@ export default function CrawlerAdminPage() {
   // Manual crawl states
   const [crawlUrl, setCrawlUrl] = useState('');
   const [isCrawling, setIsCrawling] = useState(false);
-  const [autoFallback, setAutoFallback] = useState(true);
   const [crawlLog, setCrawlLog] = useState<string[]>([]);
 
   // Dispatch search states
   const [dispatchNumber, setDispatchNumber] = useState('');
   const [dispatchSource, setDispatchSource] = useState<'all' | 'gdt' | 'mof' | 'customs' | 'vbpl'>('gdt');
   const [isSearchingDispatch, setIsSearchingDispatch] = useState(false);
-  const [dispatchResults, setDispatchResults] = useState<DiscoveredDoc[]>([]);
 
   // Cron test trigger
   const [isTestingCron, setIsTestingCron] = useState(false);
@@ -751,18 +740,34 @@ export default function CrawlerAdminPage() {
             </h3>
 
             <form onSubmit={handleSearchDispatch} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Nhập số hiệu công văn:
-                </label>
-                <input
-                  type="text"
-                  value={dispatchNumber}
-                  onChange={(e) => setDispatchNumber(e.target.value)}
-                  placeholder="Ví dụ: 3643/TNI-QLDN, 1585/QTR-QLDN2, 1188/TCT-TTKT..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50"
-                  required
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Nhập số hiệu công văn:
+                  </label>
+                  <input
+                    type="text"
+                    value={dispatchNumber}
+                    onChange={(e) => setDispatchNumber(e.target.value)}
+                    placeholder="Ví dụ: 3643/TNI-QLDN, 1585/QTR-QLDN2, 1188/TCT-TTKT..."
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Nguồn tra cứu:
+                  </label>
+                  <select
+                    value={dispatchSource}
+                    onChange={(e) => setDispatchSource(e.target.value as 'all' | 'gdt' | 'mof' | 'customs' | 'vbpl')}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50"
+                  >
+                    <option value="gdt">Tổng cục Thuế (gdt.gov.vn)</option>
+                    <option value="mof">Bộ Tài chính (mof.gov.vn)</option>
+                    <option value="vbpl">CSDL Quốc Gia VBPL</option>
+                  </select>
+                </div>
               </div>
 
               <button

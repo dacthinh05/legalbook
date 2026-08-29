@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
-import { queryLegalAssistant, type LegalCitation, type LegalAiResponse } from '@/lib/ai/legal-rag';
+import { queryLegalAssistant, generateLocalDocumentSummary, type LegalCitation, type LegalAiResponse } from '@/lib/ai/legal-rag';
 import { cleanHtmlToText } from '@/lib/sanitize.server';
-import { formatShortTitle } from '@/lib/utils';
 import type { LegalDocument } from '@/types';
 
 export const runtime = 'nodejs';
@@ -138,12 +137,106 @@ ${question || 'Hãy tóm tắt 4 điểm khác biệt hoặc quy định chi ti�
       }
     }
 
+    // ── Mode: SUMMARY (Tóm tắt văn bản chuyên sâu) ──────────────────────────
+    if (mode === 'summary' && targetDoc) {
+      const docText = targetDoc.html_content ? cleanHtmlToText(targetDoc.html_content).slice(0, 35000) : '';
+      const docMeta = `Số hiệu: ${targetDoc.document_number}
+Tiêu đề: ${targetDoc.title}
+Cơ quan ban hành: ${targetDoc.issuing_body || 'Chưa cập nhật'}
+Loại văn bản: ${targetDoc.document_type || 'Văn bản quy phạm'}
+Ngày ban hành: ${targetDoc.issued_date || 'N/A'}
+Ngày có hiệu lực: ${targetDoc.effective_date || 'N/A'}
+Người ký: ${targetDoc.signer || 'N/A'}`;
+
+      const summaryPrompt = `Bạn là Chuyên gia Cao cấp về Pháp luật & Thuế - Kế toán Việt Nam.
+Hãy phân tích toàn văn văn bản pháp luật sau và tạo một bản TÓM TẮT PHÁP LÝ CHUYÊN SÂU chuẩn nghiệp vụ dành cho Doanh nghiệp, Kế toán và Luật sư.
+
+[THÔNG TIN VĂN BẢN]
+${docMeta}
+
+[TOÀN VĂN VĂN BẢN]
+${docText}
+
+[YÊU CẦU TRÌNH BÀY]:
+Trình bày định dạng Markdown chuyên nghiệp, rõ ràng theo đúng 5 phần sau:
+
+### 1. 📌 TỔNG QUAN & MỤC ĐÍCH BAN HÀNH
+- Nêu ngắn gọn bối cảnh, mục đích và phạm vi điều chỉnh chính của văn bản.
+
+### 2. ⚡ CÁC ĐIỂM MỚI & NỘI DUNG CỐT LÕI (Kèm Căn cứ Điều/Khoản)
+- Liệt kê 4-6 điểm mới hoặc quy định then chốt nhất.
+- BẮT BUỘC ghi rõ căn cứ [Điều X, Khoản Y].
+
+### 3. 👥 ĐỐI TƯỢNG ÁP DỤNG & PHẠM VI ẢNH HƯỞNG
+- Nêu rõ các nhóm đối tượng chịu tác động (doanh nghiệp, hộ kinh doanh, kế toán, cơ quan quản lý...).
+
+### 4. ⏳ HIỆU LỰC THI HÀNH & ĐIỀU KHOẢN CHUYỂN TIẾP
+- Ngày bắt đầu có hiệu lực, các văn bản bị bãi bỏ/thay thế, lộ trình thực hiện hoặc quy định chuyển tiếp.
+
+### 5. ⚠️ LƯU Ý THỰC THI & RỦI RO PHÁP LÝ CẦN TRÁNH
+- Các hành động bắt buộc cần thực hiện ngay và rủi ro/chế tài nếu không tuân thủ.`;
+
+      const aiResult = await callGeminiApi(summaryPrompt, systemInstruction);
+
+      if (aiResult) {
+        const citations: LegalCitation[] = [];
+        const articleMatches = aiResult.text.matchAll(/\[(?:Căn cứ\s+)?(Điều\s+\d+[a-z]?(?:,\s*Khoản\s+\d+)?)[^\]]*\]/gi);
+        for (const m of articleMatches) {
+          citations.push({
+            documentId: targetDoc.id,
+            documentNumber: targetDoc.document_number || 'Văn bản',
+            documentTitle: targetDoc.title || '',
+            documentType: targetDoc.document_type || 'van_ban',
+            articleNumber: m[1],
+            articleTitle: m[1],
+            exactQuote: m[0],
+            confidence: 0.99,
+          });
+        }
+
+        return NextResponse.json({
+          success: true,
+          source: 'gemini',
+          keyUsed: aiResult.keyUsed,
+          answer: aiResult.text,
+          citations,
+          suggestedFollowUps: [
+            `Đối tượng nào được miễn hoặc ưu đãi theo ${targetDoc.document_number}?`,
+            `Mức xử phạt và rủi ro hành chính cần lưu ý?`,
+            `Hồ sơ, biểu mẫu và thủ tục nộp theo quy định mới?`,
+          ],
+        });
+      }
+
+      // Local fallback for summary mode
+      const localSummary = generateLocalDocumentSummary(targetDoc);
+      return NextResponse.json({
+        success: true,
+        source: 'local_rag',
+        answer: localSummary.fullMarkdown,
+        summaryPoints: localSummary.newPoints,
+        citations: localSummary.keyArticles.map((a) => ({
+          documentId: targetDoc.id,
+          documentNumber: targetDoc.document_number || '',
+          documentTitle: targetDoc.title,
+          documentType: targetDoc.document_type || 'Văn bản',
+          articleNumber: a.articleNumber,
+          articleTitle: a.articleTitle,
+          exactQuote: a.summary,
+          confidence: 0.95,
+        })),
+        suggestedFollowUps: [
+          `Thời hạn hiệu lực của ${targetDoc.document_number}?`,
+          `Các văn bản liên quan hoặc hướng dẫn thi hành?`,
+        ],
+      });
+    }
+
     // ── Mode: IN-DOCUMENT ASK / SUMMARY ─────────────────────────────────────
     const docText = targetDoc?.html_content ? cleanHtmlToText(targetDoc.html_content).slice(0, 30000) : '';
     const docMeta = targetDoc
       ? `Số hiệu: ${targetDoc.document_number} | Tên: ${targetDoc.title} | Cơ quan: ${targetDoc.issuing_body} | Hiệu lực: ${targetDoc.effective_date}`
       : 'Thư viện pháp luật chung';
-
     const askPrompt = `[VĂN BẢN QUY PHẠM PHÁP LUẬT ĐANG ĐỌC]
 ${docMeta}
 Nội dung toàn văn:

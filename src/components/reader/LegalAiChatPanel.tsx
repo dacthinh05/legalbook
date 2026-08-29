@@ -10,13 +10,13 @@ import {
   RotateCcw,
   BookOpen,
   CheckCircle2,
-  ExternalLink,
   ChevronRight,
   Loader2,
   HelpCircle,
 } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { askLegalAi, type LegalCitation } from '@/lib/ai/legal-rag';
+import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
 import type { LegalDocument } from '@/types';
 
 interface Message {
@@ -35,6 +35,12 @@ interface LegalAiChatPanelProps {
   onCitationClick?: (articleNumber?: string) => void;
 }
 
+let chatMsgCounter = 0;
+function getNextChatMsgId(prefix: string) {
+  chatMsgCounter += 1;
+  return `${prefix}-${chatMsgCounter}`;
+}
+
 export function LegalAiChatPanel({
   document: doc,
   onClose,
@@ -42,20 +48,20 @@ export function LegalAiChatPanel({
 }: LegalAiChatPanelProps) {
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<Message[]>(() => [
     {
       id: 'welcome-1',
       sender: 'ai',
       text: `Xin chào! Tôi là **Trợ lý Pháp lý AI** của LegalBook (vận hành bởi Google Gemini).\n\nTôi đã nạp toàn văn **${doc.document_number || doc.title}** vào ngữ cảnh. Bạn có thể hỏi bất kỳ câu hỏi nghiệp vụ nào về căn cứ, mức thuế, thủ tục hoặc các điểm mới!`,
       suggestedFollowUps: [
+        '📝 Tóm tắt chuyên sâu toàn văn văn bản này',
         'Điểm mới cốt lõi của văn bản này là gì?',
         'Trách nhiệm và nghĩa vụ của doanh nghiệp?',
         'Thời điểm hiệu lực và điều khoản chuyển tiếp?',
       ],
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: 'Bây giờ',
     },
   ]);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -70,26 +76,27 @@ export function LegalAiChatPanel({
     const query = (textToSend || inputQuery).trim();
     if (!query || isLoading) return;
 
+    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg: Message = {
-      id: `user-${Date.now()}`,
+      id: getNextChatMsgId('user'),
       sender: 'user',
       text: query,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: nowStr,
     };
-
     setMessages((prev) => [...prev, userMsg]);
     setInputQuery('');
     setIsLoading(true);
 
     try {
+      const isSummaryQuery = query.toLowerCase().includes('tóm tắt') || query.toLowerCase().includes('tom tat') || query.toLowerCase().includes('summary');
       const response = await askLegalAi({
         question: query,
         currentDoc: doc,
-        mode: 'ask',
+        mode: isSummaryQuery ? 'summary' : 'ask',
       });
 
       const aiMsg: Message = {
-        id: `ai-${Date.now()}`,
+        id: getNextChatMsgId('ai'),
         sender: 'ai',
         text: response.answer,
         citations: response.citations,
@@ -97,17 +104,15 @@ export function LegalAiChatPanel({
         source: response.source,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error('Error asking Legal AI:', err);
       const errorMsg: Message = {
-        id: `ai-err-${Date.now()}`,
+        id: getNextChatMsgId('ai-err'),
         sender: 'ai',
         text: 'Rất tiếc, đã có lỗi kết nối tạm thời khi truy vấn AI. Vui lòng thử lại câu hỏi.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }
@@ -116,14 +121,14 @@ export function LegalAiChatPanel({
   const handleClearHistory = () => {
     setMessages([
       {
-        id: `welcome-${Date.now()}`,
+        id: getNextChatMsgId('welcome'),
         sender: 'ai',
         text: `Đã làm mới cuộc hội thoại. Hãy đặt câu hỏi về **${doc.document_number || doc.title}**.`,
         suggestedFollowUps: [
           'Điểm mới cốt lõi của văn bản này là gì?',
           'Nghĩa vụ và trách nhiệm của người nộp thuế?',
         ],
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: 'Bây giờ',
       },
     ]);
   };
@@ -208,23 +213,14 @@ export function LegalAiChatPanel({
                   : 'bg-slate-100/90 text-slate-800 border border-slate-200/80 rounded-tl-xs'
               )}
             >
-              {/* Message text with basic markdown formatting */}
-              <div className="text-xs whitespace-pre-wrap leading-relaxed space-y-1">
-                {msg.text.split('\n').map((line, i) => {
-                  if (line.startsWith('**') && line.endsWith('**')) {
-                    return <p key={i} className="font-bold">{line.replace(/\*\*/g, '')}</p>;
-                  }
-                  if (line.startsWith('- ') || line.startsWith('* ')) {
-                    return (
-                      <div key={i} className="flex items-start gap-1.5 pl-1">
-                        <span className="text-blue-500">•</span>
-                        <span>{line.replace(/^[-*]\s*/, '')}</span>
-                      </div>
-                    );
-                  }
-                  return <p key={i}>{line}</p>;
-                })}
-              </div>
+              {/* Message text with full rich Markdown formatting */}
+              {msg.sender === 'user' ? (
+                <div className="text-xs whitespace-pre-wrap leading-relaxed font-medium">
+                  {msg.text}
+                </div>
+              ) : (
+                <MarkdownRenderer content={msg.text} className="text-xs text-slate-800" />
+              )}
 
               {/* Citations list if present */}
               {msg.citations && msg.citations.length > 0 && (
@@ -234,22 +230,39 @@ export function LegalAiChatPanel({
                     Căn cứ trích dẫn pháp lý:
                   </span>
                   <div className="space-y-1">
-                    {msg.citations.map((c, cIdx) => (
-                      <button
-                        key={cIdx}
-                        type="button"
-                        onClick={() => onCitationClick?.(c.articleNumber)}
-                        className="w-full text-left p-1.5 bg-white border border-slate-200 rounded text-[11px] hover:border-blue-300 hover:bg-blue-50/50 transition-colors flex items-center justify-between gap-1 group cursor-pointer"
-                      >
-                        <div className="truncate">
-                          <span className="font-mono font-bold text-blue-900 mr-1">
-                            {c.articleNumber || c.documentNumber}
-                          </span>
-                          <span className="text-slate-600 truncate">{c.articleTitle || c.documentTitle}</span>
-                        </div>
-                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 shrink-0" />
-                      </button>
-                    ))}
+                    {msg.citations.map((c, cIdx) => {
+                      const docNum = c.documentNumber?.trim() || '';
+                      const artNum = c.articleNumber?.trim() || '';
+                      let title = (c.articleTitle || c.documentTitle || '').trim();
+
+                      // Clean up duplicate doc number in title if title starts with or equals docNum
+                      if (docNum && title.startsWith(docNum)) {
+                        title = title.slice(docNum.length).replace(/^[\s:–—.-]+/, '').trim();
+                      }
+
+                      const badgeText = artNum || docNum;
+                      const displayText = title || (artNum ? docNum : '');
+
+                      return (
+                        <button
+                          key={cIdx}
+                          type="button"
+                          onClick={() => onCitationClick?.(c.articleNumber)}
+                          className="w-full text-left p-1.5 bg-white border border-slate-200 rounded-lg text-[11px] hover:border-blue-300 hover:bg-blue-50/50 transition-colors flex items-center justify-between gap-1.5 group cursor-pointer shadow-2xs"
+                          title={`Xem chi tiết căn cứ: ${badgeText}`}
+                        >
+                          <div className="truncate flex items-center gap-1.5 min-w-0">
+                            <span className="font-mono font-bold text-blue-900 shrink-0 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60 text-[10.5px]">
+                              {badgeText}
+                            </span>
+                            {displayText && displayText !== badgeText && (
+                              <span className="text-slate-700 truncate font-medium">{displayText}</span>
+                            )}
+                          </div>
+                          <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 shrink-0" />
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

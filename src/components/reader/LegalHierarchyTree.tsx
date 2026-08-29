@@ -8,12 +8,8 @@ import {
   GitFork,
   GitCompare,
   Columns2,
-  ExternalLink,
   ChevronsUp,
   ChevronsDown,
-  Filter,
-  Layers,
-  Sparkles,
 } from 'lucide-react';
 import { buildDocumentHierarchy, type HierarchyNode } from '@/lib/hierarchy';
 import {
@@ -21,7 +17,6 @@ import {
   DOCUMENT_STATUS_COLORS,
   getEffectiveStatus,
   formatDate,
-  formatShortTitle,
 } from '@/lib/utils';
 import { LegalDiffViewer } from './LegalDiffViewer';
 import type { LegalDocument } from '@/types';

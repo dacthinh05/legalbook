@@ -78,8 +78,8 @@ export function LegalEffectOverlay({
 
   // Cleanup on unmount
   useEffect(() => {
+    const container = containerRef.current;
     return () => {
-      const container = containerRef.current;
       if (container) removeLegalEffectOverlay(container);
     };
   }, [containerRef]);

@@ -5,7 +5,6 @@ import {
   GitCompare,
   Columns2,
   Rows,
-  Filter,
   CheckCircle2,
   PlusCircle,
   MinusCircle,
@@ -16,21 +15,17 @@ import {
   BookOpen,
   Sparkles,
   Layers,
-  Send,
-  Bot,
-  User,
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { askLegalAi } from '@/lib/ai/legal-rag';
+import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
 import {
   compareLegalDocuments,
   buildCrossReferenceMatrix,
-} from '@/lib/diff-engine';
-import type {
-  LegalDocumentDiffResult,
-  LegalCrossReferenceResult,
-  ArticleDiffItem,
+  type LegalDocumentDiffResult,
+  type LegalCrossReferenceResult,
+  type ArticleDiffItem,
 } from '@/lib/diff-engine';
 import type { LegalDocument } from '@/types';
 interface LegalDiffViewerProps {
@@ -549,15 +544,18 @@ export function LegalDiffViewer({
                         'p-3 rounded-lg text-xs leading-relaxed',
                         item.sender === 'user'
                           ? 'bg-blue-600 text-white ml-6 font-medium'
-                          : 'bg-slate-50 border border-slate-200 text-slate-800 mr-6 whitespace-pre-wrap'
+                          : 'bg-slate-50 border border-slate-200 text-slate-800 mr-6'
                       )}
                     >
-                      {item.text}
+                      {item.sender === 'user' ? (
+                        item.text
+                      ) : (
+                        <MarkdownRenderer content={item.text} className="text-xs text-slate-800" />
+                      )}
                     </div>
                   ))}
                 </div>
               )}
-
               {aiLoading && (
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-center gap-2">
                   <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />

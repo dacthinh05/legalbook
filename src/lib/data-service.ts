@@ -18,7 +18,7 @@ import {
   getDocumentsForCategoryTree as getEmbeddedDocsForCategory 
 } from '@/lib/demo-data';
 import { getCategoryDocumentType } from '@/lib/tree-utils';
-import type { LegalDocument, Category, DocumentRelation, DocumentType, EffectiveStatusType } from '@/types';
+import type { LegalDocument, Category, DocumentRelation, DocumentType } from '@/types';
 
 export type DataSourceType = 'supabase_live' | 'embedded_repository' | 'unavailable';
 

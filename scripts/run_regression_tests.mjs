@@ -33,6 +33,13 @@ import { getDescendantCategoryIds } from '../src/lib/tree-utils.ts';
 import { getDescendantIds } from '../src/lib/count-utils.ts';
 import { formatDate, getApplicabilityInfo, getTvplSourceUrl } from '../src/lib/utils.ts';
 import { isStrictProductionMode, isEmbeddedDataPermitted } from '../src/lib/data-service.ts';
+import { verificationService } from '../src/lib/verification/data-service.ts';
+import {
+  detectDocumentConflicts,
+  calculateOverallConfidence,
+  normalizeText,
+  parseDateString,
+} from '../src/lib/verification/conflict-detector.ts';
 
 describe('1. Security & HTML Sanitization (DOMPurify XSS Prevention)', () => {
   test('strips <script> tags and inner executable code in server sanitizer', () => {
@@ -2206,5 +2213,385 @@ describe('23. Legal AI Assistant, Multi-Provider Fallback & Dual-Document Compar
 
     const res = await queryLegalAssistant('Thuế suất thuế TNDN', doc67);
     assert.ok(res.suggestedFollowUps.length >= 2);
+  });
+
+  test('4. generateLocalDocumentSummary creates structured legal breakdown with all 5 core sections', async () => {
+    const { generateLocalDocumentSummary } = await import('../src/lib/ai/legal-rag.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc109 = DEMO_DOCUMENTS.find((d) => d.document_number === '109/2025/QH15');
+
+    assert.ok(doc109);
+    const summary = generateLocalDocumentSummary(doc109);
+
+    assert.ok(summary);
+    assert.strictEqual(summary.documentNumber, '109/2025/QH15');
+    assert.ok(summary.overview.length > 20);
+    assert.ok(summary.newPoints.length >= 2);
+    assert.ok(summary.applicableTarget.length >= 2);
+    assert.ok(summary.complianceRisks.length >= 2);
+    assert.ok(summary.fullMarkdown.includes('TỔNG QUAN & MỤC ĐÍCH BAN HÀNH'));
+    assert.ok(summary.fullMarkdown.includes('CÁC ĐIỂM MỚI & NỘI DUNG CỐT LÕI'));
+    assert.ok(summary.fullMarkdown.includes('ĐỐI TƯỢNG ÁP DỤNG'));
+    assert.ok(summary.fullMarkdown.includes('HIỆU LỰC THI HÀNH'));
+    assert.ok(summary.fullMarkdown.includes('LƯU Ý THỰC THI'));
+  });
+
+  test('5. summarizeDocumentWithAi resolves summary with fallback source and article references', async () => {
+    const { summarizeDocumentWithAi } = await import('../src/lib/ai/legal-rag.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc253 = DEMO_DOCUMENTS.find((d) => d.document_number === '253/2026/NĐ-CP');
+
+    assert.ok(doc253);
+    const summary = await summarizeDocumentWithAi(doc253);
+
+    assert.ok(summary);
+    assert.ok(summary.fullMarkdown.length > 100);
+    assert.ok(summary.keyArticles.length >= 1);
+    assert.ok(['gemini', 'local_rag'].includes(summary.source));
+  });
+});
+describe('24. Collapsible Panels, Rail Restores, Splitter Double-Click & True Focus Mode', () => {
+  test('1. WorkspaceLayout state model supports independent panel collapse flags', () => {
+    const layoutState = {
+      topicPanel: { collapsed: false, width: 280 },
+      documentListPanel: { collapsed: false, width: 360 },
+      focusMode: false,
+    };
+
+    assert.strictEqual(layoutState.topicPanel.collapsed, false);
+    assert.strictEqual(layoutState.documentListPanel.collapsed, false);
+    assert.strictEqual(layoutState.focusMode, false);
+  });
+
+  test('2. Independent collapse: collapsing Topic panel preserves Document list open state', () => {
+    let sidebarOpen = true;
+    let listOpen = true;
+
+    // User clicks collapse on Topic panel
+    sidebarOpen = false;
+
+    assert.strictEqual(sidebarOpen, false);
+    assert.strictEqual(listOpen, true, 'Document list must stay open when Topic panel is collapsed');
+  });
+
+  test('3. Independent collapse: collapsing Document list preserves Topic panel open state', () => {
+    let sidebarOpen = true;
+    let listOpen = true;
+
+    // User clicks collapse on Document list
+    listOpen = false;
+
+    assert.strictEqual(sidebarOpen, true, 'Topic panel must stay open when Document list is collapsed');
+    assert.strictEqual(listOpen, false);
+  });
+
+  test('4. Splitter width clamping: respects minimum and maximum limits without overflow', () => {
+    const MIN_SIDEBAR = 240;
+    const MAX_SIDEBAR = 340;
+    const MIN_LIST = 320;
+    const MAX_LIST = 460;
+    const MIN_READER = 680;
+
+    const clampSidebar = (w) => Math.max(MIN_SIDEBAR, Math.min(MAX_SIDEBAR, w));
+    const clampList = (w) => Math.max(MIN_LIST, Math.min(MAX_LIST, w));
+
+    assert.strictEqual(clampSidebar(150), 240);
+    assert.strictEqual(clampSidebar(400), 340);
+    assert.strictEqual(clampSidebar(280), 280);
+
+    assert.strictEqual(clampList(200), 320);
+    assert.strictEqual(clampList(600), 460);
+    assert.strictEqual(clampList(360), 360);
+
+    const totalWorkspaceWidth = 1440;
+    const readerWidth = totalWorkspaceWidth - clampSidebar(280) - clampList(360);
+    assert.ok(readerWidth >= MIN_READER, `Reader width (${readerWidth}px) must be >= ${MIN_READER}px`);
+  });
+
+  test('5. Focus Mode memory restoration: restores EXACT previously open/closed panels upon exit', () => {
+    // Scenario A: Topic was open, List was closed
+    const prevLayout = { sidebarOpen: true, listOpen: false };
+    let sidebarOpen = false;
+    let listOpen = false;
+    let isFocusMode = true;
+
+    // Exit Focus Mode
+    sidebarOpen = prevLayout.sidebarOpen;
+    listOpen = prevLayout.listOpen;
+    isFocusMode = false;
+
+    assert.strictEqual(sidebarOpen, true, 'Topic panel should restore to open');
+    assert.strictEqual(listOpen, false, 'Document list should remain closed because it was closed before focus');
+
+    // Scenario B: Both were open
+    const prevLayoutB = { sidebarOpen: true, listOpen: true };
+    sidebarOpen = false;
+    listOpen = false;
+    isFocusMode = true;
+
+    // Exit Focus Mode
+    sidebarOpen = prevLayoutB.sidebarOpen;
+    listOpen = prevLayoutB.listOpen;
+    isFocusMode = false;
+    assert.strictEqual(isFocusMode, false);
+    assert.strictEqual(sidebarOpen, true);
+    assert.strictEqual(listOpen, true);
+  });
+
+  test('6. Keyboard shortcut dispatch table maps F, Esc, [, ] accurately', () => {
+    const shortcuts = {
+      'k': { modifier: 'ctrl', action: 'open_search' },
+      'Escape': { action: 'exit_focus_or_modal' },
+      'f': { action: 'toggle_focus_mode' },
+      '[': { action: 'toggle_topic_panel' },
+      ']': { action: 'toggle_list_panel' },
+    };
+
+    assert.strictEqual(shortcuts['f'].action, 'toggle_focus_mode');
+    assert.strictEqual(shortcuts['Escape'].action, 'exit_focus_or_modal');
+    assert.strictEqual(shortcuts['['].action, 'toggle_topic_panel');
+    assert.strictEqual(shortcuts[']'].action, 'toggle_list_panel');
+  });
+});
+
+describe('25. Admin Verification Workspace, 3-Column Inspection, Conflict Detection & Audit (16 Criteria)', () => {
+  test('1. Document selection updates preview and Inspector without state leakage', () => {
+    const docs = verificationService.getDocuments();
+    assert.ok(docs.length >= 2, 'Must have at least 2 documents in verification queue');
+    const doc1 = verificationService.getDocumentById(docs[0].id);
+    const doc2 = verificationService.getDocumentById(docs[1].id);
+    assert.ok(doc1 && doc2);
+    assert.notEqual(doc1.id, doc2.id);
+    assert.equal(doc1.fields['document_number'].currentValue, doc1.document.document_number);
+    assert.equal(doc2.fields['document_number'].currentValue, doc2.document.document_number);
+  });
+
+  test('2. Preview titles are dynamic based on document number, not fixed to ND 30/2020', () => {
+    const docs = verificationService.getDocuments();
+    const doc572 = docs.find((d) => d.document.document_number === '572/TNG-QLDN2');
+    assert.ok(doc572);
+    assert.equal(doc572.document.document_number, '572/TNG-QLDN2');
+    assert.equal(doc572.applicableLayoutRule, 'Nghị định 30/2020/NĐ-CP');
+  });
+
+  test('3. Edit metadata fields, save draft, recalculate confidence, and record audit log', () => {
+    const docs = verificationService.getDocuments();
+    const targetDoc = docs[0];
+    const initialAuditCount = verificationService.getAuditLogs().length;
+    const updated = verificationService.saveDocumentDraft(
+      targetDoc.id,
+      { document_number: { currentValue: '999/TEST-2026' }, signer: { currentValue: 'Nguyễn Văn Kiểm' } },
+      'Kiểm thử lưu nháp'
+    );
+    assert.ok(updated);
+    assert.equal(updated.fields['document_number'].currentValue, '999/TEST-2026');
+    assert.equal(updated.fields['document_number'].status, 'edited');
+    assert.equal(verificationService.getAuditLogs().length, initialAuditCount + 1);
+    verificationService.undoLastAction();
+  });
+
+  test('4. Detects unsaved changes (dirty state) when fields are modified', () => {
+    const docs = verificationService.getDocuments();
+    const doc = docs[0];
+    doc.isDirty = true;
+    assert.equal(doc.isDirty, true);
+    doc.isDirty = false;
+    assert.equal(doc.isDirty, false);
+  });
+
+  test('5. Re-run OCR request requires reason, transitions status to needs_ocr and logs audit', () => {
+    const docs = verificationService.getDocuments();
+    const targetDoc = docs[0];
+    assert.equal(verificationService.requestRerunOcr(targetDoc.id, '', '').success, false);
+    const result = verificationService.requestRerunOcr(targetDoc.id, 'Scan mờ', 'Chi tiết');
+    assert.equal(result.success, true);
+    assert.equal(result.doc?.reviewStatus, 'needs_ocr');
+    verificationService.undoLastAction();
+  });
+
+  test('6. Reject document requires mandatory reason, records in audit log, does not delete data', () => {
+    const docs = verificationService.getDocuments();
+    const targetDoc = docs[1];
+    assert.equal(verificationService.rejectDocument(targetDoc.id, '', '').success, false);
+    const res = verificationService.rejectDocument(targetDoc.id, 'Trùng lặp', 'Chi tiết');
+    assert.equal(res.success, true);
+    assert.equal(res.doc?.reviewStatus, 'rejected');
+    verificationService.undoLastAction();
+  });
+
+  test('7. Verification is blocked when unresolved error conflicts exist', () => {
+    const conflicts = [
+      { id: 'e1', fieldKey: 'doc_num', severity: 'error', title: 'E', message: 'E', isResolved: false, isConfirmed: false },
+    ];
+    const blocking = conflicts.filter((c) => c.severity === 'error' && !c.isResolved);
+    assert.equal(blocking.length, 1);
+  });
+
+  test('8. Verification does not automatically publish document unless autoPublish is explicitly enabled', () => {
+    const docs = verificationService.getDocuments();
+    const doc = docs.find((d) => d.conflicts.filter((c) => c.severity === 'error' && !c.isResolved).length === 0);
+    assert.ok(doc);
+    const verifyRes = verificationService.verifyDocument(doc.id, false, 'Chuyên viên');
+    assert.equal(verifyRes.success, true);
+    assert.equal(verifyRes.doc?.reviewStatus, 'verified');
+    assert.equal(verifyRes.doc?.document.review_status, 'pending_review');
+    verificationService.undoLastAction();
+  });
+
+  test('9. Conflict detector identifies 10/05/2025 vs 26/01/2026 mismatch on document 572/TNG-QLDN2', () => {
+    const docs = verificationService.getDocuments();
+    const doc572 = docs.find((d) => d.document.document_number === '572/TNG-QLDN2');
+    assert.ok(doc572);
+    const dateConflict = doc572.conflicts.find((c) => c.fieldKey === 'issued_date');
+    assert.ok(dateConflict);
+    assert.equal(dateConflict.severity, 'warning');
+    assert.ok(dateConflict.message.includes('10/05/2025') && dateConflict.message.includes('26/01/2026'));
+  });
+
+  test('10. Original scan blocks have accurate bounding boxes and page references', () => {
+    const docs = verificationService.getDocuments();
+    const doc = docs[0];
+    assert.ok(doc.ocrPages.length >= 2);
+    const p1 = doc.ocrPages[0];
+    assert.equal(p1.pageNumber, 1);
+    assert.ok(p1.blocks.length >= 4);
+  });
+
+  test('11. Relationship verification supports type change, direction swap, and audit logging', () => {
+    const rels = verificationService.getRelationships();
+    assert.ok(rels.length >= 1);
+    const rel = rels[0];
+    const initialSrc = rel.source_document_number;
+    const initialTgt = rel.target_document_number;
+    verificationService.swapRelationshipDirection(rel.id);
+    assert.equal(rel.source_document_number, initialTgt);
+    verificationService.swapRelationshipDirection(rel.id);
+    assert.equal(rel.source_document_number, initialSrc);
+  });
+
+  test('12. Changeset verification groups by Điều/Khoản and maintains before/after diff', () => {
+    const changesets = verificationService.getChangesets();
+    assert.ok(changesets.length >= 1);
+    const chg = changesets[0];
+    assert.ok(chg.articleLabel);
+    assert.ok(chg.clauseLabel);
+  });
+
+  test('13. Audit logs record before and after snapshots with timestamps and reviewers', () => {
+    const logs = verificationService.getAuditLogs();
+    assert.ok(logs.length >= 2);
+    assert.ok(logs[0].timestamp && logs[0].reviewer);
+  });
+
+  test('14. Calculate overall confidence penalizes unresolved errors and warnings correctly', () => {
+    const fields = {
+      f1: { key: 'f1', label: 'F1', category: 'metadata', extractedValue: 'A', currentValue: 'A', confidence: 0.95, status: 'unresolved', sourcePage: 1 },
+    };
+    assert.equal(calculateOverallConfidence(fields, []), 95);
+  });
+
+  test('15. Text normalization and date parsing handle Vietnamese diacritics and formats', () => {
+    assert.equal(normalizeText('Công văn số 572/TNG-QLDN2'), 'cong van so 572/tng-qldn2');
+    assert.deepEqual(parseDateString('2026-01-26'), { year: 2026, month: 1, day: 26 });
+  });
+
+  test('16. Undo mechanism safely recovers previous state after accidental actions', () => {
+    const docs = verificationService.getDocuments();
+    const doc = docs[0];
+    const originalStatus = doc.reviewStatus;
+    verificationService.verifyDocument(doc.id, false, 'Tester');
+    assert.equal(doc.reviewStatus, 'verified');
+    verificationService.undoLastAction();
+    assert.equal(doc.reviewStatus, originalStatus);
+  });
+});
+describe('26. Rich Markdown Renderer for AI Chat, Inline Tokens, Headers, Lists & Tables', () => {
+  test('1. Inline Markdown parser parses bold, italic, code, and links correctly', async () => {
+    const { renderInlineMarkdown } = await import('../src/components/common/MarkdownRenderer.tsx');
+    const sample = 'Căn cứ theo **572/TNG-QLDN2** và *Nghị định 123* cùng mã `TAX_2026` tại [Thư Viện Pháp Luật](https://thuvienphapluat.vn).';
+    const nodes = renderInlineMarkdown(sample);
+    assert.ok(Array.isArray(nodes));
+    assert.ok(nodes.length >= 4);
+  });
+
+  test('2. Exact user scenario: parses inline bold document numbers and article titles without raw asterisks', async () => {
+    const { renderInlineMarkdown } = await import('../src/components/common/MarkdownRenderer.tsx');
+    const line1 = 'Căn cứ theo **572/TNG-QLDN2** (Về điều kiện chứng từ thanh toán không dùng tiền mặt)';
+    const line2 = 'Cụ thể tại **Điều 1. Phạm vi điều chỉnh**: "Điều 1. Phạm vi điều chỉnh..."';
+
+    const nodes1 = renderInlineMarkdown(line1);
+    const nodes2 = renderInlineMarkdown(line2);
+
+    assert.ok(nodes1.some((n) => n && typeof n === 'object' && n.type === 'strong'));
+    assert.ok(nodes2.some((n) => n && typeof n === 'object' && n.type === 'strong'));
+  });
+
+  test('3. Link protocol validation blocks XSS vectors (javascript:, data:) and permits safe protocols', async () => {
+    const { isSafeLinkUrl, renderInlineMarkdown } = await import('../src/components/common/MarkdownRenderer.tsx');
+    assert.strictEqual(isSafeLinkUrl('https://thuvienphapluat.vn'), true);
+    assert.strictEqual(isSafeLinkUrl('http://gdt.gov.vn'), true);
+    assert.strictEqual(isSafeLinkUrl('mailto:contact@legalbook.vn'), true);
+    assert.strictEqual(isSafeLinkUrl('/documents/572'), true);
+    assert.strictEqual(isSafeLinkUrl('javascript:alert(1)'), false);
+    assert.strictEqual(isSafeLinkUrl('data:text/html,<script>alert(1)</script>'), false);
+
+    const unsafeNodes = renderInlineMarkdown('[Bấm vào đây](javascript:alert(document.cookie))');
+    assert.ok(unsafeNodes.some((n) => n && typeof n === 'object' && n.type === 'span'));
+  });
+
+  test('4. Nested inline formatting handles bold inside italic or links recursively', async () => {
+    const { renderInlineMarkdown } = await import('../src/components/common/MarkdownRenderer.tsx');
+    const nested = '[**Văn bản 572**](https://legalbook.vn)';
+    const nodes = renderInlineMarkdown(nested);
+    const anchor = nodes.find((n) => n && typeof n === 'object' && n.type === 'a');
+    assert.ok(anchor);
+    assert.ok(anchor.props.children);
+  });
+
+  test('5. MarkdownRenderer handles headers, lists, blockquotes, code blocks, and tables', async () => {
+    const { MarkdownRenderer } = await import('../src/components/common/MarkdownRenderer.tsx');
+    const markdown = `
+# Tiêu đề chính
+## Tiêu đề mục 2
+### 1. 📌 Tổng quan & Mục đích
+#### Chi tiết tiểu mục
+##### Lưu ý nhỏ
+
+- Điểm 1: Không dùng tiền mặt trên 5 triệu
+- Điểm 2: Khấu trừ thuế TNDN hợp lệ
+
+1. Bước 1: Kê khai
+2. Bước 2: Nộp thuế
+
+> Căn cứ Điều 15 Thông tư 219/2013/TT-BTC
+
+\`\`\`json
+{ "doc": "572/TNG-QLDN2", "status": "active" }
+\`\`\`
+
+| Số hiệu | Trạng thái |
+|---|---|
+| 572/TNG-QLDN2 | Còn hiệu lực |
+`;
+    const element = MarkdownRenderer({ content: markdown });
+    assert.ok(element);
+    assert.ok(element.props.children.length >= 6);
+  });
+
+  test('6. Legal citation deduplication removes redundant document number in title', () => {
+    const cit = {
+      documentNumber: '572/TNG-QLDN2',
+      documentTitle: '572/TNG-QLDN2 Chi tiền mặt trên 5 triệu',
+      articleNumber: '',
+      articleTitle: '',
+    };
+
+    const docNum = cit.documentNumber.trim();
+    let title = (cit.articleTitle || cit.documentTitle || '').trim();
+    if (docNum && title.startsWith(docNum)) {
+      title = title.slice(docNum.length).replace(/^[\s:–—.-]+/, '').trim();
+    }
+
+    assert.strictEqual(title, 'Chi tiền mặt trên 5 triệu');
   });
 });

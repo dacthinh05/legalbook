@@ -22,7 +22,7 @@ import {
   ExternalLink,
   RotateCcw,
   RotateCw,
-  SlidersHorizontal,
+  FileText,
   FileWarning,
   Maximize2,
   Minimize2,
@@ -48,7 +48,7 @@ import {
 import { getDocumentTopicName } from '@/lib/legal-feed-utils';
 import { DEMO_CATEGORIES } from '@/lib/demo-data';
 import { highlightHtml, isSafeUrl } from '@/lib/sanitize';
-import { formatLegalHtmlContent, normalizeDisplayTitle } from '@/lib/legal-formatter';
+import { formatLegalHtmlContent } from '@/lib/legal-formatter';
 import type { LegalDocument, ReaderPanelMode, TocItem, DocumentRelation, AnnotationColor, LegalEffect } from '@/types';
 import { ContentQualityValidator } from '@/lib/quality/content-validator';
 import { LegalHierarchyTree } from './LegalHierarchyTree';
@@ -67,6 +67,7 @@ import { PointInTimeSelector } from './PointInTimeSelector';
 import { LegalEffectOverlay } from './LegalEffectOverlay';
 import { getDocumentLegalEffects } from '@/lib/legal-effects/demo-effects';
 import { calculatePointInTimeStats } from '@/lib/legal-effects/timeline-engine';
+import { AiSummaryModal } from './AiSummaryModal';
 import { createClient } from '@/lib/supabase/client';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -146,19 +147,19 @@ export function DocumentReader({
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [showDisplayMenu, setShowDisplayMenu] = useState(false);
   const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [pdfZoomMode, setPdfZoomMode] = useState<'FitH' | 'Fit' | '125' | '150'>('FitH');
   const [selectedPdfFileIndex, setSelectedPdfFileIndex] = useState<number>(0);
-  const [showQuickViewPdf, setShowQuickViewPdf] = useState(false);
+  const [quickViewDocId, setQuickViewDocId] = useState<string | null>(null);
+  const showQuickViewPdf = quickViewDocId === doc.id;
+  const [showAiSummaryModal, setShowAiSummaryModal] = useState(false);
 
   // ── Refs ───────────────────────────────────────────────────────────────
 
   const viewportRef = useRef<HTMLDivElement>(null);   // the scrollable viewport
   const contentRef = useRef<HTMLDivElement>(null);    // the document text container
   const readerRootRef = useRef<HTMLDivElement>(null);
-  const displayMenuRef = useRef<HTMLDivElement>(null);
   const fontSizeMenuRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const [contentReady, setContentReady] = useState(false);
@@ -274,6 +275,9 @@ export function DocumentReader({
     }, 3500);
   }, []);
 
+  const executeUndoRef = useRef<() => Promise<void>>(async () => {});
+  const executeRedoRef = useRef<() => Promise<void>>(async () => {});
+
   const executeUndo = useCallback(async () => {
     const action = undoManagerRef.current.undo();
     if (!action) return;
@@ -287,7 +291,9 @@ export function DocumentReader({
     }
 
     updateUndoRedoState();
-    showToast(`Đã hoàn tác: ${action.description}`, 'Làm lại', () => executeRedo());
+    showToast(`Đã hoàn tác: ${action.description}`, 'Làm lại', () => {
+      void executeRedoRef.current();
+    });
   }, [deleteAnnotation, restoreAnnotation, updateUndoRedoState, showToast]);
 
   const executeRedo = useCallback(async () => {
@@ -303,8 +309,15 @@ export function DocumentReader({
     }
 
     updateUndoRedoState();
-    showToast(`Đã làm lại: ${action.description}`, 'Hoàn tác', () => executeUndo());
+    showToast(`Đã làm lại: ${action.description}`, 'Hoàn tác', () => {
+      void executeUndoRef.current();
+    });
   }, [deleteAnnotation, restoreAnnotation, updateUndoRedoState, showToast]);
+
+  useEffect(() => {
+    executeUndoRef.current = executeUndo;
+    executeRedoRef.current = executeRedo;
+  }, [executeUndo, executeRedo]);
 
   const handleDeleteAnnotationWithUndo = useCallback(
     async (id: string) => {
@@ -457,17 +470,11 @@ export function DocumentReader({
     return () => clearTimeout(timeout);
   }, [doc.id, targetNodeId, initialSearchQuery]);
 
-  // Reset quick-view state when document changes
-  useEffect(() => {
-    setShowQuickViewPdf(false);
-  }, [doc.id]);
 
   // ── Close menus on outside click ───────────────────────────────────────
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (displayMenuRef.current && !displayMenuRef.current.contains(e.target as Node))
-        setShowDisplayMenu(false);
       if (fontSizeMenuRef.current && !fontSizeMenuRef.current.contains(e.target as Node))
         setShowFontSizeMenu(false);
       if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node))
@@ -491,7 +498,6 @@ export function DocumentReader({
     setFontSize(16);
     setContentWidth(820);
     setLineHeight(1.75);
-    setShowDisplayMenu(false);
     setShowFontSizeMenu(false);
   }, [setFontSize, setContentWidth]);
 
@@ -792,11 +798,13 @@ export function DocumentReader({
             {onBack && (
               <button
                 onClick={onBack}
-                className="p-1 -ml-1 text-slate-600 hover:bg-slate-100 rounded md:hidden shrink-0 cursor-pointer"
-                title="Quay lại danh sách"
-                aria-label="Quay lại danh sách"
+                className="flex items-center gap-1 p-1 -ml-1 text-slate-600 hover:text-blue-900 hover:bg-slate-100 rounded transition-colors shrink-0 cursor-pointer font-medium"
+                title="Quay lại danh sách / Trang chủ"
+                aria-label="Quay lại danh sách hoặc trang chủ"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4 text-blue-700 shrink-0" />
+                <span className="hidden sm:inline text-xs font-semibold text-blue-900">Trang chủ</span>
+                <span className="text-slate-300 hidden sm:inline">/</span>
               </button>
             )}
             <span className="text-slate-500 font-medium truncate">{topicName || 'Pháp luật'}</span>
@@ -905,7 +913,7 @@ export function DocumentReader({
                     ? 'bg-blue-700 text-white border-blue-700 font-semibold'
                     : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-100'
                 )}
-                title={isFocusMode ? 'Thoát tập trung (Esc)' : 'Tập trung đọc (Thu gọn thanh bên)'}
+                title={isFocusMode ? 'Thoát tập trung (Esc hoặc F)' : 'Tập trung đọc (F)'}
                 aria-label={isFocusMode ? 'Thoát tập trung đọc' : 'Tập trung đọc'}
               >
                 <Maximize2 className="w-3.5 h-3.5" />
@@ -1054,24 +1062,6 @@ export function DocumentReader({
           totalEffectsCount={documentLegalEffects.length}
         />
       )}
-      {/* Focus Mode floating banner */}
-      {isFocusMode && (
-        <div className="bg-blue-700 text-white px-4 py-1.5 text-xs flex items-center justify-between shrink-0 shadow-sm z-20">
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold">Đang ở chế độ tập trung đọc</span>
-            <span className="text-blue-200 hidden sm:inline">— Toàn bộ không gian được ưu tiên cho văn bản.</span>
-          </div>
-          {onToggleFocusMode && (
-            <button
-              onClick={onToggleFocusMode}
-              className="bg-white/20 hover:bg-white/30 text-white px-2.5 py-0.5 rounded font-semibold transition-colors flex items-center gap-1"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Khôi phục thanh bên</span>
-            </button>
-          )}
-        </div>
-      )}
       {/* ================================================================
           2. STICKY TOOLBAR (Compact 44-48px)
           ================================================================ */}
@@ -1207,6 +1197,18 @@ export function DocumentReader({
               <span className="hidden sm:inline">Hỏi đáp AI</span>
             </button>
           )}
+
+          {/* AI Document Summary Quick Action */}
+          <button
+            type="button"
+            onClick={() => setShowAiSummaryModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 border-amber-300/90 hover:border-amber-400"
+            title="Tóm tắt toàn văn văn bản bằng AI (Điểm mới, Lộ trình, Căn cứ Điều/Khoản)"
+            aria-label="Tóm tắt AI"
+          >
+            <FileText className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+            <span className="hidden sm:inline">Tóm tắt AI</span>
+          </button>
 
           {/* TOC context panel toggle */}
           {activeTab === 'noidung' && (
@@ -1524,10 +1526,19 @@ export function DocumentReader({
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2 text-xs">
+                        {onBack && (
+                          <button
+                            onClick={onBack}
+                            className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            <span>Về Trang chủ & Danh sách</span>
+                          </button>
+                        )}
                         {tvplUrl && (
-                          <a href={tvplUrl} target="_blank" rel="noreferrer" className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg shadow-2xs transition-colors flex items-center gap-1.5">
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Mở nguồn</span>
+                          <a href={tvplUrl} target="_blank" rel="noreferrer" className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 font-semibold rounded-lg border border-slate-200 shadow-2xs transition-colors flex items-center gap-1.5">
+                            <ExternalLink className="w-3.5 h-3.5 text-slate-600" />
+                            <span>Mở nguồn gốc</span>
                           </a>
                         )}
                         <a href="/admin/upload" className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 font-semibold rounded-lg border border-slate-200 transition-colors flex items-center gap-1.5">
@@ -1854,7 +1865,7 @@ export function DocumentReader({
                         </a>
                         <button
                           type="button"
-                          onClick={() => setShowQuickViewPdf(false)}
+                          onClick={() => setQuickViewDocId(null)}
                           className="px-2.5 py-1 bg-white border border-slate-200 text-slate-600 rounded text-[11px] font-medium hover:bg-slate-50 transition-colors"
                         >
                           Đóng
@@ -1885,7 +1896,7 @@ export function DocumentReader({
                         {tvplUrl && (
                           <button
                             type="button"
-                            onClick={() => setShowQuickViewPdf(true)}
+                            onClick={() => setQuickViewDocId(doc.id)}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
@@ -1928,6 +1939,28 @@ export function DocumentReader({
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
                     <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Tóm tắt & Tác động nghiệp vụ</h3>
                     <span className="text-[11px] text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200 font-semibold">Tóm tắt hỗ trợ — cần đối chiếu văn bản gốc</span>
+                  {/* AI Summary Interactive Action Banner */}
+                  <div className="p-4 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-xl text-white shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase tracking-wide">
+                          AI Powered
+                        </span>
+                        <h4 className="font-bold text-sm text-white">Tóm tắt Chuyên sâu Văn bản này</h4>
+                      </div>
+                      <p className="text-xs text-blue-200">
+                        Tự động phân tích điểm mới, đối tượng áp dụng, lộ trình thi hành và rủi ro tuân thủ bằng AI.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAiSummaryModal(true)}
+                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer shrink-0"
+                    >
+                      <Sparkles className="w-4 h-4 text-slate-950" />
+                      <span>Mở Bản Tóm Tắt AI</span>
+                    </button>
+                  </div>
                   </div>
                   {!summaryGuard.allowed && (
                     <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2.5">
@@ -2071,6 +2104,28 @@ export function DocumentReader({
           </button>
         </div>
       )}
+
+      {/* ── AI Document Summary Modal ── */}
+      <AiSummaryModal
+        document={doc}
+        isOpen={showAiSummaryModal}
+        onClose={() => setShowAiSummaryModal(false)}
+        onOpenAiChat={(query) => {
+          setPanelMode('ai');
+        }}
+        onCitationClick={(artNum?: string) => {
+          if (artNum) {
+            const digits = artNum.replace(/[^\d]/g, '');
+            const el =
+              document.getElementById(`dieu-${digits}`) ||
+              document.getElementById(`dieu_${digits}`) ||
+              Array.from(document.querySelectorAll('h1, h2, h3, p strong')).find((h) =>
+                h.textContent?.includes(`Điều ${digits}`)
+              );
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }}
+      />
 
       {/* ── Text Selection Toolbar ── */}
       <SelectionToolbar

@@ -23,11 +23,7 @@ import {
   AlertCircle,
   Loader2,
   MessageSquare,
-  Lock,
-  Users,
-  Building2,
   Download,
-  Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { sanitizeNoteContent } from '@/lib/annotation-engine';

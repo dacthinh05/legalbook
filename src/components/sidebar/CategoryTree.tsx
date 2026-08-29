@@ -1,8 +1,7 @@
-'use client';
-
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   ChevronRight,
+  ChevronLeft,
   Search,
   BookOpen,
   Layers,
@@ -42,8 +41,8 @@ export interface CategoryTreeProps {
   onSelectDocType?: (type: DocumentType | null) => void;
   readDocuments?: Set<string>;
   activeCategoryCount?: number;
+  onCollapse?: () => void;
 }
-
 const STORAGE_KEY_EXPANDED = 'lb_tree_expanded_ids';
 
 function renderRootCategoryIcon(category: Category, className: string) {
@@ -282,11 +281,11 @@ export function CategoryTree({
   selectedDocType,
   onSelectCategory,
   onSelectDocType,
-  readDocuments,
+  readDocuments: _readDocuments,
+  activeCategoryCount: _activeCategoryCount,
+  onCollapse,
 }: CategoryTreeProps) {
   const [viewMode, setViewMode] = useState<'topic' | 'type'>('topic');
-
-  // Dynamic calculation of document counts and smart dynamic subcategories from allDocuments
   const docsList = useMemo(() => allDocuments || (DEMO_DOCUMENTS as unknown as LegalDocument[]), [allDocuments]);
   const totalDocsCount = docsList.length;
 
@@ -296,19 +295,17 @@ export function CategoryTree({
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     const initialSet = new Set<string>();
-
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY_EXPANDED);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+        const stored = localStorage.getItem(STORAGE_KEY_EXPANDED);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
             parsed.forEach((id: string) => initialSet.add(id));
           }
         }
       } catch {}
     }
-
     if (selectedCategoryId) {
       const ancestors = getAncestorCategoryIds(selectedCategoryId, enrichedCategories);
       ancestors.forEach((aId) => initialSet.add(aId));
@@ -737,6 +734,18 @@ export function CategoryTree({
               ) : (
                 <ChevronsDown className="w-4 h-4" />
               )}
+            </button>
+          )}
+
+          {onCollapse && (
+            <button
+              type="button"
+              onClick={onCollapse}
+              className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-800 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shrink-0 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              title="Ẩn cây chủ đề ( [ )"
+              aria-label="Ẩn cây chủ đề"
+            >
+              <ChevronLeft className="w-4 h-4" />
             </button>
           )}
         </div>

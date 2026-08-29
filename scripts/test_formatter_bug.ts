@@ -1,6 +1,7 @@
 import { DEMO_DOCUMENTS } from '../src/lib/demo-data';
+import type { LegalDocument } from '../src/types';
 
-function formatAdministrativeMastheadSafe(html: string, doc?: any): string {
+function formatAdministrativeMastheadSafe(html: string, doc?: Partial<LegalDocument>): string {
   if (html.includes('document-letterhead') || html.includes('legal-masthead')) {
     return html;
   }
@@ -9,11 +10,9 @@ function formatAdministrativeMastheadSafe(html: string, doc?: any): string {
   const boundaryRegex = /(<(?:h[1-6]|p)[^>]*>\s*(?:<strong>|<b>|<em>|<i>)?\s*(?:Căn cứ|LUẬT|BỘ LUẬT|NGHỊ ĐỊNH|THÔNG TƯ|QUYẾT ĐỊNH|CÔNG VĂN|NGHỊ QUYẾT|CHỈ THỊ|Chương\s+[IVXLCDM\d]+|Điều\s+\d+|Kính gửi))/i;
   const matchBoundary = html.match(boundaryRegex);
 
-  let headerSection = html;
   let bodySection = '';
 
   if (matchBoundary && matchBoundary.index !== undefined && matchBoundary.index > 0) {
-    headerSection = html.slice(0, matchBoundary.index);
     bodySection = html.slice(matchBoundary.index);
   }
 

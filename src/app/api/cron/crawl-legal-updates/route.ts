@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/client';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60s max execution time on Vercel

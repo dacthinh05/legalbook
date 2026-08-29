@@ -11,7 +11,7 @@
 
 import type { LegalDocument, Category, RelationType } from '@/types';
 import { DEMO_CATEGORY_LINKS, DEMO_CATEGORIES, DEMO_RELATIONS } from '@/lib/demo-data';
-import { getEffectiveStatus, formatDate } from '@/lib/utils';
+import { getEffectiveStatus } from '@/lib/utils';
 
 // ─── Change Types ─────────────────────────────────────────────────────────────
 

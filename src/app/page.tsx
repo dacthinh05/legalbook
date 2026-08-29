@@ -46,24 +46,24 @@ export default function MainPage() {
   const [readerFullscreen, setReaderFullscreen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Content state
-  const [selectedCatRaw, setSelectedCatRaw] = useLocalStorageString(STORAGE_KEY_SELECTED_CAT, '');
-  const [selectedDocRaw, setSelectedDocRaw] = useLocalStorageString(STORAGE_KEY_SELECTED_DOC, '');
+  // Content state (active session selection; defaults to Homepage Feed on fresh load)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [selectedDocType, setSelectedDocType] = useState<DocumentType | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchInitialQuery, setSearchInitialQuery] = useState('');
   const [importModalOpen, setImportModalOpen] = useState(false);
 
-  const selectedCategoryId = selectedCatRaw || null;
-  const selectedDocumentId = selectedDocRaw || null;
-
-  const setSelectedCategoryId = useCallback((id: string | null) => {
-    setSelectedCatRaw(id || '');
-  }, [setSelectedCatRaw]);
-
-  const setSelectedDocumentId = useCallback((id: string | null) => {
-    setSelectedDocRaw(id || '');
-  }, [setSelectedDocRaw]);
+  // Support direct URL query parameter deep linking (?doc=... or ?cat=...)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const docParam = params.get('doc');
+      const catParam = params.get('cat');
+      if (docParam) setSelectedDocumentId(docParam);
+      if (catParam) setSelectedCategoryId(catParam);
+    }
+  }, []);
 
   // User state
   const [bookmarksRaw, setBookmarksRaw] = useLocalStorageString('lb_bookmarks', '[]');
@@ -85,7 +85,18 @@ export default function MainPage() {
     }
   }, [bookmarksRaw]);
 
-  // Focus Mode Memory
+  // Focus Mode Memory & Toast Notification
+  const [focusToast, setFocusToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showFocusToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setFocusToast(msg);
+    toastTimerRef.current = setTimeout(() => {
+      setFocusToast(null);
+    }, 2500);
+  }, []);
+
   const prevLayoutRef = useRef<{ sidebarOpen: boolean; listOpen: boolean }>({
     sidebarOpen: true,
     listOpen: true,
@@ -96,21 +107,33 @@ export default function MainPage() {
       setSidebarOpen(prevLayoutRef.current.sidebarOpen);
       setListOpen(prevLayoutRef.current.listOpen);
       setIsFocusMode(false);
+      showFocusToast('Đã thoát chế độ tập trung');
     } else {
       prevLayoutRef.current = { sidebarOpen, listOpen };
       setSidebarOpen(false);
       setListOpen(false);
       setIsFocusMode(true);
+      showFocusToast('Đã bật chế độ tập trung · Nhấn Esc hoặc phím F để thoát');
     }
-  }, [isFocusMode, sidebarOpen, listOpen, setSidebarOpen, setListOpen]);
+  }, [isFocusMode, sidebarOpen, listOpen, setSidebarOpen, setListOpen, showFocusToast]);
 
-  // Keyboard shortcut Ctrl+K & Escape
+  // Keyboard shortcut Ctrl+K, Escape, F (Focus), [ (Topic), ] (List)
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInput =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable);
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         setSearchOpen(true);
+        return;
       }
+
       if (e.key === 'Escape') {
         setSearchOpen(false);
         setReaderFullscreen(false);
@@ -119,12 +142,27 @@ export default function MainPage() {
           setSidebarOpen(prevLayoutRef.current.sidebarOpen);
           setListOpen(prevLayoutRef.current.listOpen);
           setIsFocusMode(false);
+          showFocusToast('Đã thoát chế độ tập trung');
+        }
+        return;
+      }
+
+      if (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          handleToggleFocusMode();
+        } else if (e.key === '[') {
+          e.preventDefault();
+          setSidebarOpen((prev) => !prev);
+        } else if (e.key === ']') {
+          e.preventDefault();
+          setListOpen((prev) => !prev);
         }
       }
     };
     document.addEventListener('keydown', handleKeydown);
     return () => document.removeEventListener('keydown', handleKeydown);
-  }, [isFocusMode, setListOpen, setSidebarOpen]);
+  }, [isFocusMode, setListOpen, setSidebarOpen, handleToggleFocusMode, showFocusToast]);
 
   // Auto-collapse logic when viewport is tight to preserve Reader >= 680px
   useEffect(() => {
@@ -319,6 +357,16 @@ export default function MainPage() {
     setSelectedDocumentId(documentId);
   };
 
+  const handleResetHome = useCallback(() => {
+    setSelectedDocumentId(null);
+    setSelectedCategoryId(null);
+    setSelectedDocType(null);
+    setSidebarOpen(true);
+    setListOpen(true);
+    setIsFocusMode(false);
+    setMobileSidebarOpen(false);
+  }, [setSelectedCategoryId, setSelectedDocumentId, setSidebarOpen, setListOpen]);
+
   const handleMarkRead = (documentId: string) => {
     const next = new Set(readDocuments);
     if (next.has(documentId)) {
@@ -406,6 +454,7 @@ export default function MainPage() {
         unreadCount={allDocList.filter((d: LegalDocument) => !readDocuments.has(d.id!)).length}
         onMobileSidebarToggle={() => setMobileSidebarOpen(true)}
         onOpenImportModal={() => setImportModalOpen(true)}
+        onLogoClick={handleResetHome}
       />
 
       {/* 2. Main 3-Column Workspace */}
@@ -447,29 +496,49 @@ export default function MainPage() {
               onSelectDocType={handleDocTypeSelect}
               readDocuments={readDocuments}
               activeCategoryCount={categoryDocuments.length}
+              onCollapse={() => setSidebarOpen(false)}
             />
           )}
         </div>
 
-        {/* Splitter 1: Between Category Sidebar & Document List */}
-        <div
-          className="hidden md:flex relative items-center justify-center shrink-0 w-1 hover:w-1.5 bg-slate-200 hover:bg-blue-400 transition-all cursor-col-resize group z-20 select-none"
-          onMouseDown={handleSidebarResizeStart}
-          title="Kéo để thay đổi độ rộng danh mục"
-        >
+        {/* Collapsed Category Rail Button (Left-edge quick restore) */}
+        {!sidebarOpen && !mobileSidebarOpen && (
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSidebarOpen(!sidebarOpen);
-            }}
-            className="absolute top-2.5 z-30 w-5 h-6 -left-2 bg-white border border-slate-300 rounded shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus:opacity-100"
-            title={sidebarOpen ? 'Thu gọn danh mục' : 'Mở rộng danh mục'}
-            aria-label={sidebarOpen ? 'Thu gọn danh mục' : 'Mở rộng danh mục'}
+            onClick={() => setSidebarOpen(true)}
+            className="hidden md:flex flex-col items-center justify-start pt-3 gap-2 w-7 h-full bg-slate-50 hover:bg-blue-50 border-r border-slate-200 hover:border-blue-300 text-slate-500 hover:text-blue-700 transition-colors cursor-pointer shrink-0 z-20 group select-none"
+            title="Mở cây chủ đề ( [ )"
+            aria-label="Mở cây chủ đề"
           >
-            {sidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <span className="[writing-mode:vertical-lr] text-[10px] font-semibold tracking-wider uppercase text-slate-600 group-hover:text-blue-700">
+              Chủ đề
+            </span>
           </button>
-        </div>
+        )}
+
+        {/* Splitter 1: Between Category Sidebar & Document List */}
+        {sidebarOpen && (
+          <div
+            className="hidden md:flex relative items-center justify-center shrink-0 w-1 hover:w-1.5 bg-slate-200 hover:bg-blue-400 transition-all cursor-col-resize group z-20 select-none"
+            onMouseDown={handleSidebarResizeStart}
+            onDoubleClick={() => setSidebarOpen(false)}
+            title="Kéo để thay đổi độ rộng · Nhấp đúp để ẩn danh mục"
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSidebarOpen(!sidebarOpen);
+              }}
+              className="absolute top-2.5 z-30 w-5 h-6 -left-2 bg-white border border-slate-300 rounded shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus:opacity-100"
+              title={sidebarOpen ? 'Thu gọn danh mục ( [ )' : 'Mở rộng danh mục ( [ )'}
+              aria-label={sidebarOpen ? 'Thu gọn danh mục' : 'Mở rộng danh mục'}
+            >
+              {sidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            </button>
+          </div>
+        )}
 
         {/* COLUMN 2: Document List Sidebar (320 - 460px) */}
         <div
@@ -487,29 +556,49 @@ export default function MainPage() {
               selectedDocType={selectedDocType}
               readDocuments={readDocuments}
               bookmarkedDocuments={bookmarkedDocuments}
+              onCollapse={() => setListOpen(false)}
             />
           )}
         </div>
 
-        {/* Splitter 2: Between Document List & Reader */}
-        <div
-          className="hidden md:flex relative items-center justify-center shrink-0 w-1 hover:w-1.5 bg-slate-200 hover:bg-blue-400 transition-all cursor-col-resize group z-20 select-none"
-          onMouseDown={handleListResizeStart}
-          title="Kéo để thay đổi độ rộng danh sách"
-        >
+        {/* Collapsed Document List Rail Button (Left-edge quick restore) */}
+        {!listOpen && (
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setListOpen(!listOpen);
-            }}
-            className="absolute top-2.5 z-30 w-5 h-6 -left-2 bg-white border border-slate-300 rounded shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus:opacity-100"
-            title={listOpen ? 'Thu gọn danh sách văn bản' : 'Mở rộng danh sách văn bản'}
-            aria-label={listOpen ? 'Thu gọn danh sách văn bản' : 'Mở rộng danh sách văn bản'}
+            onClick={() => setListOpen(true)}
+            className="hidden md:flex flex-col items-center justify-start pt-3 gap-2 w-7 h-full bg-slate-50 hover:bg-blue-50 border-r border-slate-200 hover:border-blue-300 text-slate-500 hover:text-blue-700 transition-colors cursor-pointer shrink-0 z-20 group select-none"
+            title="Mở danh sách văn bản ( ] )"
+            aria-label="Mở danh sách văn bản"
           >
-            {listOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <span className="[writing-mode:vertical-lr] text-[10px] font-semibold tracking-wider uppercase text-slate-600 group-hover:text-blue-700">
+              Danh sách
+            </span>
           </button>
-        </div>
+        )}
+
+        {/* Splitter 2: Between Document List & Reader */}
+        {listOpen && (
+          <div
+            className="hidden md:flex relative items-center justify-center shrink-0 w-1 hover:w-1.5 bg-slate-200 hover:bg-blue-400 transition-all cursor-col-resize group z-20 select-none"
+            onMouseDown={handleListResizeStart}
+            onDoubleClick={() => setListOpen(false)}
+            title="Kéo để thay đổi độ rộng · Nhấp đúp để ẩn danh sách"
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setListOpen(!listOpen);
+              }}
+              className="absolute top-2.5 z-30 w-5 h-6 -left-2 bg-white border border-slate-300 rounded shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus:opacity-100"
+              title={listOpen ? 'Thu gọn danh sách văn bản ( ] )' : 'Mở rộng danh sách văn bản ( ] )'}
+              aria-label={listOpen ? 'Thu gọn danh sách văn bản' : 'Mở rộng danh sách văn bản'}
+            >
+              {listOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            </button>
+          </div>
+        )}
         {/* COLUMN 3: Main Workspace (Cập nhật pháp luật or Document Reader >= 680px) */}
         <main className={`flex-1 overflow-hidden flex flex-col min-w-0 bg-white ${
           selectedDocumentId ? 'flex' : 'hidden md:flex'
@@ -641,6 +730,16 @@ export default function MainPage() {
           <span>Đã lưu {bookmarkedDocuments.size > 0 ? `(${bookmarkedDocuments.size})` : ''}</span>
         </button>
       </nav>
+      {/* Floating Focus Mode Notification Toast */}
+      {focusToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white text-xs px-4 py-2 rounded-lg shadow-xl flex items-center gap-2 backdrop-blur-xs border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-200 select-none"
+        >
+          <span className="font-medium">{focusToast}</span>
+        </div>
+      )}
     </div>
   );
 }

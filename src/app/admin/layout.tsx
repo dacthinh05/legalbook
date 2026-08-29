@@ -6,11 +6,12 @@ import { usePathname } from 'next/navigation';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isVerificationPage = pathname?.startsWith('/admin/verification-queue');
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Top Admin Header */}
-      <header className="bg-slate-900 text-white h-14 px-6 flex items-center justify-between shadow-md">
+      <header className="bg-slate-900 text-white h-14 px-6 flex items-center justify-between shadow-md sticky top-0 z-30 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-sm">
             LB
@@ -35,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </header>
 
       {/* Main Admin Area */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto p-6 gap-6">
+      <div className={`flex-1 flex w-full mx-auto gap-4 ${isVerificationPage ? 'max-w-[1920px] p-2 md:p-3' : 'max-w-7xl p-6'}`}>
         {/* Admin Navigation */}
         <aside className="w-60 bg-white border border-gray-200 rounded-xl p-3 shadow-xs h-fit space-y-1 text-xs">
           <p className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
@@ -129,7 +130,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Content Area */}
-        <main className="flex-1 bg-white border border-gray-200 rounded-xl p-6 shadow-xs overflow-hidden">
+        <main className={`flex-1 bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden ${isVerificationPage ? 'p-0' : 'p-6'}`}>
           {children}
         </main>
       </div>

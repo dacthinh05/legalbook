@@ -197,9 +197,12 @@ export function useAnnotations({
   }, [documentId, supabase, persistLocally]);
 
   useEffect(() => {
+    let ignore = false;
     fetchAnnotations();
+    return () => {
+      ignore = true;
+    };
   }, [fetchAnnotations]);
-
   // ── Realtime subscription (team/org notes) ───────────────────────────────
 
   useEffect(() => {

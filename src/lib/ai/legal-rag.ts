@@ -6,7 +6,6 @@
  * returning structured citations with exact document numbers and article references.
  */
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
-import { stripHtml } from '@/lib/search';
 import { formatShortTitle } from '@/lib/utils';
 import { extractStructuredArticles } from '@/lib/diff-engine';
 import type { LegalDocument } from '@/types';
@@ -31,6 +30,24 @@ export interface LegalAiResponse {
     text: string;
   }>;
   suggestedFollowUps: string[];
+}
+export interface LegalDocumentSummary {
+  documentId: string;
+  documentNumber: string;
+  documentTitle: string;
+  overview: string;
+  newPoints: string[];
+  applicableTarget: string[];
+  effectiveTimeline: string;
+  complianceRisks: string[];
+  keyArticles: Array<{
+    articleNumber: string;
+    articleTitle: string;
+    summary: string;
+  }>;
+  fullMarkdown: string;
+  source: 'gemini' | 'local_rag';
+  generatedAt: string;
 }
 
 /**
@@ -200,34 +217,36 @@ export async function askLegalAi({
   docB?: LegalDocument | null;
   mode?: 'ask' | 'compare' | 'summary';
 }): Promise<LegalAiResponse & { source?: 'gemini' | 'local_rag' }> {
-  try {
-    const res = await fetch('/api/ai/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        question,
-        documentId: currentDoc?.id,
-        docAId: docA?.id,
-        docBId: docB?.id,
-        mode,
-      }),
-    });
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          documentId: currentDoc?.id,
+          docAId: docA?.id,
+          docBId: docB?.id,
+          mode,
+        }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && data.answer) {
-        return {
-          answer: data.answer,
-          summaryPoints: data.summaryPoints || [],
-          citations: data.citations || [],
-          relevantArticles: data.relevantArticles || [],
-          suggestedFollowUps: data.suggestedFollowUps || [],
-          source: data.source,
-        };
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.answer) {
+          return {
+            answer: data.answer,
+            summaryPoints: data.summaryPoints || [],
+            citations: data.citations || [],
+            relevantArticles: data.relevantArticles || [],
+            suggestedFollowUps: data.suggestedFollowUps || [],
+            source: data.source,
+          };
+        }
       }
+    } catch (err) {
+      console.warn('Network error calling /api/ai/chat, using local fallback:', err);
     }
-  } catch (err) {
-    console.warn('Network error calling /api/ai/chat, using local fallback:', err);
   }
 
   // Local fallback
@@ -252,4 +271,118 @@ export async function compareDocumentsWithAi(
     docB,
     mode: 'compare',
   });
+}
+
+/**
+ * Generates a high-quality local fallback legal summary from structured document metadata & articles.
+ */
+export function generateLocalDocumentSummary(doc: LegalDocument): LegalDocumentSummary {
+  const docNum = doc.document_number || 'Văn bản';
+  const shortTitle = formatShortTitle(doc.title, doc.document_type, doc.document_number);
+  const overview = doc.summary_main || `Văn bản ${docNum} quy định chi tiết về ${doc.title.toLowerCase()}.`;
+  
+  const newPoints = doc.summary_new_points
+    ? doc.summary_new_points.split(/[\n;]+/).map((p) => p.replace(/^[-*•\d.]+\s*/, '').trim()).filter(Boolean)
+    : [
+        `Quy định tiêu chuẩn và nguyên tắc áp dụng theo ${docNum}`,
+        `Chuẩn hóa quy trình thực hiện cho doanh nghiệp và cơ quan liên quan`,
+        `Có hiệu lực thi hành từ ngày ${doc.effective_date || doc.issued_date || 'theo quy định'}`,
+      ];
+
+  const applicableTarget = [
+    'Doanh nghiệp, tổ chức kinh tế và hộ kinh doanh có liên quan',
+    'Chuyên viên kế toán, kiểm toán và pháp chế doanh nghiệp',
+    `Cơ quan quản lý nhà nước thuộc lĩnh vực ${doc.issuing_body || 'chuyên ngành'}`,
+  ];
+
+  const effectiveTimeline = `Có hiệu lực từ ngày ${doc.effective_date || doc.issued_date || 'kể từ ngày ký'}. Ban hành bởi ${doc.issuing_body || 'Cơ quan có thẩm quyền'}${doc.signer ? ` do ${doc.signer} ký` : ''}.`;
+
+  const complianceRisks = [
+    doc.summary_actions_needed || 'Rà soát quy chế nội bộ và cập nhật hệ thống kế toán/pháp lý phù hợp với quy định mới.',
+    'Đảm bảo lưu trữ chứng từ, hồ sơ đầy đủ để phục vụ công tác thanh tra, kiểm tra.',
+    'Tuân thủ đúng thời hạn và chế độ báo cáo theo biểu mẫu quy định.',
+  ];
+
+  // Extract key articles
+  const articles = doc.html_content ? extractStructuredArticles(doc.html_content) : [];
+  const keyArticles = articles.slice(0, 6).map((art) => ({
+    articleNumber: art.title.match(/^Điều\s+\d+[a-z]?/i)?.[0] || art.title,
+    articleTitle: art.title,
+    summary: art.body.slice(0, 240) + (art.body.length > 240 ? '...' : ''),
+  }));
+
+  const fullMarkdown = `### 1. 📌 TỔNG QUAN & MỤC ĐÍCH BAN HÀNH
+**${docNum}** — ${doc.title}
+
+${overview}
+
+### 2. ⚡ CÁC ĐIỂM MỚI & NỘI DUNG CỐT LÕI
+${newPoints.map((p, idx) => `${idx + 1}. **${p}**`).join('\n')}
+${keyArticles.length > 0 ? `\n**Căn cứ một số Điều khoản then chốt:**\n` + keyArticles.slice(0, 4).map((a) => `- **${a.articleTitle}:** ${a.summary}`).join('\n') : ''}
+
+### 3. 👥 ĐỐI TƯỢNG ÁP DỤNG & PHẠM VI ẢNH HƯỞNG
+${applicableTarget.map((t) => `- ${t}`).join('\n')}
+
+### 4. ⏳ HIỆU LỰC THI HÀNH & LỘ TRÌNH THỰC HIỆN
+- **Ngày ban hành:** ${doc.issued_date || 'Chưa cập nhật'}
+- **Ngày có hiệu lực:** ${doc.effective_date || 'Theo quy định'}
+- **Cơ quan ban hành:** ${doc.issuing_body || 'Chưa cập nhật'}
+
+### 5. ⚠️ LƯU Ý THỰC THI & RỦI RO PHÁP LÝ CẦN TRÁNH
+${complianceRisks.map((r) => `- ${r}`).join('\n')}`;
+
+  return {
+    documentId: doc.id,
+    documentNumber: docNum,
+    documentTitle: shortTitle,
+    overview,
+    newPoints,
+    applicableTarget,
+    effectiveTimeline,
+    complianceRisks,
+    keyArticles,
+    fullMarkdown,
+    source: 'local_rag',
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Calls AI to generate a comprehensive, structured legal summary of a document.
+ */
+export async function summarizeDocumentWithAi(
+  doc: LegalDocument
+): Promise<LegalDocumentSummary> {
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentId: doc.id,
+          mode: 'summary',
+          question: 'Hãy tạo bản tóm tắt pháp lý chuyên sâu chuẩn nghiệp vụ cho văn bản này.',
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.answer) {
+          const rawText: string = data.answer;
+          const local = generateLocalDocumentSummary(doc);
+          
+          return {
+            ...local,
+            fullMarkdown: rawText,
+            source: data.source || 'gemini',
+            generatedAt: new Date().toISOString(),
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('Network error calling /api/ai/chat for summary, using local generator:', err);
+    }
+  }
+
+  return generateLocalDocumentSummary(doc);
 }

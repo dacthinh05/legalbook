@@ -32,13 +32,6 @@ interface SelectionToolbarProps {
 }
 // ─── Color picker ────────────────────────────────────────────────────────────
 
-const COLORS: { color: AnnotationColor; label: string; bg: string }[] = [
-  { color: 'yellow', label: 'Vàng nhạt', bg: 'bg-amber-300' },
-  { color: 'green', label: 'Xanh lá', bg: 'bg-emerald-400' },
-  { color: 'pink', label: 'Hồng nhạt', bg: 'bg-rose-300' },
-  { color: 'blue', label: 'Xanh dương', bg: 'bg-sky-300' },
-  { color: 'purple', label: 'Tím nhạt', bg: 'bg-purple-300' },
-];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -52,13 +45,11 @@ export function SelectionToolbar({
 }: SelectionToolbarProps) {
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [showColors, setShowColors] = useState(false);
   const [copied, setCopied] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   const hide = useCallback(() => {
     setVisible(false);
-    setShowColors(false);
   }, []);
 
   // Listen for selection changes and viewport/container scroll

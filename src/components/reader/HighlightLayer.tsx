@@ -98,8 +98,8 @@ export function HighlightLayer({
 
   // Cleanup marks on unmount
   useEffect(() => {
+    const container = containerRef.current;
     return () => {
-      const container = containerRef.current;
       if (container) removeAnnotationMarks(container);
     };
   }, [containerRef]);

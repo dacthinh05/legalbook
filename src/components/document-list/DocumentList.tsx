@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, FileText, ChevronDown, X } from 'lucide-react';
+import { Search, FileText, ChevronDown, ChevronLeft, X } from 'lucide-react';
 import { DocumentCard } from './DocumentCard';
 import { matchesDocumentQuery } from '@/lib/search';
 import type { LegalDocument, DocumentType } from '@/types';
@@ -14,6 +14,7 @@ interface DocumentListProps {
   selectedDocType?: DocumentType | null;
   readDocuments: Set<string>;
   bookmarkedDocuments?: Set<string>;
+  onCollapse?: () => void;
 }
 
 const STATUS_OPTIONS = [
@@ -55,13 +56,9 @@ function FilterSelect({
   id: string;
   label: string;
 }) {
-  const isFiltered = value !== 'all' && value !== options[0]?.value;
-
+  const isFiltered = value !== 'all';
   return (
-    <div className="relative min-w-0 flex-1">
-      <label htmlFor={id} className="sr-only">
-        {label}
-      </label>
+    <div className="relative flex-1 min-w-0">
       <select
         id={id}
         value={value}
@@ -101,6 +98,7 @@ export function DocumentList({
   selectedDocType,
   readDocuments,
   bookmarkedDocuments,
+  onCollapse,
 }: DocumentListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -178,9 +176,22 @@ export function DocumentList({
           >
             {displayCategoryTitle}
           </h2>
-          <span className="text-[11px] text-slate-500 font-mono shrink-0 font-semibold">
-            {totalCount} văn bản
-          </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[11px] text-slate-500 font-mono shrink-0 font-semibold">
+              {totalCount} văn bản
+            </span>
+            {onCollapse && (
+              <button
+                type="button"
+                onClick={onCollapse}
+                className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded cursor-pointer transition-colors"
+                title="Ẩn danh sách văn bản ( ] )"
+                aria-label="Ẩn danh sách văn bản"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Row 2: Search input */}
