@@ -27,7 +27,6 @@ import { DEMO_DOCUMENTS, DEMO_CATEGORY_LINKS } from '@/lib/demo-data';
 import {
   getAncestorCategoryIds,
   getDescendantCategoryIds,
-  getTreeIndentation,
   flattenVisibleTree,
   injectVirtualSubcategories,
 } from '@/lib/tree-utils';
