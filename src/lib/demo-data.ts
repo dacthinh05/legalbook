@@ -492,6 +492,102 @@ export const DEMO_CATEGORIES: Category[] = [
     "is_active": true,
     "created_at": "2026-08-28T08:59:45.736489+00:00",
     "updated_at": "2026-08-28T09:05:32.895997+00:00"
+  },
+  {
+    "id": "c7e2b101-9f12-4c22-92ab-110000000001",
+    "parent_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "name": "Luật thuế TNDN",
+    "slug": "thue-tndn-luat",
+    "description": "Luật Thuế thu nhập doanh nghiệp",
+    "order_index": 1,
+    "icon": null,
+    "is_active": true,
+    "created_at": "2026-08-29T05:28:50.185Z",
+    "updated_at": "2026-08-29T05:28:50.186Z"
+  },
+  {
+    "id": "c7e2b101-9f12-4c22-92ab-110000000002",
+    "parent_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "name": "Nghị định thuế TNDN",
+    "slug": "thue-tndn-nghi-dinh",
+    "description": "Nghị định hướng dẫn thuế TNDN",
+    "order_index": 2,
+    "icon": null,
+    "is_active": true,
+    "created_at": "2026-08-29T05:28:50.186Z",
+    "updated_at": "2026-08-29T05:28:50.186Z"
+  },
+  {
+    "id": "c7e2b101-9f12-4c22-92ab-110000000003",
+    "parent_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "name": "Thông tư thuế TNDN",
+    "slug": "thue-tndn-thong-tu",
+    "description": "Thông tư hướng dẫn thuế TNDN",
+    "order_index": 3,
+    "icon": null,
+    "is_active": true,
+    "created_at": "2026-08-29T05:28:50.186Z",
+    "updated_at": "2026-08-29T05:28:50.186Z"
+  },
+  {
+    "id": "c7e2b101-9f12-4c22-92ab-110000000004",
+    "parent_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "name": "Công văn thuế TNDN",
+    "slug": "thue-tndn-cong-van",
+    "description": "Công văn giải đáp vướng mắc thuế TNDN",
+    "order_index": 4,
+    "icon": null,
+    "is_active": true,
+    "created_at": "2026-08-29T05:28:50.186Z",
+    "updated_at": "2026-08-29T05:28:50.186Z"
+  },
+  {
+    "id": "d8f3c202-0e23-4d33-a3bc-220000000001",
+    "parent_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "name": "Luật thuế TNCN",
+    "slug": "thue-tncn-luat",
+    "description": "Luật Thuế thu nhập cá nhân",
+    "order_index": 1,
+    "icon": null,
+    "is_active": true,
+    "created_at": "2026-08-29T05:28:50.186Z",
+    "updated_at": "2026-08-29T05:28:50.186Z"
+  },
+  {
+    "id": "d8f3c202-0e23-4d33-a3bc-220000000002",
+    "parent_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "name": "Nghị định thuế TNCN",
+    "slug": "thue-tncn-nghi-dinh",
+    "description": "Nghị định hướng dẫn thuế TNCN",
+    "order_index": 2,
+    "icon": null,
+    "is_active": true,
+    "created_at": "2026-08-29T05:28:50.186Z",
+    "updated_at": "2026-08-29T05:28:50.186Z"
+  },
+  {
+    "id": "d8f3c202-0e23-4d33-a3bc-220000000003",
+    "parent_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "name": "Thông tư thuế TNCN",
+    "slug": "thue-tncn-thong-tu",
+    "description": "Thông tư hướng dẫn thuế TNCN",
+    "order_index": 3,
+    "icon": null,
+    "is_active": true,
+    "created_at": "2026-08-29T05:28:50.186Z",
+    "updated_at": "2026-08-29T05:28:50.186Z"
+  },
+  {
+    "id": "d8f3c202-0e23-4d33-a3bc-220000000004",
+    "parent_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "name": "Công văn thuế TNCN",
+    "slug": "thue-tncn-cong-van",
+    "description": "Công văn giải đáp vướng mắc thuế TNCN",
+    "order_index": 4,
+    "icon": null,
+    "is_active": true,
+    "created_at": "2026-08-29T05:28:50.186Z",
+    "updated_at": "2026-08-29T05:28:50.186Z"
   }
 ];
 
@@ -1867,6 +1963,60 @@ export const DEMO_CATEGORY_LINKS: DocumentCategoryLink[] = [
     "id": "06903180-3e53-43c8-ab35-e165243757d4",
     "document_id": "f7a94459-bdf1-41e1-a41b-4842e9942f72",
     "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "link-9dc07e8e-d8f3c202",
+    "document_id": "9dc07e8e-8e8b-4f5e-a7be-440f5e68d601",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000002",
+    "is_primary": false
+  },
+  {
+    "id": "link-6dc5e0af-c7e2b101",
+    "document_id": "6dc5e0af-c0cf-489a-a51d-c317aa4eb941",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000003",
+    "is_primary": false
+  },
+  {
+    "id": "link-cf5f4ca4-d8f3c202",
+    "document_id": "cf5f4ca4-16ce-4750-af1b-05e7dfebd14a",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000001",
+    "is_primary": false
+  },
+  {
+    "id": "link-0792f139-c7e2b101",
+    "document_id": "0792f139-c838-432d-a6e6-f1eb9d755144",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000001",
+    "is_primary": false
+  },
+  {
+    "id": "link-22e82ce9-c7e2b101",
+    "document_id": "22e82ce9-73ea-4b1f-a849-4ee010809730",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000002",
+    "is_primary": false
+  },
+  {
+    "id": "link-f7a94459-c7e2b101",
+    "document_id": "f7a94459-bdf1-41e1-a41b-4842e9942f72",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000002",
+    "is_primary": false
+  },
+  {
+    "id": "link-b858330e-fb501a15",
+    "document_id": "b858330e-57c6-442c-a44b-8b5fb19bb2a9",
+    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "is_primary": false
+  },
+  {
+    "id": "link-b858330e-c7e2b101",
+    "document_id": "b858330e-57c6-442c-a44b-8b5fb19bb2a9",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000004",
+    "is_primary": false
+  },
+  {
+    "id": "link-60cc814d-d8f3c202",
+    "document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000001",
     "is_primary": false
   }
 ];
@@ -4638,63 +4788,49 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
 export function buildCategoryTree(categories: Category[]): Category[] {
   const map = new Map<string, Category>();
   const roots: Category[] = [];
-
-  categories.forEach((cat) => {
-    map.set(cat.id, { ...cat, children: [] });
-  });
-
-  categories.forEach((cat) => {
-    const node = map.get(cat.id)!;
-    if (cat.parent_id && map.has(cat.parent_id)) {
-      const parent = map.get(cat.parent_id)!;
-      parent.children = parent.children || [];
-      parent.children.push(node);
+  const cloned = (categories || []).map((c) => ({ ...c, children: [] as Category[] }));
+  cloned.forEach((c) => map.set(c.id, c));
+  cloned.forEach((c) => {
+    if (c.parent_id && map.has(c.parent_id)) {
+      const parent = map.get(c.parent_id)!;
+      if (!parent.children) parent.children = [];
+      parent.children.push(c);
+      parent.children.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
     } else {
-      roots.push(node);
+      roots.push(c);
     }
   });
-
-  return roots;
+  return roots.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 }
 
 export function getDocumentById(id: string): LegalDocument | undefined {
   return DEMO_DOCUMENTS.find((d) => d.id === id);
 }
 
-export function getDocumentRelations(documentId: string): {
-  as_source: DocumentRelation[];
-  as_target: DocumentRelation[];
-} {
+export function getDocumentsForCategoryTree(categoryId: string): LegalDocument[] {
+  const descendantIds = new Set<string>([categoryId]);
+  const queue: string[] = [categoryId];
+  while (queue.length > 0) {
+    const curr = queue.shift()!;
+    for (const c of DEMO_CATEGORIES) {
+      if (c.parent_id === curr && !descendantIds.has(c.id)) {
+        descendantIds.add(c.id);
+        queue.push(c.id);
+      }
+    }
+  }
+  const links = DEMO_CATEGORY_LINKS.filter((l) => descendantIds.has(l.category_id));
+  const docIds = new Set(links.map((l) => l.document_id));
+  return DEMO_DOCUMENTS.filter((d) => docIds.has(d.id));
+}
+
+export function getDocumentRelations(documentId: string): { as_source: DocumentRelation[]; as_target: DocumentRelation[] } {
   return {
     as_source: DEMO_RELATIONS.filter((r) => r.source_document_id === documentId),
     as_target: DEMO_RELATIONS.filter((r) => r.target_document_id === documentId),
   };
 }
 
-export function getDocumentsForCategoryTree(categoryId: string): LegalDocument[] {
-  const targetCategoryIds = new Set<string>([categoryId]);
-
-  let added = true;
-  while (added) {
-    added = false;
-    for (const cat of DEMO_CATEGORIES) {
-      if (cat.parent_id && targetCategoryIds.has(cat.parent_id) && !targetCategoryIds.has(cat.id)) {
-        targetCategoryIds.add(cat.id);
-        added = true;
-      }
-    }
-  }
-
-  const linkedDocIds = new Set<string>();
-  for (const link of DEMO_CATEGORY_LINKS) {
-    if (targetCategoryIds.has(link.category_id)) {
-      linkedDocIds.add(link.document_id);
-    }
-  }
-
-  return DEMO_DOCUMENTS.filter((doc) => linkedDocIds.has(doc.id));
-}
-
 export function getCategoryDocumentCount(categoryId: string): number {
-  return getDocumentsForCategoryTree(categoryId).length;
+  return DEMO_CATEGORY_LINKS.filter((l) => l.category_id === categoryId).length;
 }
