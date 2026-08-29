@@ -62,43 +62,11 @@ export const DOCUMENT_STATUS_COLORS: Record<DocumentStatus, string> = {
 };
 
 /**
- * Returns a concise title for card list views by removing redundant leading document type prefixes
- * when the document type is already known from the active filter/category context.
- * Does NOT mutate original title in data or Document Reader.
+ * Returns document title cleanly without stripping Vietnamese characters.
  */
-export function formatShortTitle(title: string, docType?: DocumentType | string, docNumber?: string | null): string {
+export function formatShortTitle(title: string, _docType?: DocumentType | string, _docNumber?: string | null): string {
   if (!title) return '';
-  let clean = title.trim();
-
-  // 1. If explicit docNumber is provided or matches in title, strip it
-  if (docNumber) {
-    const escapedNum = docNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const numRegex = new RegExp(`^(?:Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)?\\s*(?:số)?\\s*${escapedNum}\\s*[-–—:]?\\s*`, 'i');
-    clean = clean.replace(numRegex, '');
-  }
-
-  // 2. Also strip generic leading prefix (e.g. "Thông tư 118/2026/TT-BTC", "Nghị định 70/2025/NĐ-CP", "Luật số 76/2025/QH15")
-  clean = clean.replace(/^(?:Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\s+(?:số\s+)?[\w\d/.-]+\s*[-–—:]?\s*/i, '');
-
-  // 3. Fallback type prefix strip
-  if (docType === 'nghi_dinh') {
-    clean = clean.replace(/^Nghị\s+định\s+(?:số\s+[\w/.-]+\s+)?/i, '');
-  } else if (docType === 'luat') {
-    clean = clean.replace(/^Luật\s+(?:số\s+[\w/.-]+\s+)?/i, '');
-  } else if (docType === 'thong_tu') {
-    clean = clean.replace(/^Thông\s+tư\s+(?:số\s+[\w/.-]+\s+)?/i, '');
-  } else if (docType === 'cong_van') {
-    clean = clean.replace(/^Công\s+văn\s+(?:số\s+[\w/.-]+\s+)?/i, '');
-  } else if (docType === 'quyet_dinh') {
-    clean = clean.replace(/^Quyết\s+định\s+(?:số\s+[\w/.-]+\s+)?/i, '');
-  }
-
-  clean = clean.trim();
-  if (clean.length > 0) {
-    clean = clean.charAt(0).toUpperCase() + clean.slice(1);
-    return clean;
-  }
-  return title;
+  return title.trim();
 }
 
 
