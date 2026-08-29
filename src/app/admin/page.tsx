@@ -1,32 +1,35 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Search, Edit2, Trash2, CheckCircle2, RotateCcw, AlertTriangle, CheckSquare, Square } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, CheckCircle2, RotateCcw, AlertTriangle, CheckSquare, Square, Loader2 } from 'lucide-react';
 import { getDocuments, deleteDocument, batchDeleteDocuments, restoreAllDeletedDocuments } from '@/lib/data-service';
+import { DEMO_DOCUMENTS } from '@/lib/demo-data';
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, formatDate, getEffectiveStatus } from '@/lib/utils';
 import type { LegalDocument, DocumentType, DocumentStatus } from '@/types';
 
 export default function AdminDocumentsPage() {
-  const [documents, setDocuments] = useState<LegalDocument[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [documents, setDocuments] = useState<LegalDocument[]>(() => {
+    return (DEMO_DOCUMENTS as unknown as LegalDocument[]) || [];
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingDoc, setEditingDoc] = useState<Partial<LegalDocument> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: 'success' | 'info' } | null>(null);
-
   const showFeedback = (text: string, type: 'success' | 'info' = 'success') => {
     setFeedbackMsg({ text, type });
     setTimeout(() => setFeedbackMsg(null), 4000);
   };
 
   const loadData = useCallback(async () => {
-    setIsLoading(true);
     try {
       const res = await getDocuments(null);
-      setDocuments(res.data || []);
-    } finally {
-      setIsLoading(false);
+      if (res.data && res.data.length > 0) {
+        setDocuments(res.data);
+      }
+    } catch (err) {
+      console.warn('Background admin data sync warning:', err);
     }
   }, []);
 

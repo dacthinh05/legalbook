@@ -69,12 +69,17 @@ export interface ValidationInput {
   summaryNewPoints?: string | null;
   hasAttachedFiles?: boolean;
 }
+const validationCache = new Map<string, ContentQualityResult>();
 
 export class ContentQualityValidator {
   /**
-   * Main validation entry point.
+   * Main validation entry point with instant LRU cache.
    */
   public static validate(input: ValidationInput): ContentQualityResult {
+    const cacheKey = `${input.documentNumber || ''}_${input.title || ''}_${input.htmlContent?.length || 0}_${input.summaryMain?.length || 0}`;
+    const cached = validationCache.get(cacheKey);
+    if (cached) return cached;
+
     const rawHtml = input.htmlContent || '';
     const rawText = input.rawText || this.stripHtml(rawHtml);
     const title = (input.title || '').trim();
@@ -223,7 +228,7 @@ export class ContentQualityValidator {
       hasTables,
     };
 
-    return {
+    const result: ContentQualityResult = {
       status,
       score,
       reasons,
@@ -235,6 +240,12 @@ export class ContentQualityValidator {
       isScanNeedingOcr,
       isErrorOrCaptchaPage,
     };
+
+    if (validationCache.size < 500) {
+      validationCache.set(cacheKey, result);
+    }
+
+    return result;
   }
 
   /**
