@@ -46,7 +46,7 @@ import { getDocumentTopicName } from '@/lib/legal-feed-utils';
 import { DEMO_CATEGORIES } from '@/lib/demo-data';
 import { highlightHtml, isSafeUrl } from '@/lib/sanitize';
 import { formatLegalHtmlContent, normalizeDisplayTitle } from '@/lib/legal-formatter';
-import type { LegalDocument, ReaderPanelMode, TocItem, DocumentRelation } from '@/types';
+import type { LegalDocument, ReaderPanelMode, TocItem, DocumentRelation, AnnotationColor } from '@/types';
 import { ContentQualityValidator } from '@/lib/quality/content-validator';
 import { LegalHierarchyTree } from './LegalHierarchyTree';
 import { useLocalStorageNumber } from '@/lib/useLocalStorage';
@@ -239,20 +239,11 @@ export function DocumentReader({
 
   // ── Debounce Search Input ───────────────────────────────────────────────
   useEffect(() => {
-    const trimmed = searchInputValue.trim();
-    if (!trimmed) {
-      setDebouncedSearchQuery('');
-      setActiveMatchIndex(0);
-      return;
-    }
-    if (trimmed.length < 2) {
-      setDebouncedSearchQuery('');
-      return;
-    }
     const timer = setTimeout(() => {
-      setDebouncedSearchQuery(trimmed);
+      const trimmed = searchInputValue.trim();
+      setDebouncedSearchQuery(trimmed.length >= 2 ? trimmed : '');
       setActiveMatchIndex(0);
-    }, 250);
+    }, 200);
     return () => clearTimeout(timer);
   }, [searchInputValue]);
 
@@ -460,11 +451,12 @@ export function DocumentReader({
       if (!contentRef.current) return;
       const mark = contentRef.current.querySelector(
         `[data-annotation-id="${ann.id}"]`
-      ) as HTMLElement | null;
+      );
       if (mark) {
         mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        mark.classList.add('toc-scroll-target');
-        setTimeout(() => mark.classList.remove('toc-scroll-target'), 2000);
+        // Flash animation
+        mark.classList.add('ring-2', 'ring-blue-500', 'ring-offset-1');
+        setTimeout(() => mark.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-1'), 1500);
       }
     },
     []
@@ -473,13 +465,14 @@ export function DocumentReader({
   // ── Selection toolbar handlers ─────────────────────────────────────────
 
   const handleHighlight = useCallback(
-    async (color: import('@/types').AnnotationColor) => {
-      if (!currentUserId || !contentRef.current) return;
+    async (color: AnnotationColor) => {
+      if (!contentRef.current) return;
       const sel = window.getSelection();
-      if (!sel) return;
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+      const effectiveUserId = currentUserId || 'guest_user';
       const draft = buildAnnotationFromSelection(sel, contentRef.current, {
         documentId: doc.id,
-        userId: currentUserId,
+        userId: effectiveUserId,
         contentVersion,
         type: 'highlight',
         color,
@@ -492,19 +485,21 @@ export function DocumentReader({
     [currentUserId, doc.id, contentVersion, addAnnotation]
   );
 
-  const handleAddNoteFromSelection = useCallback(() => {
-    if (!currentUserId || !contentRef.current) return;
+  const handleAddNoteFromSelection = useCallback(async () => {
+    if (!contentRef.current) return;
     const sel = window.getSelection();
-    if (!sel) return;
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+    const effectiveUserId = currentUserId || 'guest_user';
     const draft = buildAnnotationFromSelection(sel, contentRef.current, {
       documentId: doc.id,
-      userId: currentUserId,
+      userId: effectiveUserId,
       contentVersion,
       type: 'note',
+      color: 'yellow',
     });
     if (draft) {
       setPanelMode('notes');
-      addAnnotation({ ...draft, anchorStatus: 'active' });
+      await addAnnotation({ ...draft, anchorStatus: 'active' });
     }
     sel.removeAllRanges();
   }, [currentUserId, doc.id, contentVersion, addAnnotation]);
@@ -524,16 +519,17 @@ export function DocumentReader({
 
   const handleAddNoteFromPanel = useCallback(
     async (noteContent: string) => {
-      if (!currentUserId) return;
+      const effectiveUserId = currentUserId || 'guest_user';
       const sanitized = sanitizeNoteContent(noteContent);
       await addAnnotation({
         documentId: doc.id,
-        userId: currentUserId,
+        userId: effectiveUserId,
         anchor: {
           exactText: '',
           contentVersion,
         },
         type: 'note',
+        color: 'yellow',
         noteContent: sanitized,
         visibility: 'private',
         anchorStatus: 'active',
@@ -541,6 +537,34 @@ export function DocumentReader({
     },
     [currentUserId, doc.id, contentVersion, addAnnotation]
   );
+
+  // Handle clicking on highlight marks inside the document content
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const handleMarkClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const mark = target.closest('[data-annotation-id]') as HTMLElement | null;
+      if (!mark) return;
+
+      const annId = mark.getAttribute('data-annotation-id');
+      if (annId) {
+        setPanelMode('notes');
+        setTimeout(() => {
+          const card = document.getElementById(`note-card-${annId}`);
+          if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            card.classList.add('ring-2', 'ring-blue-500');
+            setTimeout(() => card.classList.remove('ring-2', 'ring-blue-500'), 1500);
+          }
+        }, 120);
+      }
+    };
+
+    container.addEventListener('click', handleMarkClick);
+    return () => container.removeEventListener('click', handleMarkClick);
+  }, []);
 
   const handleOrphaned = useCallback((ids: string[]) => {
     console.warn('[Reader] Orphaned annotations:', ids);
@@ -572,17 +596,17 @@ export function DocumentReader({
       } as React.CSSProperties}
     >
       {/* ================================================================
-          1. DOCUMENT HEADER (Redesigned into 4 clean rows)
+          1. DOCUMENT HEADER (Standardized Spacing & Refined Actions)
           ================================================================ */}
-      <header className="px-4 sm:px-6 py-3 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
-        {/* Dòng 1: Breadcrumb [Chủ đề] / [Loại VB] bên trái + Actions bên phải */}
-        <div className="flex items-center justify-between gap-2.5 mb-1.5 min-w-0">
+      <header className="px-4 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
+        {/* Dòng 1: Breadcrumb + Actions (Cách số hiệu 16px: mb-4) */}
+        <div className="flex items-center justify-between gap-2.5 mb-4 min-w-0">
           {/* Breadcrumb */}
           <div className="flex items-center gap-1.5 text-xs text-slate-500 min-w-0 truncate">
             {onBack && (
               <button
                 onClick={onBack}
-                className="p-1 -ml-1 text-slate-600 hover:bg-slate-100 rounded md:hidden shrink-0"
+                className="p-1 -ml-1 text-slate-600 hover:bg-slate-100 rounded md:hidden shrink-0 cursor-pointer"
                 title="Quay lại danh sách"
                 aria-label="Quay lại danh sách"
               >
@@ -600,24 +624,27 @@ export function DocumentReader({
 
           {/* Actions */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Đánh dấu đã đọc / chưa đọc button */}
             <button
               onClick={onMarkRead}
               className={cn(
-                'inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium border transition-colors',
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border transition-colors cursor-pointer',
                 isRead
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
               )}
-              title={isRead ? 'Đã đọc văn bản' : 'Đánh dấu đã đọc'}
+              title={isRead ? 'Đã đọc — Nhấn để đánh dấu chưa đọc' : 'Nhấn để đánh dấu đã đọc'}
+              aria-label={isRead ? 'Đánh dấu chưa đọc' : 'Đánh dấu đã đọc'}
             >
-              {isRead && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-              <span>{isRead ? 'Đã đọc' : 'Chưa đọc'}</span>
+              <Check className={cn('w-3.5 h-3.5', isRead ? 'text-emerald-600 stroke-[2.5]' : 'text-slate-400')} />
+              <span>{isRead ? 'Đánh dấu chưa đọc' : 'Đánh dấu đã đọc'}</span>
             </button>
 
+            {/* Bookmark button */}
             <button
               onClick={onToggleBookmark}
               className={cn(
-                'p-1.5 rounded border transition-colors',
+                'p-1.5 rounded border transition-colors cursor-pointer',
                 isBookmarked
                   ? 'bg-amber-50 text-amber-700 border-amber-300'
                   : 'text-slate-600 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-100'
@@ -628,11 +655,12 @@ export function DocumentReader({
               <Bookmark className="w-3.5 h-3.5" fill={isBookmarked ? 'currentColor' : 'none'} />
             </button>
 
+            {/* Focus Mode action (Single clear action, no duplicate expand icon) */}
             {onToggleFocusMode && (
               <button
                 onClick={onToggleFocusMode}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium transition-colors hidden md:inline-flex',
+                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium transition-colors cursor-pointer hidden md:inline-flex',
                   isFocusMode
                     ? 'bg-blue-700 text-white border-blue-700 font-semibold'
                     : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-100'
@@ -645,26 +673,11 @@ export function DocumentReader({
               </button>
             )}
 
-            {onFullscreen && (
-              <button
-                onClick={onFullscreen}
-                className="p-1.5 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors hidden sm:inline-flex"
-                title={isFullscreen ? 'Thu nhỏ cửa sổ đọc' : 'Toàn màn hình'}
-                aria-label={isFullscreen ? 'Thu nhỏ cửa sổ đọc' : 'Toàn màn hình'}
-              >
-                {isFullscreen ? (
-                  <Minimize2 className="w-3.5 h-3.5" />
-                ) : (
-                  <Maximize2 className="w-3.5 h-3.5" />
-                )}
-              </button>
-            )}
-
             {/* Overflow menu */}
             <div className="relative" ref={moreMenuRef}>
               <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="p-1.5 text-slate-600 hover:text-slate-900 border border-slate-200 bg-white rounded hover:bg-slate-100 transition-colors"
+                className="p-1.5 text-slate-600 hover:text-slate-900 border border-slate-200 bg-white rounded hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Tác vụ khác"
                 aria-label="Tác vụ khác"
               >
@@ -675,22 +688,31 @@ export function DocumentReader({
                   {onToggleFocusMode && (
                     <button
                       onClick={() => { onToggleFocusMode(); setShowMoreMenu(false); }}
-                      className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 md:hidden"
+                      className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 md:hidden cursor-pointer"
                     >
                       <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
                       <span>{isFocusMode ? 'Thoát tập trung' : 'Tập trung đọc'}</span>
                     </button>
                   )}
+                  {onFullscreen && (
+                    <button
+                      onClick={() => { onFullscreen(); setShowMoreMenu(false); }}
+                      className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
+                    >
+                      {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-slate-500" /> : <Maximize2 className="w-3.5 h-3.5 text-slate-500" />}
+                      <span>{isFullscreen ? 'Thu nhỏ cửa sổ đọc' : 'Toàn màn hình trình duyệt'}</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => { window.print(); setShowMoreMenu(false); }}
-                    className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5 text-slate-500" />
                     <span>In văn bản</span>
                   </button>
                   <button
                     onClick={handleShare}
-                    className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
                   >
                     <Share2 className="w-3.5 h-3.5 text-slate-500" />
                     <span>Sao chép liên kết</span>
@@ -700,7 +722,7 @@ export function DocumentReader({
                       href={doc.files[0].file_url}
                       download={doc.files[0].original_filename}
                       onClick={() => setShowMoreMenu(false)}
-                      className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
                     >
                       <Download className="w-3.5 h-3.5 text-slate-500" />
                       <span>Tải tệp gốc ({doc.files[0].file_type.toUpperCase()})</span>
@@ -712,7 +734,7 @@ export function DocumentReader({
                       alert('Đã gửi thông báo kiểm tra đến Ban biên tập.');
                       setShowMoreMenu(false);
                     }}
-                    className="w-full px-3 py-2 text-left text-slate-500 hover:bg-slate-100 flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-slate-500 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
                   >
                     <FileWarning className="w-3.5 h-3.5 text-slate-400" />
                     <span>Báo lỗi nội dung</span>
@@ -728,20 +750,20 @@ export function DocumentReader({
           </div>
         </div>
 
-        {/* Dòng 2: Số hiệu & Tiêu đề văn bản */}
-        <div className="py-1 min-w-0 space-y-0.5">
+        {/* Dòng 2: Số hiệu (cách tiêu đề 6px: mb-1.5) & Tiêu đề (cách metadata 12px: mb-3) */}
+        <div className="min-w-0">
           {doc.document_number && (
-            <div className="font-mono text-xs sm:text-sm font-bold text-blue-900">
+            <div className="font-mono text-xs sm:text-sm font-bold text-blue-900 mb-1.5">
               {doc.document_number}
             </div>
           )}
-          <h1 className="text-base sm:text-lg md:text-xl font-bold text-slate-950 leading-snug break-words">
+          <h1 className="text-base sm:text-lg md:text-xl font-bold text-slate-950 leading-snug break-words mb-3">
             {displayTitle}
           </h1>
         </div>
 
-        {/* Dòng 3: Metadata gọn gàng */}
-        <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-slate-600 flex-wrap pt-0.5 leading-relaxed">
+        {/* Dòng 3: Metadata gọn gàng (cách trạng thái 12px: mb-3) */}
+        <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-slate-600 flex-wrap leading-relaxed mb-3">
           {doc.issued_date && (
             <span className="whitespace-nowrap">
               Ban hành: <strong className="text-slate-800 font-medium">{formatDate(doc.issued_date)}</strong>
@@ -773,8 +795,8 @@ export function DocumentReader({
           )}
         </div>
 
-        {/* Dòng 4: Status Badges & Link nguồn */}
-        <div className="flex items-center justify-between gap-2.5 pt-2 flex-wrap">
+        {/* Dòng 4: Status Badges & Ghost Link Nguồn */}
+        <div className="flex items-center justify-between gap-2.5 flex-wrap pt-0.5">
           <div className="flex items-center gap-2 flex-wrap">
             {doc.document_type === 'cong_van' ? (
               <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-300">
@@ -788,20 +810,23 @@ export function DocumentReader({
               </span>
             )}
 
-            {/* Verification badge with detail tooltip */}
+            {/* Verification badge with detail tooltip accessible on hover & focus */}
             {(() => {
               const breakdown = getVerificationBreakdown(doc);
               return (
                 <div className="relative group">
                   <button
+                    type="button"
+                    tabIndex={0}
+                    aria-label={`Trạng thái đối chiếu: ${breakdown.primaryBadge.label}`}
                     className={cn(
-                      'px-2.5 py-0.5 rounded text-[11px] font-semibold border transition-colors flex items-center gap-1 cursor-help',
+                      'px-2.5 py-0.5 rounded text-[11px] font-semibold border transition-colors flex items-center gap-1 cursor-help focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
                       breakdown.primaryBadge.badgeColor
                     )}
                     title={breakdown.primaryBadge.tooltip}
                   >
                     <span>{breakdown.primaryBadge.label}</span>
-                    <Info className="w-3 h-3 opacity-60" />
+                    <Info className="w-3 h-3 opacity-60" aria-label="Thông tin chi tiết" />
                   </button>
                   <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 hidden group-hover:block group-focus-within:block text-xs space-y-2 animate-in fade-in duration-150">
                     <div className="font-bold text-slate-900 border-b border-slate-100 pb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-700">
@@ -829,7 +854,7 @@ export function DocumentReader({
                       </p>
                     ) : (
                       <p className="text-[10px] text-slate-500 pt-1 border-t border-slate-100">
-                        Chỉ đánh dấu &ldquo;Đã đối chiếu&rdquo; khi có tệp lưu trữ, mã hash và chữ ký kiểm duyệt.
+                        Dữ liệu chưa được quản trị viên đối chiếu đầy đủ với nguồn chính thức.
                       </p>
                     )}
                   </div>
@@ -838,15 +863,16 @@ export function DocumentReader({
             })()}
           </div>
 
-          {/* Link nguồn */}
+          {/* Link nguồn: Ghost link */}
           <a
             href={tvplUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-[11px] text-blue-700 bg-blue-50/80 hover:bg-blue-100 hover:text-blue-900 px-2.5 py-0.5 rounded border border-blue-200/80 font-medium transition-colors ml-auto"
+            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-blue-700 hover:underline transition-colors ml-auto shrink-0 cursor-pointer"
+            title="Mở nguồn tại Thư Viện Pháp Luật"
           >
-            <ExternalLink className="w-3 h-3 text-blue-600" />
-            <span>Xem nguồn: Thư Viện Pháp Luật ↗</span>
+            <span>Nguồn: Thư Viện Pháp Luật</span>
+            <ExternalLink className="w-3 h-3 text-slate-400" />
           </a>
         </div>
       </header>
@@ -871,9 +897,9 @@ export function DocumentReader({
       )}
 
       {/* ================================================================
-          2. STICKY TOOLBAR (48-52px)
+          2. STICKY TOOLBAR (Clean Border Hierarchy & Compact Controls)
           ================================================================ */}
-      <div className="sticky top-0 z-20 px-3 sm:px-5 border-b border-slate-200 bg-white flex items-center justify-between gap-2 shrink-0 min-h-[48px] max-h-[52px]">
+      <div className="sticky top-0 z-20 px-3 sm:px-5 border-b border-slate-200 bg-white flex items-center justify-between gap-2 shrink-0 min-h-[46px] max-h-[50px] overflow-visible">
         {/* Left: Main content tabs (shrink-0: NEVER gets squeezed) */}
         <div className="flex items-center gap-1 py-1 shrink-0">
           {(
@@ -898,9 +924,9 @@ export function DocumentReader({
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
               className={cn(
-                'px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap shrink-0 flex items-center gap-1',
+                'px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer',
                 activeTab === tab.id
-                  ? 'bg-slate-100 text-blue-800 font-semibold'
+                  ? 'bg-slate-100 text-blue-900 font-semibold shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               )}
             >
@@ -914,7 +940,7 @@ export function DocumentReader({
           ))}
         </div>
 
-        {/* Right: Search + Panels + Typography Controls */}
+        {/* Right: Search + Panels + Compact Typography Controls */}
         <div className="flex items-center gap-1 sm:gap-1.5 py-1 shrink-0 ml-auto">
           {/* Desktop in-document search */}
           <div className="relative hidden md:flex items-center">
@@ -926,7 +952,7 @@ export function DocumentReader({
               onKeyDown={handleSearchKeyDown}
               placeholder="Tìm trong văn bản..."
               className={cn(
-                'pl-7 py-1 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
+                'pl-7 py-1 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-md text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
                 searchInputValue ? 'pr-20 w-44 lg:w-56' : 'pr-2 w-28 lg:w-36 focus:w-48'
               )}
             />
@@ -974,7 +1000,7 @@ export function DocumentReader({
           {/* Search button for mobile / compact view */}
           <button
             onClick={() => setShowMobileSearch(!showMobileSearch)}
-            className="md:hidden p-1.5 text-slate-600 hover:text-slate-900 border border-slate-200 rounded hover:bg-slate-100 transition-colors"
+            className="md:hidden p-1.5 text-slate-600 hover:text-slate-900 border border-slate-200 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
             title="Tìm trong văn bản"
             aria-label="Tìm trong văn bản"
           >
@@ -986,10 +1012,10 @@ export function DocumentReader({
             <button
               onClick={() => togglePanel('toc')}
               className={cn(
-                'flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-colors whitespace-nowrap shrink-0',
+                'flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md border text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer',
                 panelMode === 'toc'
-                  ? 'bg-slate-100 text-blue-800 border-slate-300'
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-slate-100 text-blue-900 border-slate-300 font-semibold'
+                  : 'bg-white text-slate-600 border-slate-200/90 hover:bg-slate-50 hover:text-slate-900'
               )}
               title="Mục lục điều khoản"
               aria-label={`Mục lục ${tocItems.length > 0 ? `(${tocItems.length})` : ''}`}
@@ -1010,10 +1036,10 @@ export function DocumentReader({
             <button
               onClick={() => togglePanel('notes')}
               className={cn(
-                'flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-colors whitespace-nowrap shrink-0',
+                'flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md border text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer',
                 panelMode === 'notes'
-                  ? 'bg-slate-100 text-blue-800 border-slate-300'
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-slate-100 text-blue-900 border-slate-300 font-semibold'
+                  : 'bg-white text-slate-600 border-slate-200/90 hover:bg-slate-50 hover:text-slate-900'
               )}
               title="Ghi chú và highlight"
               aria-label={`Ghi chú ${totalAnnotationsCount > 0 ? `(${totalAnnotationsCount})` : ''}`}
@@ -1029,12 +1055,12 @@ export function DocumentReader({
             </button>
           )}
 
-          {/* Font size control (Consolidated A-, 16px, A+) */}
-          <div className="flex items-center border border-slate-200 rounded bg-white relative shrink-0" ref={fontSizeMenuRef}>
+          {/* Font size control (Consolidated compact group: A- / 16px / A+) */}
+          <div className="flex items-center border border-slate-200/90 rounded-md bg-white relative shrink-0 shadow-2xs" ref={fontSizeMenuRef}>
             <button
               onClick={() => handleFontSizeChange(-1)}
               disabled={fontSize <= 13}
-              className="px-1.5 sm:px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors"
+              className="px-1.5 sm:px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors cursor-pointer"
               title="Giảm cỡ chữ (Ctrl + -)"
               aria-label="Giảm cỡ chữ"
             >
@@ -1042,7 +1068,7 @@ export function DocumentReader({
             </button>
             <button
               onClick={() => setShowFontSizeMenu(!showFontSizeMenu)}
-              className="px-1 sm:px-1.5 py-1 text-xs font-mono text-slate-700 hover:bg-slate-50 border-x border-slate-100 transition-colors"
+              className="px-1 sm:px-1.5 py-1 text-xs font-mono text-slate-700 hover:bg-slate-50 border-x border-slate-100 transition-colors cursor-pointer"
               aria-label={`Cỡ chữ hiện tại: ${fontSize}px`}
             >
               {fontSize}px
@@ -1050,7 +1076,7 @@ export function DocumentReader({
             <button
               onClick={() => handleFontSizeChange(1)}
               disabled={fontSize >= 24}
-              className="px-1.5 sm:px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors"
+              className="px-1.5 sm:px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors cursor-pointer"
               title="Tăng cỡ chữ (Ctrl + +)"
               aria-label="Tăng cỡ chữ"
             >
@@ -1064,7 +1090,7 @@ export function DocumentReader({
                     key={size}
                     onClick={() => handleSetExactFontSize(size)}
                     className={cn(
-                      'w-full px-3 py-1.5 text-left flex items-center justify-between transition-colors',
+                      'w-full px-3 py-1.5 text-left flex items-center justify-between transition-colors cursor-pointer',
                       fontSize === size ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-100'
                     )}
                   >
@@ -1075,7 +1101,7 @@ export function DocumentReader({
                 <div className="border-t border-slate-100 my-1" />
                 <button
                   onClick={handleResetDefaults}
-                  className="w-full px-3 py-1.5 text-left text-slate-500 hover:bg-slate-100 flex items-center gap-1.5"
+                  className="w-full px-3 py-1.5 text-left text-slate-500 hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
                 >
                   <RotateCcw className="w-3 h-3" />
                   <span>Khôi phục mặc định</span>
@@ -1084,11 +1110,11 @@ export function DocumentReader({
             )}
           </div>
 
-          {/* Display settings dropdown */}
-          <div className="relative shrink-0" ref={displayMenuRef}>
+          {/* Display settings dropdown (Collapses on <900px, visible on wider screens) */}
+          <div className="relative shrink-0 hidden min-[900px]:block" ref={displayMenuRef}>
             <button
               onClick={() => setShowDisplayMenu(!showDisplayMenu)}
-              className="px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-200 rounded flex items-center gap-1 transition-colors whitespace-nowrap"
+              className="px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-200/90 rounded-md flex items-center gap-1 transition-colors whitespace-nowrap cursor-pointer shadow-2xs"
               title="Tùy chỉnh hiển thị"
               aria-label="Tùy chỉnh hiển thị"
             >
@@ -1664,16 +1690,14 @@ export function DocumentReader({
       </div>
 
       {/* ── Text Selection Toolbar ── */}
-      {contentRef.current && (
-        <SelectionToolbar
-          contentContainerRef={contentRef}
-          hasFullText={hasFullText}
-          onHighlight={handleHighlight}
-          onAddNote={handleAddNoteFromSelection}
-          onCopy={handleCopySelection}
-          onCopyLink={handleCopySelectionLink}
-        />
-      )}
+      <SelectionToolbar
+        contentContainerRef={contentRef}
+        hasFullText={hasFullText}
+        onHighlight={handleHighlight}
+        onAddNote={handleAddNoteFromSelection}
+        onCopy={handleCopySelection}
+        onCopyLink={handleCopySelectionLink}
+      />
     </div>
   );
 }
