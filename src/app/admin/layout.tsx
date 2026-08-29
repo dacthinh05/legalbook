@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, FolderTree, Upload, Users, ArrowLeft, Shield } from 'lucide-react';
+import { BookOpen, FolderTree, Upload, Users, ArrowLeft, Shield, Sparkles } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-
+import { PacoLogo } from '@/components/common/PacoLogo';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isVerificationPage = pathname?.startsWith('/admin/verification-queue');
@@ -13,24 +13,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Top Admin Header */}
       <header className="bg-slate-900 text-white h-14 px-6 flex items-center justify-between shadow-md sticky top-0 z-30 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-sm">
-            LB
-          </div>
-          <div>
-            <span className="font-bold text-sm">LegalBook Quản Trị</span>
-            <span className="ml-2 text-[10px] bg-slate-800 text-blue-300 px-2 py-0.5 rounded border border-slate-700">
-              Admin Portal
-            </span>
-          </div>
+          <Link href="/" className="flex items-center group transition-opacity hover:opacity-90 cursor-pointer" title="Về trang chủ LegalBook">
+            <PacoLogo size="sm" />
+          </Link>
+          <div className="h-5 w-px bg-slate-700 mx-1 hidden sm:block" />
+          <span className="text-[11px] font-bold bg-blue-900/60 text-blue-300 px-2.5 py-0.5 rounded border border-blue-700/60 uppercase tracking-wider hidden sm:inline-block">
+            Bàn Quản Trị Hệ Thống
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md transition-colors"
+            prefetch={true}
+            className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md transition-colors font-medium cursor-pointer shadow-2xs"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Về ứng dụng Ebook
+            <span>Về ứng dụng Ebook</span>
           </Link>
         </div>
       </header>
@@ -44,6 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </p>
           <Link
             href="/admin"
+            prefetch={true}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
               pathname === '/admin'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -56,6 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/categories"
+            prefetch={true}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
               pathname === '/admin/categories'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -68,6 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/upload"
+            prefetch={true}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
               pathname === '/admin/upload'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -80,6 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/data-quality"
+            prefetch={true}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
               pathname === '/admin/data-quality'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -92,6 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/verification-queue"
+            prefetch={true}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
               pathname === '/admin/verification-queue'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -104,13 +108,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/crawler"
+            prefetch={true}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
               pathname === '/admin/crawler'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
-            <span className="w-4 h-4 flex items-center justify-center font-bold text-amber-600 text-xs">⚡</span>
+            <Sparkles className="w-4 h-4 text-amber-600" />
             Tự tìm & Crawl luật mới
           </Link>
 

@@ -68,6 +68,7 @@ import { LegalEffectOverlay } from './LegalEffectOverlay';
 import { getDocumentLegalEffects } from '@/lib/legal-effects/demo-effects';
 import { calculatePointInTimeStats } from '@/lib/legal-effects/timeline-engine';
 import { AiSummaryModal } from './AiSummaryModal';
+import { DocumentSummaryView } from './DocumentSummaryView';
 import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
 import { createClient } from '@/lib/supabase/client';
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -440,17 +441,28 @@ export function DocumentReader({
 
   // ── Scroll to target on mount ──────────────────────────────────────────
 
+  // ── Scroll to target or hash on mount / document change ─────────────────
   useEffect(() => {
-    if (!targetNodeId && !initialSearchQuery) return;
+    if (!contentReady || !contentRef.current || !viewportRef.current) return;
+
+    // Check targetNodeId, initialSearchQuery, or URL hash
+    const hash = typeof window !== 'undefined' ? window.location.hash.replace(/^#/, '') : '';
+    const effectiveTargetId = targetNodeId || hash;
+
+    if (!effectiveTargetId && !initialSearchQuery) return;
+
     const timeout = setTimeout(() => {
-      if (!contentRef.current) return;
+      if (!contentRef.current || !viewportRef.current) return;
       let targetEl: HTMLElement | null = null;
 
-      if (targetNodeId) {
-        targetEl = contentRef.current.querySelector(`#${targetNodeId}`);
+      if (effectiveTargetId) {
+        targetEl =
+          contentRef.current.querySelector(`#${effectiveTargetId}`) ||
+          contentRef.current.querySelector(`#dieu-${effectiveTargetId.replace(/^dieu-|^article-/, '')}`) ||
+          document.getElementById(effectiveTargetId);
       }
-      if (!targetEl && targetNodeId?.startsWith('dieu-')) {
-        const num = targetNodeId.replace('dieu-', '');
+      if (!targetEl && effectiveTargetId && (effectiveTargetId.startsWith('dieu-') || effectiveTargetId.startsWith('article-'))) {
+        const num = effectiveTargetId.replace(/^dieu-|^article-/, '');
         const els = contentRef.current.querySelectorAll('strong, h2, h3, p');
         for (const h of els) {
           if (new RegExp(`^\\s*Điều\\s+${num}\\b`, 'i').test(h.textContent || '')) {
@@ -463,15 +475,24 @@ export function DocumentReader({
         targetEl = contentRef.current.querySelector('mark');
       }
 
-      if (targetEl) {
-        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        targetEl.classList.add('toc-scroll-target');
-        setTimeout(() => targetEl?.classList.remove('toc-scroll-target'), 2000);
-      }
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [doc.id, targetNodeId, initialSearchQuery]);
+      if (targetEl && viewportRef.current) {
+        const containerRect = viewportRef.current.getBoundingClientRect();
+        const targetRect = targetEl.getBoundingClientRect();
+        const nextTop = viewportRef.current.scrollTop + targetRect.top - containerRect.top - 16;
 
+        viewportRef.current.scrollTo({
+          top: Math.max(0, nextTop),
+          behavior: 'smooth',
+        });
+
+        targetEl.classList.remove('is-navigation-target', 'toc-scroll-target');
+        void targetEl.offsetWidth;
+        targetEl.classList.add('is-navigation-target', 'toc-scroll-target');
+        setTimeout(() => targetEl?.classList.remove('is-navigation-target', 'toc-scroll-target'), 1500);
+      }
+    }, 150);
+    return () => clearTimeout(timeout);
+  }, [doc.id, contentReady, targetNodeId, initialSearchQuery]);
 
   // ── Close menus on outside click ───────────────────────────────────────
 
@@ -545,17 +566,25 @@ export function DocumentReader({
 
   const handleTocClick = useCallback(
     (item: TocItem) => {
-      setActiveTocId(item.id);
-
       if (activeTab !== 'noidung') {
         setActiveTab('noidung');
       }
 
       const performScroll = () => {
-        if (!contentRef.current) return;
-        scrollToTocItem(contentRef.current, item);
-        if (item.articleNumber) {
-          window.history.pushState(null, '', `#article-${item.articleNumber}`);
+        if (!contentRef.current || !viewportRef.current) return;
+        const scrolledEl = scrollToTocItem(contentRef.current, item, {
+          behavior: 'smooth',
+          stickyOffset: 16,
+        });
+
+        if (scrolledEl) {
+          setActiveTocId(item.id);
+          const hashId = item.targetId || (item.articleNumber ? `dieu-${item.articleNumber}` : item.id);
+          window.history.replaceState(null, '', `#${hashId}`);
+        } else {
+          // Warn gracefully when target provision is not in DOM
+          console.warn(`[TOC Navigation] Không tìm thấy vị trí trong văn bản cho mục: "${item.title}"`);
+          showToast('Không tìm thấy vị trí trong văn bản');
         }
       };
 
@@ -1106,7 +1135,7 @@ export function DocumentReader({
                 badge: relationsCount > 0 ? relationsCount : undefined,
                 badgeClass: 'text-blue-600',
               },
-              { id: 'thongtin', label: 'Tóm tắt' },
+              { id: 'thongtin', label: 'Tổng quan' },
             ] as const
           ).map((tab) => (
             <button
@@ -1217,17 +1246,22 @@ export function DocumentReader({
           )}
 
           {/* AI Document Summary Quick Action */}
+          {/* Document Overview Quick Action */}
           <button
             type="button"
-            onClick={() => setShowAiSummaryModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 border-amber-300/90 hover:border-amber-400"
-            title="Tóm tắt toàn văn văn bản bằng AI (Điểm mới, Lộ trình, Căn cứ Điều/Khoản)"
-            aria-label="Tóm tắt AI"
+            onClick={() => setActiveTab('thongtin')}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs',
+              activeTab === 'thongtin'
+                ? 'bg-blue-100 text-blue-900 border-blue-300 font-bold'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+            )}
+            title="Xem bản tổng quan pháp lý của văn bản"
+            aria-label="Tổng quan văn bản"
           >
-            <FileText className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-            <span className="hidden sm:inline">Tóm tắt AI</span>
+            <FileText className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+            <span className="hidden sm:inline">Tổng quan</span>
           </button>
-
           {/* TOC context panel toggle */}
           {activeTab === 'noidung' && (
             <button
@@ -1931,73 +1965,40 @@ export function DocumentReader({
             </div>
           )}
 
-          {/* ── TAB: TÓM TẮT ── */}
-          {activeTab === 'thongtin' && (() => {
-            const summaryGuard = ContentQualityValidator.canGenerateAiSummary(doc);
-            const hasSummaryFields = Boolean(
-              doc.summary_main || doc.summary_new_points || doc.summary_accounting_impact || doc.summary_actions_needed
-            );
-            return (
-              <div className="reader-canvas">
-                <div className="document-page my-2">
-                  <div className="p-6 md:p-8 space-y-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Tóm tắt & Tác động nghiệp vụ</h3>
-                    <span className="text-[11px] text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200 font-semibold">Tóm tắt hỗ trợ — cần đối chiếu văn bản gốc</span>
-                  {/* AI Summary Interactive Action Banner */}
-                  <div className="p-4 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-xl text-white shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase tracking-wide">
-                          AI Powered
-                        </span>
-                        <h4 className="font-bold text-sm text-white">Tóm tắt Chuyên sâu Văn bản này</h4>
-                      </div>
-                      <p className="text-xs text-blue-200">
-                        Tự động phân tích điểm mới, đối tượng áp dụng, lộ trình thi hành và rủi ro tuân thủ bằng AI.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowAiSummaryModal(true)}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer shrink-0"
-                    >
-                      <Sparkles className="w-4 h-4 text-slate-950" />
-                      <span>Mở Bản Tóm Tắt AI</span>
-                    </button>
-                  </div>
-                  </div>
-                  {!summaryGuard.allowed && (
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2.5">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <span className="font-bold block">Không đủ toàn văn để tạo tóm tắt đáng tin cậy</span>
-                        <p className="text-[11px] text-amber-800 leading-relaxed">Văn bản này hiện chưa có toàn văn hợp lệ. Nội dung tóm tắt mang tính định hướng tham khảo.</p>
-                      </div>
-                    </div>
-                  )}
-                  {hasSummaryFields ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                      {[
-                        { title: '1. Tóm tắt nội dung chính', content: doc.summary_main },
-                        { title: '2. Điểm mới nổi bật', content: doc.summary_new_points },
-                        { title: '3. Tác động Kế toán & Kiểm toán', content: doc.summary_accounting_impact || doc.summary_audit_impact },
-                        { title: '4. Hành động cần thực hiện', content: doc.summary_actions_needed },
-                      ].map(({ title, content }) => (
-                        <div key={title} className="p-3.5 bg-slate-50 rounded border border-slate-200 space-y-1">
-                          <h4 className="font-semibold text-xs text-slate-900">{title}</h4>
-                          <p className="text-xs text-slate-700 leading-relaxed">{content || 'Đang cập nhật.'}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-slate-400 text-xs">Chưa có bản tóm tắt trích yếu cho văn bản này.</div>
-                  )}
-                </div>
-              </div>
+          {/* ── TAB: TỔNG QUAN VĂN BẢN ── */}
+          {activeTab === 'thongtin' && (
+            <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 select-text">
+              <DocumentSummaryView
+                document={doc}
+                onNavigateToArticle={(artNum) => {
+                  setActiveTab('noidung');
+                  if (artNum) {
+                    const digits = artNum.replace(/[^\d]/g, '');
+                    setTimeout(() => {
+                      const el =
+                        document.getElementById(`dieu-${digits}`) ||
+                        document.getElementById(`dieu_${digits}`) ||
+                        Array.from(document.querySelectorAll('h1, h2, h3, p strong')).find((h) =>
+                          h.textContent?.includes(`Điều ${digits}`)
+                        );
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        el.classList.add('toc-scroll-target');
+                        setTimeout(() => el.classList.remove('toc-scroll-target'), 2500);
+                      }
+                    }, 100);
+                  }
+                }}
+                onOpenToc={() => {
+                  setActiveTab('noidung');
+                  togglePanel('toc');
+                }}
+                onOpenAiChat={(query) => {
+                  setPanelMode('ai');
+                }}
+              />
             </div>
-            );
-          })()}
+          )}
           {/* Back to top */}
           {showBackToTop && (
             <button

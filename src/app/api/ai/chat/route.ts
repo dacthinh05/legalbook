@@ -197,7 +197,7 @@ Ngày có hiệu lực: ${targetDoc.effective_date || 'N/A'}
 Người ký: ${targetDoc.signer || 'N/A'}`;
 
       const summaryPrompt = `Bạn là Chuyên gia Cao cấp về Pháp luật & Thuế - Kế toán Việt Nam.
-Hãy phân tích toàn văn văn bản pháp luật sau và tạo một bản TÓM TẮT PHÁP LÝ CHUYÊN SÂU chuẩn nghiệp vụ dành cho Doanh nghiệp, Kế toán và Luật sư.
+Hãy phân tích toàn văn văn bản pháp luật sau và tạo một bản TỔNG QUAN PHÁP LÝ chuẩn nghiệp vụ dành cho Doanh nghiệp, Kế toán và Luật sư (đọc nhanh trong 1-3 phút, trung tính, chính xác, có dẫn chiếu).
 
 [THÔNG TIN VĂN BẢN]
 ${docMeta}
@@ -206,23 +206,25 @@ ${docMeta}
 ${docText}
 
 [YÊU CẦU TRÌNH BÀY]:
-Trình bày định dạng Markdown chuyên nghiệp, rõ ràng theo đúng 5 phần sau:
+Trình bày định dạng Markdown chuyên nghiệp, rõ ràng theo đúng 5 phần sau (KHÔNG dùng từ ngữ phóng đại, KHÔNG tự khẳng định "điểm mới" nếu chưa có văn bản so sánh):
 
-### 1. 📌 TỔNG QUAN & MỤC ĐÍCH BAN HÀNH
-- Nêu ngắn gọn bối cảnh, mục đích và phạm vi điều chỉnh chính của văn bản.
+### 1. Văn bản quy định gì?
+- Tóm tắt 3-5 câu (khoảng 100-140 từ): nêu phạm vi điều chỉnh, đối tượng áp dụng, nội dung chính và thời điểm áp dụng. Diễn đạt trung tính, khách quan.
 
-### 2. ⚡ CÁC ĐIỂM MỚI & NỘI DUNG CỐT LÕI (Kèm Căn cứ Điều/Khoản)
-- Liệt kê 4-6 điểm mới hoặc quy định then chốt nhất.
-- BẮT BUỘC ghi rõ căn cứ [Điều X, Khoản Y].
+### 2. Nội dung đáng chú ý
+- Nêu 3-6 nội dung quy định trọng yếu nhất (mỗi ý 2-3 dòng).
+- BẮT BUỘC ghi rõ căn cứ [Điều X, Khoản Y] ngay cạnh mỗi nội dung.
 
-### 3. 👥 ĐỐI TƯỢNG ÁP DỤNG & PHẠM VI ẢNH HƯỞNG
-- Nêu rõ các nhóm đối tượng chịu tác động (doanh nghiệp, hộ kinh doanh, kế toán, cơ quan quản lý...).
+### 3. Đối tượng chịu tác động
+- Liệt kê các nhóm đối tượng chịu tác động trực tiếp và gián tiếp có căn cứ trong văn bản.
 
-### 4. ⏳ HIỆU LỰC THI HÀNH & ĐIỀU KHOẢN CHUYỂN TIẾP
-- Ngày bắt đầu có hiệu lực, các văn bản bị bãi bỏ/thay thế, lộ trình thực hiện hoặc quy định chuyển tiếp.
+### 4. Việc cần lưu ý
+- Phân biệt rõ 2 nhóm:
+  + [Quy định trong văn bản]: Các nghĩa vụ, hồ sơ, thời hạn bắt buộc theo luật (kèm căn cứ [Điều X]).
+  + [Gợi ý rà soát]: Khuyến nghị chuyên môn nghiệp vụ để doanh nghiệp chuẩn bị tuân thủ (ghi rõ là gợi ý tham khảo).
 
-### 5. ⚠️ LƯU Ý THỰC THI & RỦI RO PHÁP LÝ CẦN TRÁNH
-- Các hành động bắt buộc cần thực hiện ngay và rủi ro/chế tài nếu không tuân thủ.`;
+### 5. Căn cứ chính
+- Liệt kê danh sách các Điều/Khoản cốt lõi trong văn bản.`;
 
       const aiResult = await callGeminiApi(summaryPrompt, systemInstruction);
 

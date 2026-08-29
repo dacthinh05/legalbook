@@ -909,15 +909,25 @@ mark.legal-effect-guides {
 }
 
 /* TOC Scroll Target Highlight */
-.toc-scroll-target {
-  animation: toc-flash 2s ease-out forwards;
-  border-radius: 3px;
+.toc-scroll-target,
+.is-navigation-target,
+.document-heading.is-navigation-target {
+  animation: toc-flash 1.5s ease-out forwards;
+  border-radius: 4px;
 }
 
 @keyframes toc-flash {
-  0%   { background-color: #fef3c7; outline: 2px solid #f59e0b; }
-  60%  { background-color: #fef3c7; outline: 2px solid #f59e0b; }
+  0%   { background-color: #eff6ff; outline: 2px solid #60a5fa; }
+  60%  { background-color: #eff6ff; outline: 2px solid #60a5fa; }
   100% { background-color: transparent; outline: 2px solid transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-navigation-target,
+  .toc-scroll-target {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* Search Highlights */

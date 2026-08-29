@@ -92,34 +92,38 @@ export function AppHeader({
             <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50 text-xs">
               <Link
                 href="/admin/verification-queue"
+                prefetch={true}
                 onClick={() => setAdminMenuOpen(false)}
-                className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors"
+                className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
-                <CheckSquare className="w-3.5 h-3.5 text-slate-500" />
+                <CheckSquare className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                 <span>Kiểm duyệt văn bản</span>
               </Link>
               <Link
                 href="/admin/crawler"
+                prefetch={true}
                 onClick={() => setAdminMenuOpen(false)}
-                className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors"
+                className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+                <RefreshCw className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                 <span>Thu thập & Crawl</span>
               </Link>
               <Link
                 href="/admin/categories"
+                prefetch={true}
                 onClick={() => setAdminMenuOpen(false)}
-                className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors"
+                className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
-                <Layers className="w-3.5 h-3.5 text-slate-500" />
+                <Layers className="w-3.5 h-3.5 text-green-600 shrink-0" />
                 <span>Cấu trúc danh mục</span>
               </Link>
               <Link
                 href="/admin/upload"
+                prefetch={true}
                 onClick={() => setAdminMenuOpen(false)}
-                className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors"
+                className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
-                <Database className="w-3.5 h-3.5 text-slate-500" />
+                <Database className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                 <span>Nguồn & Tải lên tệp</span>
               </Link>
             </div>

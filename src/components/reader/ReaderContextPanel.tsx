@@ -153,21 +153,28 @@ function TocPanel({ items, activeId, onItemClick }: TocPanelProps) {
       {/* TOC tree */}
       <nav
         aria-label="Mục lục văn bản"
-        className="flex-1 overflow-y-auto py-2"
+        className="flex-1 overflow-y-auto py-1.5 space-y-0.5"
       >
         {itemsWithParent.map(({ item, parentChapterId }) => {
           if (item.type !== 'article') {
             const isCollapsed = collapsed.has(item.id);
+            const isActiveChapter = item.id === activeId;
             return (
-              <div key={item.id}>
+              <div key={item.id} className="pt-1">
                 <button
                   onClick={() => toggleCollapse(item.id)}
-                  className="w-full flex items-center gap-1.5 px-3 py-2 text-left text-[11px] font-bold text-slate-800 hover:bg-slate-50 transition-colors mt-1"
+                  title={item.title}
+                  className={cn(
+                    'w-full min-h-[34px] flex items-center gap-1.5 px-3 py-1.5 text-left text-xs font-semibold rounded-md transition-colors cursor-pointer',
+                    isActiveChapter
+                      ? 'bg-blue-50 text-blue-900 font-bold border-l-[3px] border-blue-600'
+                      : 'text-slate-900 bg-slate-50/80 hover:bg-slate-100'
+                  )}
                 >
                   {isCollapsed ? (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   ) : (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   )}
                   <span className="truncate">{item.title}</span>
                 </button>
@@ -185,16 +192,22 @@ function TocPanel({ items, activeId, onItemClick }: TocPanelProps) {
               key={item.id}
               ref={isActive ? activeRef : undefined}
               onClick={() => onItemClick(item)}
+              title={item.title}
               aria-current={isActive ? 'location' : undefined}
               className={cn(
-                'w-full text-left px-4 pl-8 py-1.5 text-xs transition-colors flex items-center gap-2 rounded-sm mx-1',
+                'w-full min-h-[32px] text-left px-3 pl-8 py-1 text-[13px] transition-colors flex items-center gap-2 rounded-md cursor-pointer',
                 isActive
-                  ? 'bg-blue-50 text-blue-800 font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-blue-50 text-blue-900 font-semibold border-l-[3px] border-blue-600 pl-[29px] shadow-2xs'
+                  : 'text-slate-700 font-normal hover:bg-blue-50/40 hover:text-blue-950'
               )}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0 opacity-40" />
-              <span className="truncate">{item.title}</span>
+              <span
+                className={cn(
+                  'w-1.5 h-1.5 rounded-full shrink-0',
+                  isActive ? 'bg-blue-600' : 'bg-slate-400 opacity-50'
+                )}
+              />
+              <span className="truncate leading-tight">{item.title}</span>
             </button>
           );
         })}

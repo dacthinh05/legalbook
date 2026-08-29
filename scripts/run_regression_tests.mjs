@@ -2931,3 +2931,373 @@ describe('27. Cross-Document Analysis Redesign & Exact Amendment Diff Separation
     assert.ok(crossDocModalCode.includes('exportReport') || crossDocModalCode.includes('handleExportDownload'));
   });
 });
+
+describe('28. Table of Contents Navigation, Target ID Stability & Precision Viewport Scrolling (10 Criteria)', () => {
+  test('1. extractToc generates stable targetIds matching legal structure', async () => {
+    const { extractToc } = await import('../src/lib/toc-utils.ts');
+    const sampleHtml = `
+      <div class="legal-chapter-block" id="chuong-iii">
+        <p class="legal-chapter-num">Chương III</p>
+        <h2 class="legal-chapter-title">Kiểm tra an toàn thông tin</h2>
+      </div>
+      <h2 class="legal-article-title" id="dieu-14">Điều 14. Kiểm tra an toàn thông tin</h2>
+      <p>Nội dung điều 14...</p>
+      <h2 class="legal-article-title" id="dieu-15">Điều 15. Xử lý vi phạm</h2>
+      <p>Nội dung điều 15...</p>
+    `;
+
+    const items = extractToc(sampleHtml);
+    assert.strictEqual(items.length, 3);
+    assert.strictEqual(items[0].type, 'chapter');
+    assert.strictEqual(items[0].targetId, 'chuong-iii');
+    assert.strictEqual(items[1].targetId, 'dieu-14');
+    assert.strictEqual(items[1].articleNumber, '14');
+    assert.strictEqual(items[2].type, 'article');
+    assert.strictEqual(items[2].targetId, 'dieu-15');
+  });
+
+  test('2. formatArticlesAndClauses robustly wraps bold and unbolded article titles with id="dieu-X"', async () => {
+    const { formatLegalHtmlContent } = await import('../src/lib/legal-formatter.ts');
+    const raw1 = '<p><strong>Điều 14.</strong> Kiểm tra an toàn thông tin hệ thống</p>';
+    const raw2 = '<p><b>Điều 15:</b> Quy trình ứng cứu sự cố</p>';
+    const raw3 = '<p><strong>Điều 16. Tiêu chuẩn dữ liệu</strong></p>';
+
+    const formatted1 = formatLegalHtmlContent(raw1);
+    const formatted2 = formatLegalHtmlContent(raw2);
+    const formatted3 = formatLegalHtmlContent(raw3);
+
+    assert.ok(formatted1.includes('id="dieu-14"'));
+    assert.ok(formatted1.includes('class="legal-article-title"'));
+    assert.ok(formatted1.includes('Điều 14. Kiểm tra an toàn thông tin hệ thống'));
+
+    assert.ok(formatted2.includes('id="dieu-15"'));
+    assert.ok(formatted2.includes('class="legal-article-title"'));
+
+    assert.ok(formatted3.includes('id="dieu-16"'));
+    assert.ok(formatted3.includes('class="legal-article-title"'));
+  });
+
+  test('3. findTocElement locates DOM element by targetId, data-article, and regex patterns', async () => {
+    const { findTocElement } = await import('../src/lib/toc-utils.ts');
+    const { JSDOM } = await import('jsdom');
+
+    const dom = new JSDOM(`
+      <div class="reader-viewport" style="overflow-y: auto;">
+        <div class="legal-doc-content">
+          <h2 id="dieu-14" class="legal-article-title">Điều 14. Kiểm tra an toàn thông tin</h2>
+          <p>Nội dung...</p>
+        </div>
+      </div>
+    `);
+
+    const container = dom.window.document.querySelector('.legal-doc-content');
+    const item = {
+      id: 'toc-art-14',
+      targetId: 'dieu-14',
+      title: 'Điều 14. Kiểm tra an toàn thông tin',
+      type: 'article',
+      level: 1,
+      articleNumber: '14',
+      anchorText: 'Điều 14. Kiểm tra an toàn thông tin',
+    };
+
+    const el = findTocElement(container, item);
+    assert.ok(el);
+    assert.strictEqual(el.id, 'dieu-14');
+    assert.ok(el.textContent.includes('Điều 14'));
+  });
+
+  test('4. scrollToTocItem scrolls reader viewport smoothly with sticky offset breathing room', async () => {
+    const { scrollToTocItem } = await import('../src/lib/toc-utils.ts');
+    const { JSDOM } = await import('jsdom');
+
+    const dom = new JSDOM(`
+      <div class="reader-viewport" style="overflow-y: auto;">
+        <div class="legal-doc-content">
+          <div id="chuong-1" style="height: 500px;">Chương I</div>
+          <h2 id="dieu-14" class="legal-article-title">Điều 14. Kiểm tra an toàn thông tin</h2>
+          <p>Nội dung...</p>
+        </div>
+      </div>
+    `);
+
+    const viewport = dom.window.document.querySelector('.reader-viewport');
+    const content = dom.window.document.querySelector('.legal-doc-content');
+    const targetEl = dom.window.document.querySelector('#dieu-14');
+
+    let scrolledTop = -1;
+    viewport.scrollTo = (options) => {
+      scrolledTop = typeof options === 'number' ? options : options.top;
+    };
+
+    // Mock rects
+    viewport.getBoundingClientRect = () => ({ top: 0, bottom: 800, height: 800, left: 0, right: 800, width: 800 });
+    targetEl.getBoundingClientRect = () => ({ top: 600, bottom: 640, height: 40, left: 0, right: 800, width: 800 });
+    viewport.scrollTop = 0;
+
+    const item = {
+      id: 'toc-art-14',
+      targetId: 'dieu-14',
+      title: 'Điều 14. Kiểm tra an toàn thông tin',
+      type: 'article',
+      level: 1,
+      articleNumber: '14',
+      anchorText: 'Điều 14. Kiểm tra an toàn thông tin',
+    };
+
+    const res = scrollToTocItem(content, item, { behavior: 'smooth', stickyOffset: 16 });
+    assert.ok(res);
+    assert.strictEqual(scrolledTop, 600 - 0 + 0 - 16); // 584px
+    assert.ok(targetEl.classList.contains('is-navigation-target'));
+  });
+
+  test('5. Non-existent target element returns null safely and does not scroll', async () => {
+    const { scrollToTocItem } = await import('../src/lib/toc-utils.ts');
+    const { JSDOM } = await import('jsdom');
+
+    const dom = new JSDOM(`
+      <div class="reader-viewport" style="overflow-y: auto;">
+        <div class="legal-doc-content">
+          <h2 id="dieu-1" class="legal-article-title">Điều 1. Phạm vi điều chỉnh</h2>
+        </div>
+      </div>
+    `);
+
+    const content = dom.window.document.querySelector('.legal-doc-content');
+    const missingItem = {
+      id: 'toc-art-999',
+      targetId: 'dieu-999',
+      title: 'Điều 999. Không tồn tại',
+      type: 'article',
+      level: 1,
+      articleNumber: '999',
+      anchorText: 'Điều 999. Không tồn tại',
+    };
+
+    const res = scrollToTocItem(content, missingItem);
+    assert.strictEqual(res, null);
+  });
+
+  test('6. createTocObserver registers elements and reports active provision on intersection', async () => {
+    const { createTocObserver } = await import('../src/lib/toc-utils.ts');
+    const { JSDOM } = await import('jsdom');
+
+    // Mock IntersectionObserver
+    let observedElements = [];
+    class MockObserver {
+      constructor(callback, options) {
+        this.callback = callback;
+        this.options = options;
+      }
+      observe(el) {
+        observedElements.push(el);
+      }
+      unobserve() {}
+      disconnect() {
+        observedElements = [];
+      }
+    }
+
+    global.IntersectionObserver = MockObserver;
+
+    const dom = new JSDOM(`
+      <div class="reader-viewport" style="overflow-y: auto;">
+        <div class="legal-doc-content">
+          <h2 id="dieu-1" class="legal-article-title">Điều 1. Phạm vi</h2>
+          <h2 id="dieu-14" class="legal-article-title">Điều 14. An toàn</h2>
+        </div>
+      </div>
+    `);
+
+    const viewport = dom.window.document.querySelector('.reader-viewport');
+    const content = dom.window.document.querySelector('.legal-doc-content');
+
+    let activeId = null;
+    const tocItems = [
+      { id: 'toc-art-1', targetId: 'dieu-1', title: 'Điều 1', type: 'article', level: 1, articleNumber: '1', anchorText: 'Điều 1' },
+      { id: 'toc-art-14', targetId: 'dieu-14', title: 'Điều 14', type: 'article', level: 1, articleNumber: '14', anchorText: 'Điều 14' },
+    ];
+
+    const cleanup = createTocObserver({
+      container: viewport,
+      contentEl: content,
+      tocItems,
+      onActiveChange: (id) => { activeId = id; },
+    });
+
+    assert.strictEqual(observedElements.length, 2);
+    assert.strictEqual(typeof cleanup, 'function');
+    cleanup();
+    assert.strictEqual(observedElements.length, 0);
+  });
+
+  test('7. globals.css defines .is-navigation-target and scroll-margin-top', async () => {
+    const fs = await import('fs');
+    const css = fs.readFileSync('src/app/globals.css', 'utf8');
+    assert.ok(css.includes('.is-navigation-target'));
+    assert.ok(css.includes('scroll-margin-top'));
+    assert.ok(css.includes('prefers-reduced-motion'));
+  });
+
+  test('8. DocumentReader synchronizes URL hash and provides toast for missing target', async () => {
+    const fs = await import('fs');
+    const readerCode = fs.readFileSync('src/components/reader/DocumentReader.tsx', 'utf8');
+    assert.ok(readerCode.includes('history.replaceState'));
+    assert.ok(readerCode.includes('Không tìm thấy vị trí trong văn bản'));
+    assert.ok(readerCode.includes('scrollToTocItem'));
+  });
+
+  test('9. ReaderContextPanel TocPanel handles search filter and renders row heights with tooltips', async () => {
+    const fs = await import('fs');
+    const panelCode = fs.readFileSync('src/components/reader/ReaderContextPanel.tsx', 'utf8');
+    assert.ok(panelCode.includes('TocPanel'));
+    assert.ok(panelCode.includes('title={item.title}'));
+    assert.ok(panelCode.includes('border-l-[3px] border-blue-600'));
+    assert.ok(panelCode.includes('min-h-[32px]') || panelCode.includes('min-h-[34px]'));
+  });
+
+  test('10. Document 109/2025/QH15 extracts 29 articles with valid targetId dieu-1 through dieu-29', async () => {
+    const { extractToc } = await import('../src/lib/toc-utils.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc109 = DEMO_DOCUMENTS.find((d) => d.document_number === '109/2025/QH15');
+    assert.ok(doc109);
+
+    const items = extractToc(doc109.html_content);
+    assert.ok(items.length >= 29);
+
+    const art14 = items.find((i) => i.articleNumber === '14');
+    assert.ok(art14);
+    assert.strictEqual(art14.targetId, 'dieu-14');
+    assert.strictEqual(art14.type, 'article');
+  });
+});
+
+describe('29. AI Summary Redesign: Concise Legal Overview, Verified Citations & Reader Navigation (12 Criteria)', () => {
+  test('1. generateLocalDocumentSummary creates clean 5-part structured overview', async () => {
+    const { generateLocalDocumentSummary } = await import('../src/lib/ai/legal-rag.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc = DEMO_DOCUMENTS[0];
+    const summary = generateLocalDocumentSummary(doc);
+
+    assert.ok(summary.scopeAndPurpose, 'Must have Section 1: scopeAndPurpose');
+    assert.ok(Array.isArray(summary.notableProvisions), 'Must have Section 2: notableProvisions');
+    assert.ok(Array.isArray(summary.impactedEntities), 'Must have Section 3: impactedEntities');
+    assert.ok(Array.isArray(summary.complianceNotes), 'Must have Section 4: complianceNotes');
+    assert.ok(Array.isArray(summary.primaryProvisions), 'Must have Section 5: primaryProvisions');
+  });
+
+  test('2. Scope and purpose is neutral, concise, and avoids subjective hype', async () => {
+    const { generateLocalDocumentSummary } = await import('../src/lib/ai/legal-rag.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc = DEMO_DOCUMENTS[0];
+    const summary = generateLocalDocumentSummary(doc);
+
+    assert.doesNotMatch(summary.scopeAndPurpose, /quan trọng nhất/i, 'Must not use subjective hype like "quan trọng nhất"');
+    assert.ok(summary.scopeAndPurpose.length > 50 && summary.scopeAndPurpose.length < 800, 'Should be concise (100-140 words)');
+  });
+
+  test('3. Notable provisions have claim-level citations with Article references', async () => {
+    const { generateLocalDocumentSummary } = await import('../src/lib/ai/legal-rag.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc = DEMO_DOCUMENTS[0];
+    const summary = generateLocalDocumentSummary(doc);
+
+    assert.ok(summary.notableProvisions.length >= 2);
+    const firstClaim = summary.notableProvisions[0];
+    assert.ok(firstClaim.title);
+    assert.ok(firstClaim.text);
+    assert.ok(firstClaim.citations.length > 0, 'Every notable provision must have citations');
+    assert.ok(firstClaim.citations[0].label.includes('Điều'));
+  });
+
+  test('4. Compliance notes clearly distinguish statutory rules vs advisory suggestions', async () => {
+    const { generateLocalDocumentSummary } = await import('../src/lib/ai/legal-rag.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc = DEMO_DOCUMENTS[0];
+    const summary = generateLocalDocumentSummary(doc);
+
+    const statutory = summary.complianceNotes.find((n) => n.type === 'statutory');
+    const advisory = summary.complianceNotes.find((n) => n.type === 'advisory');
+
+    assert.ok(statutory, 'Must have direct statutory compliance note');
+    assert.ok(advisory, 'Must have AI advisory suggestion note');
+    assert.strictEqual(statutory.type, 'statutory');
+    assert.strictEqual(advisory.type, 'advisory');
+  });
+
+  test('5. Primary provisions provide direct article references for fast scanning', async () => {
+    const { generateLocalDocumentSummary } = await import('../src/lib/ai/legal-rag.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc = DEMO_DOCUMENTS.find((d) => d.html_content && d.html_content.includes('Điều 1'));
+    assert.ok(doc);
+    const summary = generateLocalDocumentSummary(doc);
+
+    assert.ok(summary.primaryProvisions.length > 0);
+    assert.ok(summary.primaryProvisions[0].articleNumber.startsWith('Điều'));
+    assert.ok(summary.primaryProvisions[0].articleTitle);
+  });
+
+  test('6. Dates are formatted in standard Vietnamese DD/MM/YYYY format', async () => {
+    const { formatDate } = await import('../src/lib/utils.ts');
+    const { generateLocalDocumentSummary } = await import('../src/lib/ai/legal-rag.ts');
+    
+    assert.strictEqual(formatDate('2025-07-01'), '01/07/2025');
+    assert.strictEqual(formatDate('2026-04-05'), '05/04/2026');
+
+    const doc = {
+      id: 'test-date-doc',
+      title: 'Thông tư thử nghiệm',
+      document_number: '69/2025/TT-BTC',
+      document_type: 'thong_tu',
+      status: 'hieu_luc',
+      effective_date: '2025-07-01',
+      issued_date: '2025-05-15',
+    };
+
+    const summary = generateLocalDocumentSummary(doc);
+    assert.strictEqual(summary.issuedDate, '15/05/2025');
+  });
+
+  test('7. DocumentReader defines native "Tổng quan" tab and embeds DocumentSummaryView', async () => {
+    const fs = await import('fs');
+    const readerCode = fs.readFileSync('src/components/reader/DocumentReader.tsx', 'utf8');
+    assert.ok(readerCode.includes("id: 'thongtin', label: 'Tổng quan'"));
+    assert.ok(readerCode.includes('<DocumentSummaryView'));
+    assert.ok(readerCode.includes('onNavigateToArticle'));
+    assert.ok(readerCode.includes('toc-scroll-target'));
+  });
+
+  test('8. AiSummaryModal is a compact non-intrusive modal supporting Escape key', async () => {
+    const fs = await import('fs');
+    const modalCode = fs.readFileSync('src/components/reader/AiSummaryModal.tsx', 'utf8');
+    assert.ok(modalCode.includes('max-w-4xl'));
+    assert.ok(modalCode.includes('max-h-[calc(100vh-64px)]'));
+    assert.ok(modalCode.includes("e.key === 'Escape'"));
+    assert.doesNotMatch(modalCode, /AI LEGAL SUMMARY/);
+    assert.doesNotMatch(modalCode, /LegalBook RAG Engine/);
+  });
+
+  test('9. DocumentSummaryView implements neutral provenance status banner', async () => {
+    const fs = await import('fs');
+    const viewCode = fs.readFileSync('src/components/reader/DocumentSummaryView.tsx', 'utf8');
+    assert.ok(viewCode.includes('Tổng quan văn bản'));
+    assert.ok(viewCode.includes('Tóm tắt hỗ trợ bởi AI · Chưa kiểm duyệt'));
+    assert.ok(viewCode.includes('1. Văn bản quy định gì?'));
+    assert.ok(viewCode.includes('2. Nội dung đáng chú ý'));
+    assert.ok(viewCode.includes('3. Đối tượng chịu tác động'));
+    assert.ok(viewCode.includes('4. Việc cần lưu ý'));
+    assert.ok(viewCode.includes('5. Căn cứ chính trong văn bản'));
+  });
+
+  test('10. API chat summary prompt enforces 5 clean sections without technical buzzwords', async () => {
+    const fs = await import('fs');
+    const routeCode = fs.readFileSync('src/app/api/ai/chat/route.ts', 'utf8');
+    assert.ok(routeCode.includes('TỔNG QUAN PHÁP LÝ'));
+    assert.ok(routeCode.includes('1. Văn bản quy định gì?'));
+    assert.ok(routeCode.includes('2. Nội dung đáng chú ý'));
+    assert.ok(routeCode.includes('3. Đối tượng chịu tác động'));
+    assert.ok(routeCode.includes('4. Việc cần lưu ý'));
+    assert.ok(routeCode.includes('5. Căn cứ chính'));
+    assert.ok(routeCode.includes('KHÔNG dùng từ ngữ phóng đại'));
+  });
+});
