@@ -5,10 +5,12 @@ import {
   ChevronRight, 
   ChevronDown, 
   Plus, 
-  Layers
+  Layers,
+  GitCompare,
 } from 'lucide-react';
 import { buildDocumentHierarchy, type HierarchyNode } from '@/lib/hierarchy';
 import { DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, getEffectiveStatus, formatDate } from '@/lib/utils';
+import { LegalDiffViewer } from './LegalDiffViewer';
 import type { LegalDocument } from '@/types';
 
 interface LegalHierarchyTreeProps {
@@ -24,7 +26,7 @@ export function LegalHierarchyTree({
 }: LegalHierarchyTreeProps) {
   const hierarchy = buildDocumentHierarchy(doc.id);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set([doc.id]));
-
+  const [compareTargetDoc, setCompareTargetDoc] = useState<LegalDocument | null>(null);
   const toggleNode = (id: string) => {
     const next = new Set(expandedNodes);
     if (next.has(id)) next.delete(id);
@@ -137,20 +139,36 @@ export function LegalHierarchyTree({
             </div>
           </div>
 
-          {/* Quick Action: Add Dispatch under this node */}
-          {onAddDispatch && node.tier <= 3 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddDispatch(node.document);
-              }}
-              className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded text-[10px] font-semibold flex items-center gap-1 shrink-0 transition-colors"
-              title={`Gắn công văn vào ${node.document.document_number}`}
-            >
-              <Plus className="w-3 h-3" />
-              Bỏ công văn vào
-            </button>
-          )}
+          {/* Actions: Compare diff & Add dispatch */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {!isCurrent && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCompareTargetDoc(node.document);
+                }}
+                className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                title={`So sánh điều khoản với ${node.document.document_number || 'văn bản này'}`}
+              >
+                <GitCompare className="w-3 h-3" />
+                <span>So sánh</span>
+              </button>
+            )}
+
+            {onAddDispatch && node.tier <= 3 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddDispatch(node.document);
+                }}
+                className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded text-[10px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                title={`Gắn công văn vào ${node.document.document_number}`}
+              >
+                <Plus className="w-3 h-3" />
+                <span>+ Công văn</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Render children */}
@@ -165,6 +183,18 @@ export function LegalHierarchyTree({
 
   return (
     <div className="space-y-4">
+      {/* Active Diff Comparison Modal / View */}
+      {compareTargetDoc && (
+        <div className="mb-6 animate-in fade-in">
+          <LegalDiffViewer
+            documentA={doc}
+            documentB={compareTargetDoc}
+            onClose={() => setCompareTargetDoc(null)}
+            onSelectDocument={onSelectDocument}
+          />
+        </div>
+      )}
+
       {/* Clean Header */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-200">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -174,7 +204,7 @@ export function LegalHierarchyTree({
         {onAddDispatch && (
           <button
             onClick={() => onAddDispatch(doc)}
-            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold flex items-center gap-1 shadow-2xs transition-colors"
+            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Thêm công văn liên quan</span>
