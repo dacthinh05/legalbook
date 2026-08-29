@@ -528,7 +528,7 @@ export function DocumentReader({
   }, []);
 
   const handleAddNoteFromPanel = useCallback(
-    async (noteContent: string) => {
+    async (noteContent: string, visibility: 'private' | 'team' | 'organization' = 'private') => {
       const effectiveUserId = currentUserId || 'guest_user';
       const sanitized = sanitizeNoteContent(noteContent);
       await addAnnotation({
@@ -541,7 +541,7 @@ export function DocumentReader({
         type: 'note',
         color: 'yellow',
         noteContent: sanitized,
-        visibility: 'private',
+        visibility,
         anchorStatus: 'active',
       });
     },

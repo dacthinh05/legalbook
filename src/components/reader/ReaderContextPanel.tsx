@@ -23,6 +23,11 @@ import {
   AlertCircle,
   Loader2,
   MessageSquare,
+  Lock,
+  Users,
+  Building2,
+  Download,
+  Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { sanitizeNoteContent } from '@/lib/annotation-engine';
@@ -211,7 +216,7 @@ interface NotesPanelProps {
   hasFullText: boolean;
   currentUserId?: string;
   onNoteClick: (ann: DocumentAnnotation) => void;
-  onAddNote: (content: string) => void;
+  onAddNote: (content: string, visibility?: 'private' | 'team' | 'organization') => void;
   onDeleteAnnotation: (id: string) => void;
 }
 
@@ -226,21 +231,51 @@ function NotesPanel({
   onDeleteAnnotation,
 }: NotesPanelProps) {
   const [newNote, setNewNote] = useState('');
+  const [noteVisibility, setNoteVisibility] = useState<'private' | 'team' | 'organization'>('private');
+  const [filterVisibility, setFilterVisibility] = useState<'all' | 'private' | 'team' | 'organization'>('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const notes = annotations.filter((a) => a.type === 'note');
-  const highlights = annotations.filter((a) => a.type === 'highlight');
+  const filteredAnnotations = useMemo(() => {
+    if (filterVisibility === 'all') return annotations;
+    return annotations.filter((a) => a.visibility === filterVisibility);
+  }, [annotations, filterVisibility]);
 
+  const notes = filteredAnnotations.filter((a) => a.type === 'note');
+  const highlights = filteredAnnotations.filter((a) => a.type === 'highlight');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const content = newNote.trim();
     if (!content || isSubmitting) return;
     setIsSubmitting(true);
-    onAddNote(sanitizeNoteContent(content));
+    onAddNote(sanitizeNoteContent(content), noteVisibility);
     setNewNote('');
     setIsSubmitting(false);
   };
 
+  const handleExportNotes = () => {
+    if (annotations.length === 0) return;
+    let md = `# BẢNG TỔNG HỢP GHI CHÚ & TRÍCH DẪN PHÁP LÝ\n\n`;
+    md += `*Thời gian xuất: ${new Date().toLocaleString('vi-VN')}*\n\n---\n\n`;
+
+    annotations.forEach((ann, idx) => {
+      md += `### ${idx + 1}. ${ann.type === 'note' ? '📝 Ghi chú' : '🖍 Highlight'} [${ann.visibility.toUpperCase()}]\n`;
+      if (ann.anchor.exactText) {
+        md += `> "${ann.anchor.exactText}"\n\n`;
+      }
+      if (ann.noteContent) {
+        md += `**Nội dung:** ${ann.noteContent}\n\n`;
+      }
+      md += `*Ngày tạo: ${new Date(ann.createdAt).toLocaleDateString('vi-VN')}*\n\n---\n\n`;
+    });
+
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ghi-chu-phap-ly-${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -267,22 +302,39 @@ function NotesPanel({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-2">
-            <label className="text-[11px] font-semibold text-slate-700 block">
-              Ghi chú mới
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold text-slate-700 block">
+                Ghi chú mới
+              </label>
+              {/* Visibility Selector */}
+              <div className="flex items-center gap-1 text-[10px]">
+                <select
+                  value={noteVisibility}
+                  onChange={(e) => setNoteVisibility(e.target.value as 'private' | 'team' | 'organization')}
+                  className="bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 font-medium outline-none cursor-pointer"
+                >
+                  <option value="private">🔒 Cá nhân</option>
+                  <option value="team">👥 Đội nhóm</option>
+                  <option value="organization">🏢 Doanh nghiệp</option>
+                </select>
+              </div>
+            </div>
             <textarea
-              rows={3}
+              rows={2}
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
               placeholder="Nhận xét, điều cần lưu ý hoặc hướng xử lý nghiệp vụ..."
               className="w-full text-xs p-2 bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 placeholder:text-slate-400 resize-none"
               aria-label="Nội dung ghi chú"
             />
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-400">
+                {noteVisibility === 'private' ? 'Chỉ bạn xem được' : noteVisibility === 'team' ? 'Phòng ban xem được' : 'Toàn tổ chức xem được'}
+              </span>
               <button
                 type="submit"
                 disabled={!newNote.trim() || isSubmitting}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md text-xs font-medium transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md text-xs font-medium transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Lưu ghi chú
@@ -292,12 +344,49 @@ function NotesPanel({
         )}
       </div>
 
+      {/* Filter Tabs & Export Action */}
+      <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px]">
+        <div className="flex items-center gap-1">
+          {(
+            [
+              { id: 'all', label: 'Tất cả' },
+              { id: 'private', label: 'Cá nhân' },
+              { id: 'team', label: 'Nhóm' },
+              { id: 'organization', label: 'Tổ chức' },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setFilterVisibility(tab.id)}
+              className={cn(
+                'px-1.5 py-0.5 rounded text-[10.5px] font-medium transition-colors cursor-pointer',
+                filterVisibility === tab.id
+                  ? 'bg-white text-blue-900 font-semibold shadow-2xs border border-slate-200'
+                  : 'text-slate-500 hover:text-slate-900'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {annotations.length > 0 && (
+          <button
+            onClick={handleExportNotes}
+            className="text-[10.5px] text-slate-500 hover:text-blue-700 flex items-center gap-0.5 transition-colors cursor-pointer font-medium"
+            title="Xuất bảng tổng hợp ghi chú ra Markdown"
+          >
+            <Download className="w-3 h-3" />
+            <span>Xuất</span>
+          </button>
+        )}
+      </div>
+
       {/* Notes list */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {notes.length === 0 && highlights.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center space-y-2">
             <MessageSquare className="w-8 h-8 text-slate-200" />
-            <p className="text-xs text-slate-500">Chưa có ghi chú nào</p>
+            <p className="text-xs text-slate-500">Chưa có ghi chú nào trong mục này</p>
           </div>
         ) : (
           <>
@@ -340,6 +429,7 @@ function NotesPanel({
     </div>
   );
 }
+
 
 // ─── Note Card ────────────────────────────────────────────────────────────────
 
@@ -397,12 +487,17 @@ function NoteCard({
       )}
 
       {/* Footer */}
+      {/* Footer */}
       <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <span>{new Date(ann.updatedAt).toLocaleDateString('vi-VN')}</span>
           {statusInfo.label && (
             <span className={statusInfo.cls}>{statusInfo.label}</span>
           )}
+          <span className="text-slate-300">·</span>
+          <span className="text-[9.5px] px-1 py-0.2 rounded font-medium bg-white/70 border border-slate-200/60 text-slate-600">
+            {ann.visibility === 'team' ? '👥 Nhóm' : ann.visibility === 'organization' ? '🏢 Tổ chức' : '🔒 Cá nhân'}
+          </span>
         </div>
         {isOwn && (
           <button
@@ -410,7 +505,7 @@ function NoteCard({
               e.stopPropagation();
               onDelete();
             }}
-            className="opacity-0 group-hover:opacity-100 p-0.5 text-red-400 hover:text-red-600 rounded transition-opacity"
+            className="opacity-0 group-hover:opacity-100 p-0.5 text-red-400 hover:text-red-600 rounded transition-opacity cursor-pointer"
             aria-label="Xóa ghi chú"
           >
             <Trash2 className="w-3 h-3" />
