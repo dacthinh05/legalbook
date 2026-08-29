@@ -2241,7 +2241,7 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "document_type": "nghi_dinh",
     "issuing_body": "Chính phủ",
     "signer": "Phạm Minh Chính",
-    "issued_date": "2026-03-20",
+    "issued_date": "2026-05-05",
     "effective_date": "2026-05-01",
     "expiry_date": null,
     "status": "hieu_luc",

@@ -79,38 +79,38 @@ export function AppHeader({
 
           {adminMenuOpen && (
             <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50 text-xs">
-              <a
+              <Link
                 href="/admin/verification-queue"
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors"
               >
                 <CheckSquare className="w-3.5 h-3.5 text-slate-500" />
                 <span>Kiểm duyệt văn bản</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/admin/crawler"
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
                 <span>Thu thập & Crawl</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/admin/categories"
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors"
               >
                 <Layers className="w-3.5 h-3.5 text-slate-500" />
                 <span>Cấu trúc danh mục</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/admin/upload"
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors"
               >
                 <Database className="w-3.5 h-3.5 text-slate-500" />
                 <span>Nguồn & Tải lên tệp</span>
-              </a>
+              </Link>
             </div>
           )}
         </div>
