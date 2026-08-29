@@ -5,9 +5,9 @@
 - **Framework**: Next.js 16.3.3 (App Router / Turbopack)
 - **Runtime**: Node.js 24.x / Edge Middleware
 - **Production Alias**: [https://legalbook-six.vercel.app](https://legalbook-six.vercel.app)
-- **Direct Deployment URL**: [https://legalbook-1442hpha8-legalbook.vercel.app](https://legalbook-1442hpha8-legalbook.vercel.app)
-- **Deployment ID**: `dpl_BbtgTdgC4s4PMH2odXgNJhHyZjyK`
-- **Status**: READY (Healthy & Verified - Clean Legal Typography, Deduplicated Labels, NĐ 30/2020 Letterhead)
+- **Direct Deployment URL**: [https://legalbook-e6dismzgc-legalbook.vercel.app](https://legalbook-e6dismzgc-legalbook.vercel.app)
+- **Deployment ID**: `dpl_Cs9sQgcc7K7VLWrcQe3RrS5MEEFY`
+- **Status**: READY (Healthy & Verified - Decree 30/2020 Semantic Layout, Hybrid Search RPC, 58 Verified Legal Docs, 40 Categories)
 
 ## Verified Features & Test Matrix
 1. **Document Reader & Legal Typography**:

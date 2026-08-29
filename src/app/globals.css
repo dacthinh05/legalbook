@@ -863,6 +863,45 @@ mark.reader-annotation-mark.has-note::after {
   font-size: 0.6em;
 }
 
+/* Legal Effect Marks (Decree/Law Amendments, Guidance, Replacements) */
+mark.legal-effect-mark {
+  border-radius: 2px;
+  padding: 0.5px 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  text-decoration: none;
+}
+
+mark.legal-effect-mark:hover {
+  filter: brightness(0.95);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+mark.legal-effect-amends {
+  background-color: #ffe4e6;
+  color: #881337;
+  border-bottom: 2px solid #f43f5e;
+}
+
+mark.legal-effect-supplements {
+  background-color: #f3e8ff;
+  color: #581c87;
+  border-bottom: 2px solid #a855f7;
+}
+
+mark.legal-effect-corrects {
+  background-color: #dcfce7;
+  color: #064e3b;
+  border-bottom: 2px solid #10b981;
+}
+
+mark.legal-effect-guides {
+  background-color: #f0f9ff;
+  color: #0c4a6e;
+  border-bottom: 2px dashed #0284c7;
+}
+
 /* TOC Scroll Target Highlight */
 .toc-scroll-target {
   animation: toc-flash 2s ease-out forwards;

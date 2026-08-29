@@ -134,15 +134,17 @@ function formatAdministrativeMasthead(html: string, doc?: Partial<LegalDocument>
     bodySection = html.slice(matchBoundary.index);
   }
 
+  const hasBodyWrapper = html.startsWith('<div class="document-full-body">');
   if (bodySection) {
-    const hasBodyWrapper = html.startsWith('<div class="document-full-body">');
     const cleanBody = bodySection.replace(/<\/div>\s*$/, '');
     return hasBodyWrapper
       ? `<div class="document-full-body">\n${letterheadHtml}\n${cleanBody}\n</div>`
       : `${letterheadHtml}\n${bodySection}`;
   }
 
-  return html;
+  return hasBodyWrapper
+    ? `<div class="document-full-body">\n${letterheadHtml}\n</div>`
+    : letterheadHtml;
 }
 
 /**

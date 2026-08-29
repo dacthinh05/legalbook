@@ -37,6 +37,7 @@ import {
   DOCUMENT_STATUS_LABELS,
   DOCUMENT_STATUS_COLORS,
   DOCUMENT_TYPE_LABELS,
+  getEffectiveStatus,
   formatDate,
   formatShortTitle,
   getTvplSourceUrl,
@@ -46,7 +47,7 @@ import { getDocumentTopicName } from '@/lib/legal-feed-utils';
 import { DEMO_CATEGORIES } from '@/lib/demo-data';
 import { highlightHtml, isSafeUrl } from '@/lib/sanitize';
 import { formatLegalHtmlContent, normalizeDisplayTitle } from '@/lib/legal-formatter';
-import type { LegalDocument, ReaderPanelMode, TocItem, DocumentRelation, AnnotationColor } from '@/types';
+import type { LegalDocument, ReaderPanelMode, TocItem, DocumentRelation, AnnotationColor, LegalEffect } from '@/types';
 import { ContentQualityValidator } from '@/lib/quality/content-validator';
 import { LegalHierarchyTree } from './LegalHierarchyTree';
 import { useLocalStorageNumber } from '@/lib/useLocalStorage';
@@ -57,8 +58,12 @@ import { useAnnotations } from '@/lib/useAnnotations';
 import { ReaderContextPanel } from './ReaderContextPanel';
 import { SelectionToolbar } from './SelectionToolbar';
 import { HighlightLayer } from './HighlightLayer';
+import { LegalEffectPanel } from './LegalEffectPanel';
+import { PointInTimeSelector } from './PointInTimeSelector';
+import { LegalEffectOverlay } from './LegalEffectOverlay';
+import { getDocumentLegalEffects } from '@/lib/legal-effects/demo-effects';
+import { calculatePointInTimeStats } from '@/lib/legal-effects/timeline-engine';
 import { createClient } from '@/lib/supabase/client';
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** Main content tabs — Mục lục and Ghi chú are context panels */
@@ -203,13 +208,23 @@ export function DocumentReader({
     return getDocumentTopicName(doc.id, DEMO_CATEGORIES);
   }, [doc.id]);
 
+  // ── Legal Effects & Point In Time ──────────────────────────────────────
+  const [selectedPointInTimeDate, setSelectedPointInTimeDate] = useState('2026-08-29');
+  const [showLegalEffectsOverlay, setShowLegalEffectsOverlay] = useState(true);
+  const [activeLegalEffect, setActiveLegalEffect] = useState<LegalEffect | null>(null);
+
+  const documentLegalEffects = useMemo(() => getDocumentLegalEffects(doc.id), [doc.id]);
+  const activePointInTimeStats = useMemo(
+    () => calculatePointInTimeStats(documentLegalEffects, selectedPointInTimeDate),
+    [documentLegalEffects, selectedPointInTimeDate]
+  );
+
   // ── TOC ───────────────────────────────────────────────────────────────
   const tocItems: TocItem[] = useMemo(
     () => (hasFullText ? extractToc(doc.html_content) : []),
     [hasFullText, doc.html_content]
   );
   const [activeTocId, setActiveTocId] = useState<string | null>(null);
-
   // IntersectionObserver-based TOC active tracking
   useEffect(() => {
     if (!contentRef.current || !viewportRef.current || tocItems.length === 0) return;
@@ -686,9 +701,14 @@ export function DocumentReader({
           {/* Actions & Status Badges */}
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Status Badge */}
-            <span className={cn('px-2 py-0.5 rounded text-[11px] font-semibold border', DOCUMENT_STATUS_COLORS[doc.status])}>
-              {DOCUMENT_STATUS_LABELS[doc.status]}
-            </span>
+            {(() => {
+              const effStatus = getEffectiveStatus(doc);
+              return (
+                <span className={cn('px-2 py-0.5 rounded text-[11px] font-semibold border', DOCUMENT_STATUS_COLORS[effStatus])}>
+                  {DOCUMENT_STATUS_LABELS[effStatus]}
+                </span>
+              );
+            })()}
 
             {/* Verification status badge with tooltip */}
             {(() => {
@@ -908,6 +928,18 @@ export function DocumentReader({
         </div>
       </header>
 
+      {/* Point In Time Legal Effect Sub-bar */}
+      {activeTab === 'noidung' && (
+        <PointInTimeSelector
+          issuedDate={doc.issued_date}
+          selectedDate={selectedPointInTimeDate}
+          onSelectDate={setSelectedPointInTimeDate}
+          showOverlay={showLegalEffectsOverlay}
+          onToggleShowOverlay={() => setShowLegalEffectsOverlay((prev) => !prev)}
+          activeEffectsCount={activePointInTimeStats.totalActiveEffects}
+          totalEffectsCount={documentLegalEffects.length}
+        />
+      )}
       {/* Focus Mode floating banner */}
       {isFocusMode && (
         <div className="bg-blue-700 text-white px-4 py-1.5 text-xs flex items-center justify-between shrink-0 shadow-sm z-20">
@@ -1445,12 +1477,24 @@ export function DocumentReader({
                       onOrphaned={handleOrphaned}
                       onReanchor={handleReanchor}
                     />
+
+                    {/* Legal effect overlay layer */}
+                    <LegalEffectOverlay
+                      containerRef={contentRef}
+                      effects={documentLegalEffects}
+                      showOverlay={showLegalEffectsOverlay}
+                      selectedDate={selectedPointInTimeDate}
+                      isReady={contentReady}
+                      onEffectClick={(eff) => {
+                        setActiveLegalEffect(eff);
+                        setPanelMode('closed');
+                      }}
+                    />
                   </>
                 )}
               </div>
             </div>
           </div>
-
           {/* ── TAB: BẢN GỐC (PDF / TỆP GỐC) ── */}
           {activeTab === 'banggoc' && (() => {
             const pdfFiles = doc.files?.filter((f) => f.file_type === 'pdf') ?? [];
@@ -1799,6 +1843,24 @@ export function DocumentReader({
                 notesCount={totalAnnotationsCount}
                 hasFullText={hasFullText}
                 currentUserId={currentUserId}
+              />
+            </div>
+          </>
+        )}
+
+        {/* ── Legal Effect Detail Panel ── */}
+        {activeLegalEffect && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/20 z-30 md:hidden"
+              onClick={() => setActiveLegalEffect(null)}
+              aria-hidden
+            />
+            <div className="relative z-30 md:z-auto md:relative flex-shrink-0">
+              <LegalEffectPanel
+                effect={activeLegalEffect}
+                onClose={() => setActiveLegalEffect(null)}
+                onSelectDocument={onSelectRelatedDocument}
               />
             </div>
           </>

@@ -2,7 +2,7 @@
 
 import { X, GitFork, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { getDocumentRelations, getDocumentById } from '@/lib/demo-data';
-import { RELATION_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS } from '@/lib/utils';
+import { RELATION_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, getEffectiveStatus } from '@/lib/utils';
 import type { LegalDocument, RelationType } from '@/types';
 
 interface DocumentRelationsProps {
@@ -143,9 +143,14 @@ function RelationCard({
         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
           {getRelationBadge()}
         </span>
-        <span className={`text-[9px] px-1.5 py-0.2 rounded border ${DOCUMENT_STATUS_COLORS[doc.status]}`}>
-          {DOCUMENT_STATUS_LABELS[doc.status]}
-        </span>
+        {(() => {
+          const effStatus = getEffectiveStatus(doc);
+          return (
+            <span className={`text-[9px] px-1.5 py-0.2 rounded border ${DOCUMENT_STATUS_COLORS[effStatus]}`}>
+              {DOCUMENT_STATUS_LABELS[effStatus]}
+            </span>
+          );
+        })()}
       </div>
 
       <p className="font-mono text-[11px] font-semibold text-gray-900 mb-0.5">

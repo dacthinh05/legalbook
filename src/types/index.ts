@@ -363,9 +363,75 @@ export interface TocItem {
 }
 
 // ─── Reader: Panel Mode ───────────────────────────────────────────────────────
+export type ReaderPanelMode = 'closed' | 'toc' | 'notes' | 'effects';
 
-export type ReaderPanelMode = 'closed' | 'toc' | 'notes';
+// ─── Reader: Legal Effects & Provisions ──────────────────────────────────────
 
+export type LegalEffectCategory = 'substantive_change' | 'application_support';
+
+export type LegalEffectType =
+  | 'amends'            // Sửa đổi
+  | 'supplements'       // Bổ sung
+  | 'replaces'          // Thay thế
+  | 'repeals'           // Bãi bỏ toàn bộ
+  | 'partially_repeals' // Bãi bỏ một phần
+  | 'suspends'          // Đình chỉ / Tạm ngưng
+  | 'extends'           // Gia hạn
+  | 'corrects'          // Đính chính
+  | 'guides'            // Hướng dẫn thi hành
+  | 'implements'        // Quy định chi tiết
+  | 'references';       // Dẫn chiếu
+
+export interface DocumentProvision {
+  id: string;
+  documentId: string;
+  parentProvisionId?: string;
+  provisionType: 'chapter' | 'section' | 'article' | 'clause' | 'point' | 'appendix';
+  numberLabel: string;
+  headingTitle?: string;
+  normalizedPath: string;
+  stableKey: string;
+  orderIndex: number;
+  contentText: string;
+  contentHash: string;
+}
+
+export interface ProvisionAnchor {
+  id: string;
+  legalEffectId: string;
+  targetProvisionId: string;
+  exactText: string;
+  prefixText?: string;
+  suffixText?: string;
+  normalizedStartOffset?: number;
+  normalizedEndOffset?: number;
+  contentHash: string;
+  resolutionStatus: 'resolved' | 'orphaned' | 'ambiguous';
+}
+
+export interface LegalEffect {
+  id: string;
+  category: LegalEffectCategory;
+  effectType: LegalEffectType;
+  sourceDocumentId: string;
+  sourceDocumentNumber?: string;
+  sourceDocumentTitle?: string;
+  targetDocumentId: string;
+  targetDocumentNumber?: string;
+  targetProvisionId?: string;
+  targetProvisionLabel?: string;
+  effectiveFrom: string;
+  effectiveTo?: string | null;
+  impactScope: 'whole_document' | 'whole_provision' | 'text_range';
+  legalCitation: string;
+  sourceExcerpt: string;
+  sourceUrl?: string;
+  anchor?: ProvisionAnchor;
+  previousContent?: string;
+  replacementContent?: string;
+  reviewStatus: 'verified' | 'pending' | 'rejected';
+  confidence: number;
+}
 // ─── Reader: Annotations ─────────────────────────────────────────────────────
 
 export type AnnotationColor = 'yellow' | 'green' | 'pink' | 'blue' | 'purple';

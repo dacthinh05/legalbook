@@ -371,12 +371,70 @@ function mergeLineItems(items: PdfItemCoord[]): string {
 }
 
 /**
+ * Calls remote Python document processing worker if PROCESSOR_WORKER_URL is configured.
+ */
+export async function extractViaRemoteWorker(
+  buffer: Uint8Array,
+  fileExtension: 'doc' | 'docx' | 'pdf'
+): Promise<ExtractedDocumentData | null> {
+  const workerUrl = process.env.PROCESSOR_WORKER_URL;
+  if (!workerUrl || !workerUrl.startsWith('http')) return null;
+
+  try {
+    const endpoint = fileExtension === 'docx' ? '/api/v1/extract-docx' : '/api/v1/extract-pdf';
+    const formData = new FormData();
+    const blob = new Blob([buffer as unknown as BlobPart], {
+      type: fileExtension === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    formData.append('file', blob, `document.${fileExtension}`);
+
+    const res = await fetch(`${workerUrl.replace(/\/+$/, '')}${endpoint}`, {
+      method: 'POST',
+      body: formData,
+      signal: AbortSignal.timeout(20000),
+    });
+
+    if (res.ok) {
+      const data = (await res.json()) as {
+        success?: boolean;
+        html_content?: string;
+        plain_text?: string;
+        is_scanned?: boolean;
+        confidence?: number;
+        warnings?: string[];
+      };
+      if (data.success && data.html_content) {
+        return {
+          rawText: data.plain_text || '',
+          cleanText: data.plain_text || '',
+          htmlContent: data.html_content,
+          extractionMethod: data.is_scanned ? 'ocr' : 'pdf-text',
+          extractionConfidence: data.confidence || 0.95,
+          warnings: data.warnings || [],
+        };
+      }
+    }
+  } catch {
+    // Graceful fallback to local extraction on network/worker error
+  }
+
+  return null;
+}
+
+/**
  * Universal text extraction router based on file extension / format.
  */
 export async function extractDocumentContent(
   buffer: Uint8Array,
   fileExtension: 'doc' | 'docx' | 'pdf'
 ): Promise<ExtractedDocumentData> {
+  // 1. Try remote high-performance Python worker if configured
+  const remoteResult = await extractViaRemoteWorker(buffer, fileExtension);
+  if (remoteResult) {
+    return remoteResult;
+  }
+
+  // 2. Fallback to local TypeScript extractor
   switch (fileExtension) {
     case 'docx':
       return extractFromDocx(buffer);

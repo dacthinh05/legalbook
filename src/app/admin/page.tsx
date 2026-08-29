@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
-import { DOCUMENT_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, formatDate } from '@/lib/utils';
+import { DOCUMENT_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, formatDate, getEffectiveStatus } from '@/lib/utils';
 import type { LegalDocument, DocumentType, DocumentStatus } from '@/types';
 
 export default function AdminDocumentsPage() {
@@ -117,9 +117,14 @@ export default function AdminDocumentsPage() {
                   {formatDate(doc.issued_date)}
                 </td>
                 <td className="p-3 whitespace-nowrap">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${DOCUMENT_STATUS_COLORS[doc.status || 'hieu_luc']}`}>
-                    {DOCUMENT_STATUS_LABELS[doc.status || 'hieu_luc']}
-                  </span>
+                  {(() => {
+                    const effStatus = getEffectiveStatus(doc);
+                    return (
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${DOCUMENT_STATUS_COLORS[effStatus]}`}>
+                        {DOCUMENT_STATUS_LABELS[effStatus]}
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td className="p-3 text-right space-x-1 whitespace-nowrap">
                   <button
