@@ -365,6 +365,11 @@ export function DocumentReader({
     return () => clearTimeout(timeout);
   }, [doc.id, targetNodeId, initialSearchQuery]);
 
+  // Reset quick-view state when document changes
+  useEffect(() => {
+    setShowQuickViewPdf(false);
+  }, [doc.id]);
+
   // ── Close menus on outside click ───────────────────────────────────────
 
   useEffect(() => {
