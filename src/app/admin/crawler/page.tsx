@@ -24,199 +24,7 @@ import {
   FileCheck,
 } from 'lucide-react';
 import { getSafeSourceUrl, getMultiSourceLookupUrls, type MultiSourceOption } from '@/lib/utils';
-import { PRIORITY_TOPICS_2024_2026, type CrawlTargetTopic } from '@/lib/crawler/legal-tax-crawler';
-interface DiscoveredDoc {
-  id: string;
-  source: 'thuvienphapluat' | 'chinhphu' | 'vbpl' | 'gdt_gov' | 'mof_gov' | 'congbao';
-  sourceName: string;
-  sourceUrl: string;
-  document_number: string;
-  title: string;
-  issuing_body: string;
-  issued_date: string;
-  effective_date: string;
-  status: 'hieu_luc' | 'chua_hieu_luc';
-  domain: 'tax' | 'accounting' | 'audit' | 'general';
-  category_name: string;
-  file_format: 'doc' | 'docx' | 'pdf';
-  summary_main: string;
-  crawled_at: string;
-  is_approved: boolean;
-  fallbackChain?: string[];
-}
-
-const DISCOVERY_TAX_AUDIT_SAMPLES: DiscoveredDoc[] = [
-  {
-    id: 'disc-tax-06',
-    source: 'vbpl',
-    sourceName: 'Cơ sở Dữ liệu Quốc gia (vbpl.vn)',
-    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%22110%2F2025%2FUBTVQH15%22',
-    document_number: '110/2025/UBTVQH15',
-    title: 'Nghị quyết của Ủy ban Thường vụ Quốc hội về việc điều chỉnh mức giảm trừ gia cảnh thuế TNCN',
-    issuing_body: 'Ủy ban Thường vụ Quốc hội',
-    issued_date: '2025-10-17',
-    effective_date: '2026-01-01',
-    status: 'hieu_luc',
-    domain: 'tax',
-    category_name: 'Thuế > Thuế TNCN',
-    file_format: 'docx',
-    summary_main: 'Nâng mức giảm trừ gia cảnh áp dụng từ kỳ tính thuế 2026: 15,5 triệu đồng/tháng cho bản thân (186 tr/năm) và 6,2 triệu đồng/tháng cho mỗi người phụ thuộc.',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: true,
-    fallbackChain: ['Cơ sở dữ liệu Quốc gia VBPL: Thu thập thành công toàn văn .docx'],
-  },
-  {
-    id: 'disc-tax-07',
-    source: 'mof_gov',
-    sourceName: 'Bộ Tài chính (mof.gov.vn)',
-    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%2242%2F2026%2FTT-BTC%22',
-    document_number: '42/2026/TT-BTC',
-    title: 'Thông tư hướng dẫn thi hành một số điều của Luật Thuế TNCN 2025 và Nghị định 253/2026/NĐ-CP',
-    issuing_body: 'Bộ Tài chính',
-    issued_date: '2026-04-25',
-    effective_date: '2026-06-01',
-    status: 'hieu_luc',
-    domain: 'tax',
-    category_name: 'Thuế > Thuế TNCN',
-    file_format: 'doc',
-    summary_main: 'Miễn 100% thuế TNCN đối với toàn bộ tiền lương làm thêm giờ (tăng ca), làm việc ban đêm; Áp dụng biểu thuế lũy tiến từng phần rút gọn 5 bậc (5% - 35%); Quyết toán thuế qua VNeID.',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: true,
-    fallbackChain: ['Bộ Tài chính mof.gov.vn: Bóc tách thành công văn bản và biểu mẫu .doc'],
-  },
-  {
-    id: 'disc-tax-08',
-    source: 'chinhphu',
-    sourceName: 'Cổng TTĐT Chính Phủ (vanban.chinhphu.vn)',
-    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%2274%2F2024%2FN%C4%90-CP%22',
-    document_number: '74/2024/NĐ-CP',
-    title: 'Nghị định quy định mức lương tối thiểu và chế độ tiền lương làm thêm giờ, làm việc ban đêm đối với người lao động',
-    issuing_body: 'Chính phủ',
-    issued_date: '2024-06-30',
-    effective_date: '2024-07-01',
-    status: 'hieu_luc',
-    domain: 'general',
-    category_name: 'Lao động và tiền lương > Nghị định lao động',
-    file_format: 'docx',
-    summary_main: 'Quy định định mức giờ làm thêm tối đa (40h/tháng, 200h-300h/năm) và tỷ lệ trả lương làm thêm giờ (ban ngày 150%, ngày nghỉ 200%, lễ tết 300%; làm ca đêm cộng thêm 30% + 20%).',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: true,
-    fallbackChain: ['Cổng Thông tin Chính phủ: Bóc tách thành công toàn văn'],
-  },
-  {
-    id: 'disc-tax-09',
-    source: 'gdt_gov',
-    sourceName: 'Tổng cục Thuế (gdt.gov.vn)',
-    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%224128%2FTCT-DNNCN%22',
-    document_number: '4128/TCT-DNNCN',
-    title: 'Công văn về chính sách thuế TNCN đối với thu nhập làm thêm giờ, tiền ăn ca và thủ tục quyết toán thuế qua VNeID',
-    issuing_body: 'Tổng cục Thuế',
-    issued_date: '2026-05-15',
-    effective_date: '2026-05-15',
-    status: 'hieu_luc',
-    domain: 'tax',
-    category_name: 'Thuế > Công văn Thuế',
-    file_format: 'docx',
-    summary_main: 'Hướng dẫn điều kiện bóc tách thu nhập làm thêm giờ miễn thuế TNCN 100%, chi phí ăn ca được trừ và xác thực ủy quyền quyết toán qua định danh điện tử VNeID mức 2.',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: true,
-    fallbackChain: ['Tổng cục Thuế gdt.gov.vn: Thu thập trực tiếp công văn hướng dẫn'],
-  },
-  {
-    id: 'disc-tax-01',
-    source: 'chinhphu',
-    sourceName: 'Cổng TTĐT Chính Phủ (vanban.chinhphu.vn)',
-    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%22144%2F2026%2FN%C4%90-CP%22',
-    document_number: '144/2026/NĐ-CP',
-    title: 'Nghị định sửa đổi, bổ sung một số điều của Nghị định 181/2025/NĐ-CP về thuế GTGT',
-    issuing_body: 'Chính phủ',
-    issued_date: '2026-03-20',
-    effective_date: '2026-05-01',
-    status: 'hieu_luc',
-    domain: 'tax',
-    category_name: 'Thuế > Thuế GTGT',
-    file_format: 'doc',
-    summary_main: 'Hướng dẫn cụ thể điều kiện hoàn thuế GTGT dự án đầu tư theo từng giai đoạn nghiệm thu, chuẩn hóa chứng từ thanh toán ngân hàng.',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: false,
-    fallbackChain: ['TVPL: Thiếu bản Word', 'Cổng Chính Phủ: Thành công bóc tách tệp .doc'],
-  },
-  {
-    id: 'disc-audit-02',
-    source: 'vbpl',
-    sourceName: 'Cơ sở Dữ liệu Quốc gia (vbpl.vn)',
-    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%2252%2F2024%2FQH15%22',
-    document_number: '52/2024/QH15',
-    title: 'Luật sửa đổi, bổ sung một số điều của Luật Kiểm toán độc lập số 52/2024/QH15',
-    issuing_body: 'Quốc hội',
-    issued_date: '2024-11-29',
-    effective_date: '2025-07-01',
-    status: 'hieu_luc',
-    domain: 'audit',
-    category_name: 'Kiểm toán > Luật kiểm toán',
-    file_format: 'docx',
-    summary_main: 'Tăng cường trách nhiệm của kiểm toán viên hành nghề, chuẩn hóa việc luân chuyển KTV và kiểm soát chất lượng dịch vụ kiểm toán BCTC.',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: false,
-  },
-  {
-    id: 'disc-tax-03',
-    source: 'gdt_gov',
-    sourceName: 'Tổng cục Thuế (gdt.gov.vn)',
-    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%223643%2FTNI-QLDN%22',
-    document_number: '3643/TNI-QLDN',
-    title: 'Công văn về việc xuất hóa đơn và kê khai thuế GTGT hoạt động chuyển nhượng quyền sử dụng đất',
-    issuing_body: 'Cục Thuế tỉnh Tây Ninh',
-    issued_date: '2025-08-15',
-    effective_date: '2025-08-15',
-    status: 'hieu_luc',
-    domain: 'tax',
-    category_name: 'Thuế > Công văn Thuế',
-    file_format: 'docx',
-    summary_main: 'Hướng dẫn xác định giá đất được trừ khi tính thuế GTGT và lập hóa đơn điều chỉnh doanh thu chuyển nhượng.',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: false,
-    fallbackChain: ['TVPL: Chưa có toàn văn', 'Cổng Tổng cục Thuế gdt.gov.vn: Đã lấy file .docx'],
-  },
-  {
-    id: 'disc-acc-04',
-    source: 'mof_gov',
-    sourceName: 'Bộ Tài chính (mof.gov.vn)',
-    sourceUrl: 'https://www.google.com/search?q=site%3Athuvienphapluat.vn+%2258%2F2026%2FTT-BTC%22',
-    document_number: '58/2026/TT-BTC',
-    title: 'Thông tư hướng dẫn chế độ kế toán cho doanh nghiệp siêu nhỏ',
-    issuing_body: 'Bộ Tài chính',
-    issued_date: '2026-05-12',
-    effective_date: '2026-07-01',
-    status: 'hieu_luc',
-    domain: 'accounting',
-    category_name: 'Kế toán > Thông tư kế toán',
-    file_format: 'doc',
-    summary_main: 'Chế độ kế toán tối giản chỉ 7 tài khoản cốt lõi và mẫu BCTC 1 trang cho DN siêu nhỏ.',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: true,
-  },
-  {
-    id: 'disc-tax-05',
-    source: 'thuvienphapluat',
-    sourceName: 'Thư Viện Pháp Luật',
-    sourceUrl: 'https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-dinh-253-2026-ND-CP-huong-dan-Luat-Thue-thu-nhap-ca-nhan-699193.aspx',
-    document_number: '253/2026/NĐ-CP',
-    title: 'Nghị định quy định chi tiết thi hành một số điều của Luật Thuế Thu nhập cá nhân 2025',
-    issuing_body: 'Chính phủ',
-    issued_date: '2026-06-30',
-    effective_date: '2026-07-01',
-    status: 'hieu_luc',
-    domain: 'tax',
-    category_name: 'Thuế > Thuế TNCN',
-    file_format: 'docx',
-    summary_main: 'Biểu thuế lũy tiến từng phần 5 bậc mới, quy định điều kiện miễn giảm thuế cho người lao động trực tiếp sản xuất, công nghệ cao và thu nhập từ thừa kế quà tặng.',
-    crawled_at: '06:00 Hôm nay',
-    is_approved: true,
-    fallbackChain: ['Thư Viện Pháp Luật TVPL: Thu thập thành công bản đầy đủ'],
-  },
-];
-
+import { PRIORITY_TOPICS_2024_2026, DISCOVERY_TAX_AUDIT_SAMPLES, type DiscoveredDoc } from '@/lib/crawler/discovery-samples';
 export default function CrawlerAdminPage() {
   const [activeTab, setActiveTab] = useState<'ingestion' | 'discovery' | 'cron' | 'url' | 'dispatch'>('ingestion');
   const [ingestionLog, setIngestionLog] = useState<string[]>([]);
@@ -804,20 +612,19 @@ export default function CrawlerAdminPage() {
                     {/* Actions on right */}
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       {doc.is_approved ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-100 font-semibold px-2.5 py-1 rounded-full">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          Đã vào CSDL
+                        <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 font-semibold px-2.5 py-1 rounded-md">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>Đã có trong CSDL</span>
                         </span>
                       ) : (
                         <button
                           onClick={() => handleApproveSingle(doc.id)}
-                          className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
+                          className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
                         >
                           <Check className="w-3.5 h-3.5" />
-                          <span>Duyệt nạp</span>
+                          <span>Duyệt & Nạp</span>
                         </button>
                       )}
-
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
