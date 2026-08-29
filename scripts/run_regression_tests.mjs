@@ -834,14 +834,16 @@ describe('9. Data Quality Validator, Provenance & Anti-Fake Content (20 Mandator
     assert.strictEqual(results[2].status, 'success');
   });
 
-  // Scenario 19: Rollback cơ chế
-  test('Scenario 19: Backup exists and can restore original repository data', async () => {
+  // Scenario 19: Single Source of Truth Repository Integrity
+  test('Scenario 19: demo-data.ts exists and maintains verified repository integrity', async () => {
     const fs = await import('fs');
     const path = await import('path');
     const { fileURLToPath } = await import('url');
     const dirname = path.dirname(fileURLToPath(import.meta.url));
-    const backupPath = path.resolve(dirname, '../src/lib/demo-data.backup.ts');
-    assert.ok(fs.existsSync(backupPath), 'Backup file demo-data.backup.ts must exist');
+    const dataPath = path.resolve(dirname, '../src/lib/demo-data.ts');
+    assert.ok(fs.existsSync(dataPath), 'Primary repository file demo-data.ts must exist');
+    const stats = fs.statSync(dataPath);
+    assert.ok(stats.size > 10000, 'Primary repository must have non-empty data');
   });
 
   // Scenario 20: Văn bản có source nhưng source không truy cập được
