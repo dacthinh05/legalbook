@@ -17,10 +17,26 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  // Fast-path: Check if any Supabase session cookies exist in the request
+  const allCookies = request.cookies && typeof request.cookies.getAll === 'function' ? request.cookies.getAll() : [];
+  const hasAuthCookie = allCookies.some(
+    (c) =>
+      c.name.includes('auth-token') ||
+      c.name.includes('sb-') ||
+      c.name.includes('supabase')
+  );
+
+  const isStrictProd = process.env.NEXT_PUBLIC_STRICT_PROD === 'true';
+  const isDemoExplicit = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+  // If no auth cookie exists, return immediately in 0ms without external network calls
+  if (!hasAuthCookie && (!isStrictProd || isDemoExplicit)) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
-
   try {
     const supabase = createServerClient(supabaseUrl!, supabaseAnonKey!, {
       cookies: {
@@ -40,10 +56,10 @@ export async function updateSession(request: NextRequest) {
         },
       },
     });
-    // Refresh auth session token with a fast 1200ms timeout to prevent edge middleware hanging
+    // Refresh auth session token with a fast 600ms timeout to prevent edge middleware hanging
     const userPromise = supabase.auth.getUser();
     const timeoutPromise = new Promise<{ data: { user: null }; error: Error }>((resolve) =>
-      setTimeout(() => resolve({ data: { user: null }, error: new Error('Auth timeout') }), 1200)
+      setTimeout(() => resolve({ data: { user: null }, error: new Error('Auth timeout') }), 600)
     );
     const { data: { user } } = await Promise.race([userPromise, timeoutPromise]);
     // Admin route protection on strict production mode

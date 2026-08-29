@@ -25,7 +25,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            prefetch={true}
             className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md transition-colors font-medium cursor-pointer shadow-2xs"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -43,8 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </p>
           <Link
             href="/admin"
-            prefetch={true}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
               pathname === '/admin'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50'
@@ -56,8 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/categories"
-            prefetch={true}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
               pathname === '/admin/categories'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50'
@@ -69,8 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/upload"
-            prefetch={true}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
               pathname === '/admin/upload'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50'
@@ -82,8 +78,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/data-quality"
-            prefetch={true}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
               pathname === '/admin/data-quality'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50'
@@ -95,8 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/verification-queue"
-            prefetch={true}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
               pathname === '/admin/verification-queue'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50'
@@ -108,8 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link
             href="/admin/crawler"
-            prefetch={true}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
               pathname === '/admin/crawler'
                 ? 'bg-blue-50 text-blue-700 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50'

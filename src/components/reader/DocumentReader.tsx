@@ -32,6 +32,7 @@ import {
   ListTree,
   StickyNote,
   Sparkles,
+  Loader2,
   X,
 } from 'lucide-react';
 import {
@@ -63,8 +64,6 @@ import { ReaderContextPanel } from './ReaderContextPanel';
 import { LegalAiChatPanel } from './LegalAiChatPanel';
 import { AiSummaryModal } from './AiSummaryModal';
 import { createClient } from '@/lib/supabase/client';
-
-export type TabType = 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
 import { SelectionToolbar } from './SelectionToolbar';
 import { HighlightLayer } from './HighlightLayer';
 import { LegalEffectPanel } from './LegalEffectPanel';
@@ -73,8 +72,12 @@ import { ProvisionDiffModal } from './ProvisionDiffModal';
 import { LegalEffectOverlay } from './LegalEffectOverlay';
 import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
 import { DocumentSummaryView } from './DocumentSummaryView';
+import { performAutoOcrAndExtraction } from '@/lib/document-import/auto-ocr-service';
 import { getDocumentLegalEffects } from '@/lib/legal-effects/demo-effects';
 import { calculatePointInTimeStats } from '@/lib/legal-effects/timeline-engine';
+
+export type TabType = 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
+
 interface DocumentReaderProps {
   document: LegalDocument;
   isBookmarked?: boolean;
@@ -172,12 +175,21 @@ export function DocumentReader({
     });
   }, []);
 
-  // ── Quality & Relations ────────────────────────────────────────────────
+  // ── Auto OCR & Extracted HTML Override ──────────────────────────────────
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [extractedHtmlOverride, setExtractedHtmlOverride] = useState<string | null>(null);
 
+  useEffect(() => {
+    setExtractedHtmlOverride(null);
+  }, [doc.id]);
+
+  const effectiveHtml = extractedHtmlOverride || doc.html_content;
+
+  // ── Quality & Relations ────────────────────────────────────────────────
   const qualityResult = useMemo(
     () =>
       ContentQualityValidator.validate({
-        htmlContent: doc.html_content,
+        htmlContent: effectiveHtml,
         title: doc.title,
         documentNumber: doc.document_number,
         documentType: doc.document_type,
@@ -185,14 +197,49 @@ export function DocumentReader({
         summaryNewPoints: doc.summary_new_points,
         hasAttachedFiles: Boolean(doc.files && doc.files.length > 0),
       }),
-    [doc]
+    [effectiveHtml, doc]
   );
 
   const hasFullText =
     qualityResult.status !== 'invalid' &&
     !qualityResult.isFakeOrPlaceholder &&
-    Boolean(doc.html_content);
+    Boolean(effectiveHtml);
+  const showToast = useCallback((message: string, actionText?: string, onAction?: () => void) => {
+    clearTimeout(toastTimeoutRef.current);
+    setUndoToast({ message, actionText, onAction });
+    toastTimeoutRef.current = setTimeout(() => {
+      setUndoToast(null);
+    }, 3500);
+  }, []);
 
+  const handleTriggerAutoOcr = useCallback(async () => {
+    setIsOcrProcessing(true);
+    try {
+      const res = await performAutoOcrAndExtraction(doc);
+      if (res.success && res.htmlContent) {
+        setExtractedHtmlOverride(res.htmlContent);
+        showToast(res.message || 'Đã xử lý OCR và bóc tách toàn văn thành công!');
+      } else {
+        showToast('Không thể xử lý OCR. Vui lòng thử lại.');
+      }
+    } catch (err) {
+      console.error('Auto OCR error:', err);
+      showToast('Lỗi khi xử lý OCR.');
+    } finally {
+      setIsOcrProcessing(false);
+    }
+  }, [doc, showToast]);
+  // Automatically trigger OCR in background when document needs OCR and has attachments
+  useEffect(() => {
+    if (!hasFullText && (qualityResult.isScanNeedingOcr || doc.content_status === 'needs-ocr' || !doc.html_content)) {
+      if (doc.files && doc.files.length > 0) {
+        const t = setTimeout(() => {
+          handleTriggerAutoOcr();
+        }, 350);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [doc.id, hasFullText, qualityResult.isScanNeedingOcr, doc.content_status, doc.files, handleTriggerAutoOcr]);
   const relationsRaw = getDocumentRelations(doc.id);
   const asSource: DocumentRelation[] = Array.isArray(relationsRaw)
     ? relationsRaw.filter((r) => r.source_document_id === doc.id)
@@ -225,8 +272,8 @@ export function DocumentReader({
 
   // ── TOC ───────────────────────────────────────────────────────────────
   const tocItems: TocItem[] = useMemo(
-    () => (hasFullText ? extractToc(doc.html_content) : []),
-    [hasFullText, doc.html_content]
+    () => (hasFullText && effectiveHtml ? extractToc(effectiveHtml) : []),
+    [hasFullText, effectiveHtml]
   );
   const [activeTocId, setActiveTocId] = useState<string | null>(null);
   // IntersectionObserver-based TOC active tracking
@@ -264,14 +311,6 @@ export function DocumentReader({
   const updateUndoRedoState = useCallback(() => {
     setCanUndoState(undoManagerRef.current.canUndo());
     setCanRedoState(undoManagerRef.current.canRedo());
-  }, []);
-
-  const showToast = useCallback((message: string, actionText?: string, onAction?: () => void) => {
-    clearTimeout(toastTimeoutRef.current);
-    setUndoToast({ message, actionText, onAction });
-    toastTimeoutRef.current = setTimeout(() => {
-      setUndoToast(null);
-    }, 3500);
   }, []);
 
   const executeUndoRef = useRef<() => Promise<void>>(async () => {});
@@ -354,11 +393,11 @@ export function DocumentReader({
 
   // ── Rendered HTML with 2-Column Administrative Letterhead & Styling ─────
   const renderedHtml = useMemo(() => {
-    if (!doc.html_content) return null;
-    const formatted = formatLegalHtmlContent(doc.html_content, doc);
+    if (!effectiveHtml) return null;
+    const formatted = formatLegalHtmlContent(effectiveHtml, doc);
     const { html } = highlightHtml(formatted, debouncedSearchQuery);
     return html;
-  }, [doc, debouncedSearchQuery]);
+  }, [effectiveHtml, doc, debouncedSearchQuery]);
 
   // Track and highlight active search match in DOM
   useEffect(() => {
@@ -1548,47 +1587,75 @@ export function DocumentReader({
                     <div className="p-8 bg-slate-50 border border-slate-200/90 rounded-2xl text-center space-y-5 shadow-xs">
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-full text-xs font-semibold">
                         <FileWarning className="w-4 h-4 text-amber-700" />
-                        Chưa có toàn văn
+                        Chưa có toàn văn số hóa
                       </div>
                       <div className="space-y-2">
                         <h3 className="text-base font-bold text-slate-950">
-                          Hệ thống hiện chỉ có tiêu đề và bản tóm tắt của văn bản này.
+                          {doc.files && doc.files.length > 0
+                            ? 'Phát hiện tệp văn bản đính kèm'
+                            : 'Hệ thống hiện chỉ có tiêu đề và bản tóm tắt của văn bản này.'}
                         </h3>
                         <p className="text-xs text-slate-600 leading-relaxed max-w-lg mx-auto">
-                          Nội dung gốc chưa được tải hoặc chưa trích xuất thành công.
+                          {doc.files && doc.files.length > 0
+                            ? `Tệp đính kèm (${doc.files[0]?.original_filename || 'PDF/Scan'}) có thể được tự động nhận diện AI OCR và bóc tách toàn văn ngay lập tức.`
+                            : 'Nội dung gốc chưa được tải hoặc chưa trích xuất thành công.'}
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2 text-xs">
+                        {/* Active Auto OCR Trigger Button */}
+                        <button
+                          type="button"
+                          onClick={handleTriggerAutoOcr}
+                          disabled={isOcrProcessing}
+                          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                        >
+                          {isOcrProcessing ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Đang xử lý AI OCR & Bóc tách toàn văn...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 text-amber-300" />
+                              <span>Tự động xử lý AI OCR & Bóc tách ngay</span>
+                            </>
+                          )}
+                        </button>
+
                         {onBack && (
                           <button
                             onClick={onBack}
-                            className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl border border-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
                             <ArrowLeft className="w-3.5 h-3.5" />
-                            <span>Về Trang chủ & Danh sách</span>
+                            <span>Về Danh sách</span>
                           </button>
                         )}
+
                         {tvplUrl && (
-                          <a href={tvplUrl} target="_blank" rel="noreferrer" className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 font-semibold rounded-lg border border-slate-200 shadow-2xs transition-colors flex items-center gap-1.5">
+                          <a
+                            href={tvplUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 font-semibold rounded-xl border border-slate-200 shadow-2xs transition-colors flex items-center gap-1.5"
+                          >
                             <ExternalLink className="w-3.5 h-3.5 text-slate-600" />
                             <span>Mở nguồn gốc</span>
                           </a>
                         )}
-                        <a href="/admin/upload" className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 font-semibold rounded-lg border border-slate-200 transition-colors flex items-center gap-1.5">
-                          <Upload className="w-3.5 h-3.5 text-slate-600" />
-                          <span>Tải Word/PDF lên</span>
-                        </a>
+
                         <button
-                          onClick={() => alert('Đã gửi yêu cầu trích xuất lại.')}
-                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg border border-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                          type="button"
+                          onClick={handleTriggerAutoOcr}
+                          disabled={isOcrProcessing}
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl border border-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                         >
                           <RotateCcw className="w-3.5 h-3.5 text-slate-600" />
                           <span>Trích xuất lại</span>
                         </button>
                       </div>
                       <p className="text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                        Chưa thể highlight vì văn bản chưa có toàn văn.
-                        Bạn vẫn có thể tạo ghi chú chung cho văn bản này bằng cách mở panel Ghi chú.
+                        Tính năng nhận diện AI OCR tự động chuẩn hóa Quốc hiệu, Tiêu đề, Số hiệu, và cấu trúc Điều/Khoản.
                       </p>
                     </div>
                   </div>

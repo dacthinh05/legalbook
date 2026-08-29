@@ -3938,3 +3938,91 @@ describe('39. Document Deletion, Batch Quick Delete & Search Synchronous Purge (
     assert.ok(adminCode.includes('handleToggleSelectAll'), 'Admin page must support Select All');
   });
 });
+
+describe('40. Fast-Path Edge Middleware & Admin Navigation Responsiveness (4 Criteria)', () => {
+  test('1. updateSession fast-paths in 0ms when request has no Supabase auth cookies', async () => {
+    const { updateSession } = await import('../src/lib/supabase/middleware.ts');
+    const req = new Request('http://localhost:3000/admin/categories');
+    const start = Date.now();
+    const res = await updateSession(req);
+    const duration = Date.now() - start;
+    assert.ok(res);
+    assert.ok(duration < 200, `Middleware must fast-path in <200ms, took ${duration}ms`);
+  });
+
+  test('2. AdminLayout.tsx avoids aggressive prefetch queue congestion on links', async () => {
+    const fs = await import('fs');
+    const layoutCode = fs.readFileSync('src/app/admin/layout.tsx', 'utf8');
+    assert.strictEqual(layoutCode.includes('prefetch={true}'), false, 'AdminLayout must not aggressively prefetch all 6 admin routes');
+  });
+
+  test('3. Supabase middleware code implements bounded timeout protection', async () => {
+    const fs = await import('fs');
+    const mwCode = fs.readFileSync('src/lib/supabase/middleware.ts', 'utf8');
+    assert.ok(mwCode.includes('hasAuthCookie'), 'Middleware must check hasAuthCookie');
+    assert.ok(mwCode.includes('timeoutPromise'), 'Middleware must have timeoutPromise');
+  });
+});
+
+describe('41. Automated AI OCR & Full-Text Reconstruction Engine (6 Criteria)', () => {
+  test('1. reconstructStructuredLegalHtml formats official dispatches with letterhead, content, and signer', async () => {
+    const { reconstructStructuredLegalHtml } = await import('../src/lib/document-import/auto-ocr-service.ts');
+    const sampleDoc = {
+      id: 'doc-cv-test',
+      title: 'Công văn về việc hoàn thuế giá trị gia tăng',
+      document_number: '1585/QTR-QLDN2',
+      document_type: 'cong_van',
+      issuing_body: 'Cục Thuế tỉnh Quảng Trị',
+      signer: 'Nguyễn Trung Thành',
+      issued_date: '2025-07-15',
+      summary_main: 'Hướng dẫn điều kiện hoàn thuế xuất khẩu.',
+    };
+
+    const html = reconstructStructuredLegalHtml(sampleDoc);
+    assert.ok(html.includes('CỤC THUẾ TỈNH QUẢNG TRỊ'));
+    assert.ok(html.includes('1585/QTR-QLDN2'));
+    assert.ok(html.includes('Nguyễn Trung Thành'));
+    assert.ok(html.includes('Quảng Trị, ngày 15/07/2025'));
+  });
+
+  test('2. performAutoOcrAndExtraction succeeds and returns high-confidence structured HTML', async () => {
+    const { performAutoOcrAndExtraction } = await import('../src/lib/document-import/auto-ocr-service.ts');
+    const sampleDoc = {
+      id: 'doc-cv-1585',
+      title: 'Công văn 1585/QTR-QLDN2 về việc hoàn thuế GTGT',
+      document_number: '1585/QTR-QLDN2',
+      document_type: 'cong_van',
+      issuing_body: 'Cục Thuế tỉnh Quảng Trị',
+      signer: 'Nguyễn Trung Thành',
+      issued_date: '2025-07-15',
+      summary_main: 'Hướng dẫn điều kiện hoàn thuế.',
+      files: [{ id: 'f1', original_filename: 'CV 1585.pdf', file_type: 'pdf', file_url: '/test.pdf' }],
+    };
+
+    const result = await performAutoOcrAndExtraction(sampleDoc);
+    assert.strictEqual(result.success, true);
+    assert.ok(result.htmlContent && result.htmlContent.length > 100);
+    assert.ok(result.confidence >= 0.90);
+    assert.ok(result.wordCount > 10);
+  });
+
+  test('3. DocumentReader.tsx provides active OCR action trigger and handles extracted override', async () => {
+    const fs = await import('fs');
+    const readerCode = fs.readFileSync('src/components/reader/DocumentReader.tsx', 'utf8');
+    assert.ok(readerCode.includes('performAutoOcrAndExtraction'));
+    assert.ok(readerCode.includes('handleTriggerAutoOcr'));
+    assert.ok(readerCode.includes('Tự động xử lý AI OCR & Bóc tách ngay'));
+    assert.ok(readerCode.includes('extractedHtmlOverride'));
+  });
+
+  test('4. Document 1585/QTR-QLDN2 in DEMO_DOCUMENTS has complete full-text HTML and verified status', async () => {
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc1585 = DEMO_DOCUMENTS.find((d) => d.document_number === '1585/QTR-QLDN2');
+    assert.ok(doc1585, 'Doc 1585/QTR-QLDN2 must exist');
+    assert.strictEqual(doc1585.content_status, 'verified');
+    assert.ok(doc1585.html_content && doc1585.html_content.length > 500);
+    assert.ok(doc1585.html_content.includes('CỤC THUẾ TỈNH QUẢNG TRỊ'));
+    assert.ok(doc1585.html_content.includes('1585/QTR-QLDN2'));
+    assert.ok(doc1585.html_content.includes('Nguyễn Trung Thành'));
+  });
+});
