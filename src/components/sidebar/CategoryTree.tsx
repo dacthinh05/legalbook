@@ -169,21 +169,22 @@ function TopicTreeNode({
   const count = categoryCounts.get(category.id);
   const isRoot = depth === 0;
   const isLevel1 = depth === 1;
-  const isLevel2Plus = depth >= 2;
 
-  // Subtle indentation: Level 0: 6px, Level 1: 18px, Level 2: 30px, Level 3+: max 42px
-  const indentPx = isRoot ? 6 : isLevel1 ? 18 : isLevel2Plus ? Math.min(42, 28 + (depth - 2) * 8) : 6;
+  // Strict indentation specifications:
+  // Cấp 0: 10px; Cấp 1: 28px; Cấp 2: 46px; mỗi cấp tăng 18px
+  const indentPx = 10 + depth * 18;
 
-  // Heights & Typography per standardized specifications:
-  // Root (Level 0): h-[44px], font 15px, weight 600, icon 20px, count 13px
-  // Level 1: h-[40px], font 14px, weight 500
-  // Level 2+: h-[38px], font 13.5px, weight 400
-  const heightClass = isRoot ? 'h-[44px]' : isLevel1 ? 'h-[40px]' : 'h-[38px]';
+  // Compact row heights & typography:
+  // Node cấp chính (depth 0): cao 38px, font 14px, weight 600
+  // Node cấp con (depth 1): cao 34px, font 13.5px, weight 500
+  // Node cấp cuối (depth 2+): cao 32px, font 13px, weight 400
+  // Line-height: 1.25, border-radius: 6px
+  const heightClass = isRoot ? 'h-[38px]' : isLevel1 ? 'h-[34px]' : 'h-[32px]';
   const textClass = isRoot
-    ? 'text-[15px] font-semibold text-slate-900 tracking-tight'
+    ? 'text-[14px] font-semibold leading-[1.25]'
     : isLevel1
-    ? 'text-[14px] font-medium text-slate-800'
-    : 'text-[13.5px] font-normal text-slate-700';
+    ? 'text-[13.5px] font-medium leading-[1.25]'
+    : 'text-[13px] font-normal leading-[1.25]';
 
   return (
     <div key={category.id} className="select-none">
@@ -194,80 +195,78 @@ function TopicTreeNode({
         aria-level={depth + 1}
         aria-expanded={hasChildren ? isExpanded : undefined}
         aria-selected={isSelected}
+        data-selected={isSelected}
         onClick={() => onSelectCategory(category.id)}
         style={{ paddingLeft: `${indentPx}px` }}
         title={count !== undefined ? `${category.name} (${count} văn bản)` : category.name}
         className={cn(
-          'group grid grid-cols-[20px_24px_minmax(0,1fr)_28px] items-center gap-x-2 pr-2.5 rounded-lg cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
+          'tree-row group grid grid-cols-[18px_auto_minmax(0,1fr)_24px] items-center gap-x-[7px] pr-[8px] rounded-[6px] cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
           heightClass,
           isSelected
-            ? 'bg-blue-50/90 text-blue-900 font-semibold shadow-[inset_3px_0_0_#2563eb]'
-            : 'hover:bg-slate-100/70 hover:text-slate-900'
+            ? 'bg-[#eff6ff] text-[#1d4ed8] shadow-[inset_2px_0_0_#2563eb]'
+            : 'hover:bg-slate-100/70 text-slate-800 hover:text-slate-950'
         )}
       >
-        {/* Column 1: Chevron Button (20px) or Spacer */}
-        <div className="w-5 h-5 flex items-center justify-center shrink-0">
+        {/* Column 1: Chevron Button (18px container, 14px icon) */}
+        <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
           {hasChildren ? (
             <button
               type="button"
               onClick={(e) => onToggleExpand(category.id, e)}
-              className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded hover:bg-slate-200/60 transition-colors cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+              className="w-[18px] h-[18px] flex items-center justify-center text-slate-400 hover:text-slate-700 rounded transition-colors cursor-pointer focus:outline-none"
               aria-label={isExpanded ? `Thu gọn ${category.name}` : `Mở rộng ${category.name}`}
             >
               <ChevronRight
                 className={cn(
-                  'w-3.5 h-3.5 transition-transform duration-150',
+                  'w-[14px] h-[14px] transition-transform duration-150',
                   isExpanded && 'rotate-90 text-slate-600'
                 )}
               />
             </button>
           ) : (
-            <span className="w-5 h-5 block" aria-hidden="true" />
+            <span className="w-[18px] h-[18px] block" aria-hidden="true" />
           )}
         </div>
 
-        {/* Column 2: Category Icon / Bullet Indicator (24px) */}
-        <div className="w-6 h-6 flex items-center justify-center shrink-0">
+        {/* Column 2: Icon (17px for root) / Bullet Indicator (max 5px for sub-nodes) */}
+        <div className="flex items-center justify-center shrink-0">
           {isRoot ? (
             renderRootCategoryIcon(
               category,
               cn(
-                'w-5 h-5 transition-colors',
-                isSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
+                'w-[17px] h-[17px] transition-colors',
+                isSelected ? 'text-[#1d4ed8]' : 'text-slate-500 group-hover:text-slate-700'
               )
             )
           ) : isLevel1 ? (
             <span
               className={cn(
-                'w-1.5 h-1.5 rounded-full transition-colors',
-                isSelected ? 'bg-blue-600 ring-2 ring-blue-200' : 'bg-slate-300 group-hover:bg-slate-400'
+                'w-[5px] h-[5px] rounded-full transition-colors',
+                isSelected ? 'bg-[#1d4ed8]' : 'bg-slate-300 group-hover:bg-slate-400'
               )}
             />
           ) : (
             <span
               className={cn(
-                'w-1 h-1 rounded-full transition-colors',
-                isSelected ? 'bg-blue-500' : 'bg-slate-300 group-hover:bg-slate-400'
+                'w-[4px] h-[4px] rounded-full transition-colors',
+                isSelected ? 'bg-[#1d4ed8]' : 'bg-slate-300 group-hover:bg-slate-400'
               )}
             />
           )}
         </div>
 
-        {/* Column 3: Category Label (minmax(0, 1fr)) */}
-        <span className={cn('truncate leading-tight', textClass, isSelected && 'text-blue-950 font-semibold')}>
+        {/* Column 3: Label */}
+        <span className={cn('truncate text-left', textClass, isSelected ? 'text-[#1d4ed8]' : 'text-slate-800')}>
           <HighlightedLabel text={category.name} query={filterText} />
         </span>
 
-        {/* Column 4: Document Count (28px) */}
-        <div className="w-7 text-right shrink-0">
+        {/* Column 4: Count (12px, font-weight 500, tabular-nums, fixed 24px, no badge background) */}
+        <div className="w-[24px] text-right shrink-0">
           {typeof count === 'number' && count > 0 ? (
             <span
               className={cn(
-                'font-mono text-right tabular-nums transition-colors block text-[12px]',
-                isRoot && 'text-[12.5px] font-medium',
-                isSelected
-                  ? 'text-blue-700 font-semibold'
-                  : 'text-slate-400 group-hover:text-slate-600'
+                'font-mono text-right tabular-nums transition-colors block text-[12px] font-medium',
+                isSelected ? 'text-[#1d4ed8]' : 'text-slate-400 group-hover:text-slate-600'
               )}
             >
               {count}
@@ -276,9 +275,9 @@ function TopicTreeNode({
         </div>
       </div>
 
-      {/* Children Subtree with 2px spacing */}
+      {/* Children Subtree with 1px spacing */}
       {hasChildren && isExpanded && category.children && (
-        <div className="space-y-[2px] relative mt-[2px]">
+        <div className="space-y-[1px] relative mt-[1px]">
           {category.children.map((child) => {
             const isChildExpanded = expandedIds.has(child.id) || filterText.length > 0;
             const isChildSelected = selectedCategoryId === child.id;
@@ -684,16 +683,15 @@ export function CategoryTree({
   return (
     <div
       ref={treeContainerRef}
-      className="flex flex-col h-full bg-white overflow-hidden text-xs"
+      className="flex flex-col h-full bg-white overflow-hidden text-xs border-r border-gray-200"
       onKeyDown={handleKeyDown}
     >
-      {/* 1. Header Segmented Control & Search Bar */}
-      <div className="p-2 border-b border-slate-200 bg-slate-50/70 shrink-0 space-y-2">
-        {/* Segmented control tablist */}
+      {/* 1. Header Segmented Control (Total height: 44px) */}
+      <div className="h-[44px] px-2 flex items-center border-b border-gray-200 bg-slate-50/70 shrink-0">
         <div
           role="tablist"
           aria-label="Chế độ xem danh mục"
-          className="p-1 bg-slate-200/60 rounded-lg flex items-center gap-1 border border-slate-200/50"
+          className="flex items-center gap-[4px] w-full p-[3px] bg-slate-200/60 rounded-[8px]"
         >
           <button
             role="tab"
@@ -701,13 +699,13 @@ export function CategoryTree({
             tabIndex={viewMode === 'topic' ? 0 : -1}
             onClick={() => setViewMode('topic')}
             className={cn(
-              'flex-1 h-8 px-2.5 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none',
+              'flex-1 h-[34px] px-[10px] rounded-[7px] text-[13px] font-medium transition-all cursor-pointer flex items-center justify-center gap-[6px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none',
               viewMode === 'topic'
                 ? 'bg-white text-blue-900 font-semibold shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
             )}
           >
-            <BookOpen className={cn('w-3.5 h-3.5 shrink-0', viewMode === 'topic' ? 'text-blue-600' : 'text-slate-500')} />
+            <BookOpen className={cn('w-[15px] h-[15px] shrink-0', viewMode === 'topic' ? 'text-blue-600' : 'text-slate-500')} />
             <span className="truncate">Chủ đề</span>
           </button>
           <button
@@ -716,28 +714,30 @@ export function CategoryTree({
             tabIndex={viewMode === 'type' ? 0 : -1}
             onClick={() => setViewMode('type')}
             className={cn(
-              'flex-1 h-8 px-2.5 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none',
+              'flex-1 h-[34px] px-[10px] rounded-[7px] text-[13px] font-medium transition-all cursor-pointer flex items-center justify-center gap-[6px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none',
               viewMode === 'type'
                 ? 'bg-white text-blue-900 font-semibold shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
             )}
           >
-            <Layers className={cn('w-3.5 h-3.5 shrink-0', viewMode === 'type' ? 'text-blue-600' : 'text-slate-500')} />
+            <Layers className={cn('w-[15px] h-[15px] shrink-0', viewMode === 'type' ? 'text-blue-600' : 'text-slate-500')} />
             <span className="truncate">Loại văn bản</span>
           </button>
         </div>
+      </div>
 
-        {/* Filter input & Expand/Collapse All */}
-        <div className="flex items-center gap-1.5">
+      {/* 2. Filter input & Action buttons (Height: max 46px, input height: 34px, buttons: 34x34px, gap: 6px) */}
+      <div className="h-[46px] px-2 flex items-center border-b border-gray-200 bg-white shrink-0">
+        <div className="flex items-center gap-[6px] w-full">
           <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search className="w-[15px] h-[15px] absolute left-[9px] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
               placeholder={viewMode === 'topic' ? 'Lọc danh mục...' : 'Lọc loại văn bản...'}
               aria-label="Lọc danh mục văn bản"
-              className="w-full h-[38px] pl-8 pr-7 bg-white border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="w-full h-[34px] pl-[30px] pr-[26px] py-0 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-gray-200 rounded-[6px] text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
             {filterText && (
               <button
@@ -755,14 +755,14 @@ export function CategoryTree({
             <button
               type="button"
               onClick={areAllExpanded ? collapseAll : expandAll}
-              className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-800 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shrink-0 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="w-[34px] h-[34px] flex items-center justify-center text-slate-500 hover:text-slate-800 rounded-[6px] border border-gray-200 bg-white hover:bg-slate-50 shrink-0 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title={areAllExpanded ? 'Thu gọn tất cả' : 'Mở rộng tất cả'}
               aria-label={areAllExpanded ? 'Thu gọn tất cả' : 'Mở rộng tất cả'}
             >
               {areAllExpanded ? (
-                <ChevronsUp className="w-4 h-4" />
+                <ChevronsUp className="w-[15px] h-[15px]" />
               ) : (
-                <ChevronsDown className="w-4 h-4" />
+                <ChevronsDown className="w-[15px] h-[15px]" />
               )}
             </button>
           )}
@@ -771,51 +771,52 @@ export function CategoryTree({
             <button
               type="button"
               onClick={onCollapse}
-              className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-800 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shrink-0 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="w-[34px] h-[34px] flex items-center justify-center text-slate-500 hover:text-slate-800 rounded-[6px] border border-gray-200 bg-white hover:bg-slate-50 shrink-0 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Ẩn cây chủ đề ( [ )"
               aria-label="Ẩn cây chủ đề"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-[15px] h-[15px]" />
             </button>
           )}
         </div>
       </div>
 
-      {/* 2. Body: Hierarchical Tree vs Document Type Cards */}
+      {/* 3. Body: Hierarchical Tree vs Document Type Cards */}
       <div
         tabIndex={0}
         role="tree"
         aria-label="Cây phân cấp danh mục pháp luật"
-        className="flex-1 overflow-y-auto p-2 pr-1.5 space-y-[2px] focus:outline-none"
+        className="flex-1 overflow-y-auto p-1.5 space-y-[1px] focus:outline-none"
       >
-        {/* All documents root item: Standardized 44px height, matching 4-column grid */}
+        {/* All documents root item: 38px height, matching Level 0 */}
         <div
           id="category-node-all"
           tabIndex={0}
           role="treeitem"
           aria-level={1}
           aria-selected={isAllSelected}
+          data-selected={isAllSelected}
           onClick={() => handleSelectCategoryAndExpandAncestors(null)}
           title={`${totalDocsCount} văn bản thuộc tất cả chủ đề`}
-          style={{ paddingLeft: '6px' }}
+          style={{ paddingLeft: '10px' }}
           className={cn(
-            'group grid grid-cols-[20px_24px_minmax(0,1fr)_28px] items-center gap-x-2 pr-2.5 h-[44px] rounded-lg cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset mb-1',
+            'tree-row group grid grid-cols-[18px_auto_minmax(0,1fr)_24px] items-center gap-x-[7px] pr-[8px] h-[38px] rounded-[6px] cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset mb-[1px]',
             isAllSelected
-              ? 'bg-blue-50/90 text-blue-900 font-semibold shadow-[inset_3px_0_0_#2563eb]'
-              : 'hover:bg-slate-100/70 hover:text-slate-900'
+              ? 'bg-[#eff6ff] text-[#1d4ed8] shadow-[inset_2px_0_0_#2563eb]'
+              : 'hover:bg-slate-100/70 text-slate-800 hover:text-slate-950'
           )}
         >
-          {/* Column 1: Spacer (20px) */}
-          <div className="w-5 h-5 flex items-center justify-center shrink-0" aria-hidden="true">
-            <span className="w-5 h-5 block" />
+          {/* Column 1: Spacer (18px) */}
+          <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0" aria-hidden="true">
+            <span className="w-[18px] h-[18px] block" />
           </div>
 
-          {/* Column 2: Root Icon (24px) */}
-          <div className="w-6 h-6 flex items-center justify-center shrink-0">
+          {/* Column 2: Root Icon (17px) */}
+          <div className="flex items-center justify-center shrink-0">
             <BookOpen
               className={cn(
-                'w-5 h-5 transition-colors',
-                isAllSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
+                'w-[17px] h-[17px] transition-colors',
+                isAllSelected ? 'text-[#1d4ed8]' : 'text-slate-500 group-hover:text-slate-700'
               )}
             />
           </div>
@@ -823,28 +824,29 @@ export function CategoryTree({
           {/* Column 3: Label */}
           <span
             className={cn(
-              'truncate leading-tight text-[15px] font-semibold text-slate-900',
-              isAllSelected && 'text-blue-950 font-semibold'
+              'truncate leading-[1.25] text-[14px] font-semibold text-left',
+              isAllSelected ? 'text-[#1d4ed8]' : 'text-slate-900'
             )}
           >
             {viewMode === 'topic' ? 'Tất cả chủ đề' : 'Tất cả văn bản'}
           </span>
 
           {/* Column 4: Count */}
-          <div className="w-7 text-right shrink-0">
+          <div className="w-[24px] text-right shrink-0">
             <span
               className={cn(
-                'font-mono text-right tabular-nums transition-colors block text-[12.5px] font-medium',
-                isAllSelected ? 'text-blue-700 font-semibold' : 'text-slate-400 group-hover:text-slate-600'
+                'font-mono text-right tabular-nums transition-colors block text-[12px] font-medium',
+                isAllSelected ? 'text-[#1d4ed8]' : 'text-slate-400 group-hover:text-slate-600'
               )}
             >
               {totalDocsCount}
             </span>
           </div>
         </div>
+
         {viewMode === 'topic' ? (
-          /* ── View 1: Hierarchical Category Tree ── */
-          <div className="space-y-[2px]">
+          /* ── View 1: Hierarchical Category Tree (space-y-[1px]) ── */
+          <div className="space-y-[1px]">
             {filteredCategories.map((cat) => {
               const isExpanded = expandedIds.has(cat.id) || filterText.length > 0;
               const isSelected = selectedCategoryId === cat.id;
@@ -867,9 +869,9 @@ export function CategoryTree({
             })}
           </div>
         ) : (
-          /* ── View 2: Distinct Document Type Cards ── */
-          <div className="space-y-1.5 pt-0.5">
-            <div className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider px-1 pb-1">
+          /* ── View 2: Distinct Document Type Cards (Compact) ── */
+          <div className="space-y-[2px] pt-0.5">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 pb-1">
               Phân loại hình thức văn bản
             </div>
             {docTypesWithCounts.map((item) => {
@@ -881,6 +883,7 @@ export function CategoryTree({
                   onClick={() => handleSelectDocType(item.type)}
                   role="button"
                   tabIndex={0}
+                  data-selected={isSelected}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -888,20 +891,20 @@ export function CategoryTree({
                     }
                   }}
                   className={cn(
-                    'group grid grid-cols-[28px_minmax(0,1fr)_32px] items-center gap-x-2.5 px-2.5 h-[42px] rounded-lg text-xs cursor-pointer transition-all border',
+                    'tree-row group grid grid-cols-[24px_minmax(0,1fr)_24px] items-center gap-x-[7px] px-[8px] h-[34px] rounded-[6px] text-xs cursor-pointer transition-all border text-left',
                     isSelected
-                      ? 'bg-blue-50/90 text-blue-900 font-semibold border-blue-200 shadow-[inset_3px_0_0_#2563eb]'
-                      : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 text-slate-800'
+                      ? 'bg-[#eff6ff] text-[#1d4ed8] border-blue-200 shadow-[inset_2px_0_0_#2563eb]'
+                      : 'bg-white border-gray-200/70 hover:border-gray-300 hover:bg-slate-50/80 text-slate-800'
                   )}
                 >
-                  <div className={cn('w-7 h-7 rounded-md flex items-center justify-center shrink-0', item.iconBg)}>
-                    <IconComp className="w-4 h-4" />
+                  <div className={cn('w-[22px] h-[22px] rounded-[4px] flex items-center justify-center shrink-0', item.iconBg)}>
+                    <IconComp className="w-[14px] h-[14px]" />
                   </div>
                   <div className="min-w-0 flex items-center">
                     <span
                       className={cn(
-                        'font-medium text-[13.5px] truncate',
-                        isSelected ? 'text-blue-950 font-semibold' : 'text-slate-900'
+                        'font-medium text-[13px] truncate leading-[1.25]',
+                        isSelected ? 'text-[#1d4ed8] font-semibold' : 'text-slate-900'
                       )}
                     >
                       {item.label}
@@ -910,9 +913,9 @@ export function CategoryTree({
 
                   <span
                     className={cn(
-                      'text-[11.5px] font-mono text-right tabular-nums shrink-0',
+                      'text-[12px] font-mono text-right tabular-nums shrink-0 font-medium',
                       isSelected
-                        ? 'text-blue-700 font-bold'
+                        ? 'text-[#1d4ed8]'
                         : 'text-slate-400 group-hover:text-slate-600'
                     )}
                   >

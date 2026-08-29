@@ -18,15 +18,15 @@ interface DocumentListProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'all', label: 'Tất cả trạng thái' },
-  { value: 'hieu_luc', label: 'Đang có hiệu lực' },
-  { value: 'chua_hieu_luc', label: 'Sắp có hiệu lực' },
-  { value: 'het_hieu_luc_mot_phan', label: 'Thay đổi hiệu lực' },
+  { value: 'all', label: 'Trạng thái' },
+  { value: 'hieu_luc', label: 'Đang hiệu lực' },
+  { value: 'chua_hieu_luc', label: 'Sắp hiệu lực' },
+  { value: 'het_hieu_luc_mot_phan', label: 'Đổi hiệu lực' },
   { value: 'het_hieu_luc_toan_bo', label: 'Hết hiệu lực' },
 ];
 
 const TYPE_OPTIONS = [
-  { value: 'all', label: 'Tất cả loại' },
+  { value: 'all', label: 'Loại VB' },
   { value: 'luat', label: 'Luật / Bộ luật' },
   { value: 'nghi_dinh', label: 'Nghị định' },
   { value: 'thong_tu', label: 'Thông tư' },
@@ -36,10 +36,10 @@ const TYPE_OPTIONS = [
 ];
 
 const UNIFIED_SORT_OPTIONS = [
-  { value: 'effective_date:desc', label: 'Hiệu lực: Mới → Cũ' },
-  { value: 'effective_date:asc', label: 'Hiệu lực: Cũ → Mới' },
-  { value: 'issued_date:desc', label: 'Ban hành: Mới → Cũ' },
-  { value: 'issued_date:asc', label: 'Ban hành: Cũ → Mới' },
+  { value: 'effective_date:desc', label: 'HL: Mới → Cũ' },
+  { value: 'effective_date:asc', label: 'HL: Cũ → Mới' },
+  { value: 'issued_date:desc', label: 'BH: Mới → Cũ' },
+  { value: 'issued_date:asc', label: 'BH: Cũ → Mới' },
   { value: 'title:asc', label: 'Tên A → Z' },
 ];
 
@@ -49,28 +49,31 @@ function FilterSelect({
   options,
   id,
   label,
+  isFiltered,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
   id: string;
   label: string;
+  isFiltered?: boolean;
 }) {
-  const isFiltered = value !== 'all';
+  const active = isFiltered ?? value !== 'all';
+  const selectedOption = options.find((o) => o.value === value);
   return (
-    <div className="relative flex-1 min-w-0">
+    <div className="relative flex-1 min-w-0" title={selectedOption ? `${label}: ${selectedOption.label}` : label}>
       <select
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
         className={`
-          w-full min-w-0 appearance-none pl-2 pr-5 py-1
+          w-full min-w-0 appearance-none pl-2 pr-4 py-1
           border rounded text-[11px] font-medium cursor-pointer
           focus:outline-none focus:ring-1 focus:ring-blue-500
           transition-colors truncate
           ${
-            isFiltered
+            active
               ? 'bg-blue-50 border-blue-300 text-blue-800'
               : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
           }
@@ -83,7 +86,7 @@ function FilterSelect({
         ))}
       </select>
       <ChevronDown
-        className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 shrink-0"
+        className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 shrink-0"
         aria-hidden="true"
       />
     </div>
@@ -119,7 +122,7 @@ export function DocumentList({
     const issuers = Array.from(new Set(documents.map((d) => d.issuing_body).filter(Boolean))) as string[];
     issuers.sort();
     return [
-      { value: 'all', label: 'Tất cả cơ quan' },
+      { value: 'all', label: 'Cơ quan' },
       ...issuers.map((i) => ({ value: i, label: i })),
     ];
   }, [documents]);
@@ -251,6 +254,7 @@ export function DocumentList({
             value={sortKey}
             onChange={setSortKey}
             options={UNIFIED_SORT_OPTIONS}
+            isFiltered={sortKey !== 'effective_date:desc'}
           />
           {hasActiveFilter && (
             <button

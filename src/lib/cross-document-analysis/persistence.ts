@@ -88,9 +88,13 @@ export function checkIsSessionStale(
   const hashes: Record<string, string> =
     'docVersionHashes' in session && session.docVersionHashes
       ? session.docVersionHashes
-      : 'selectedDocuments' in session && Array.isArray((session as CrossDocAnalysisResult).selectedDocuments)
+      : 'result' in session && session.result?.selectedDocuments
       ? Object.fromEntries(
-          ((session as CrossDocAnalysisResult).selectedDocuments || []).map((d: { id: string; contentVersionHash?: string }) => [d.id, d.contentVersionHash || '0'])
+          session.result.selectedDocuments.map((d) => [d.id, d.contentVersionHash || '0'])
+        )
+      : 'selectedDocuments' in session && Array.isArray(session.selectedDocuments)
+      ? Object.fromEntries(
+          session.selectedDocuments.map((d) => [d.id, d.contentVersionHash || '0'])
         )
       : {};
 

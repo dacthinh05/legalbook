@@ -359,6 +359,7 @@ export interface DocumentSort {
 
 export interface TocItem {
   id: string;           // stable: "toc-ch-0", "toc-art-7"
+  targetId?: string;    // exact DOM id: "dieu-14", "chuong-3", "phu-luc-1"
   title: string;
   type: 'chapter' | 'article' | 'section' | 'appendix';
   level: number;        // 0 = chapter/part, 1 = section/article, 2+ = sub

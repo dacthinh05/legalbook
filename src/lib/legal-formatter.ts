@@ -215,14 +215,14 @@ function formatLegalBasisBlock(html: string): string {
  */
 function formatChapterHeadings(html: string): string {
   // Pattern: <p><strong>Chương I<br>QUY ĐỊNH CHUNG</strong></p> or two separate lines
-  const chapterPattern = /<p[^>]*>\s*(?:<strong>|<b>)?\s*(Chương\s+[IVXLCDM\d]+|Phần\s+[IVXLCDM\d]+|Mục\s+\d+|Phụ\s+lục\s*[\dIVX]*)(?:<br\s*\/?>|\s*<\/strong><\/p>\s*<p[^>]*><strong>|\s*[-–—:]\s*|\s*\n\s*)([^<]+?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>/gi;
+  const chapterPattern = /<(?:p|h[1-4])[^>]*>\s*(?:<strong>|<b>)?\s*(Chương\s+[IVXLCDM\d]+|Phần\s+[IVXLCDM\d]+|Mục\s+\d+|Phụ\s+lục\s*[\dIVX]*)(?:<br\s*\/?>|\s*<\/strong><\/p>\s*<p[^>]*><strong>|\s*[-–—:]\s*|\s*\n\s*)([\s\S]*?)\s*(?:<\/strong>|<\/b>)?\s*<\/(?:p|h[1-4])>/gi;
 
   return html.replace(chapterPattern, (_match, chapNum, chapTitle) => {
-    const cleanNum = chapNum.trim();
-    const cleanTitle = chapTitle.trim();
+    const cleanNum = chapNum.replace(/<[^>]+>/g, '').trim();
+    const cleanTitle = chapTitle.replace(/<[^>]+>/g, '').trim();
     const prefixMatch = cleanNum.match(/^([^\s]+)\s+([IVXLCDM\d]+)/i);
     const id = prefixMatch
-      ? `${prefixMatch[1].toLowerCase()}-${prefixMatch[2].toLowerCase()}`
+      ? `${prefixMatch[1].toLowerCase().replace(/đ/g, 'd')}-${prefixMatch[2].toLowerCase()}`
       : `chuong-${cleanNum.toLowerCase().replace(/\s+/g, '-')}`;
     return `
 <div class="legal-chapter-block" id="${id}">
@@ -238,15 +238,20 @@ function formatChapterHeadings(html: string): string {
 function formatArticlesAndClauses(html: string): string {
   let res = html;
 
-  // 1. Articles: <h2/h3> or <p><strong>Điều X. ...</strong></p>
+  // 1. Articles: <h2/h3/p><strong>Điều X.</strong> ...</h2/h3/p> or <p><strong>Điều X. Tiêu đề</strong></p>
   res = res.replace(
-    /<(?:h[2-4]|p)[^>]*>\s*(?:<strong>|<b>)?\s*(Điều\s+\d+[a-z]?[\.:\s][^<]+)\s*(?:<\/strong>|<\/b>)?\s*<\/(?:h[2-4]|p)>/gi,
-    (_match, articleText) => {
-      const trimmed = articleText.trim();
-      const numMatch = trimmed.match(/^Điều\s+(\d+[a-z]?)/i);
+    /<(?:h[2-4]|p)[^>]*>(?:\s*<a[^>]*><\/a>)?\s*(?:<strong>|<b>)?\s*(Điều\s+\d+[a-z]?)[.:\s]\s*(?:<\/strong>|<\/b>)?\s*([\s\S]*?)<\/(?:h[2-4]|p)>/gi,
+    (_match, articleNum, restContent) => {
+      const cleanNum = articleNum.trim();
+      const numMatch = cleanNum.match(/^Điều\s+(\d+[a-z]?)/i);
       const articleId = numMatch ? `dieu-${numMatch[1].toLowerCase()}` : undefined;
       const idAttr = articleId ? ` id="${articleId}"` : '';
-      return `<h2 class="legal-article-title"${idAttr}>${trimmed}</h2>`;
+
+      // Strip inner tags for title text
+      const cleanRest = restContent.replace(/<\/?(?:strong|b|a|span)[^>]*>/gi, '').trim();
+      const fullTitle = cleanRest ? `${cleanNum}. ${cleanRest}` : cleanNum;
+
+      return `<h2 class="legal-article-title"${idAttr}>${fullTitle}</h2>`;
     }
   );
 
@@ -273,19 +278,20 @@ function formatArticlesAndClauses(html: string): string {
  * Formats Appendices and Forms (Phụ lục I, Biểu mẫu số...) with semantic classes.
  */
 function formatAppendixAndForms(html: string): string {
-  const appendixPattern = /<p[^>]*>\s*(?:<strong>|<b>)?\s*(Phụ\s+lục\s*[\dIVX\-a-zA-Z\/]*|Biểu\s+mẫu\s*(?:số)?\s*[\dIVX\-a-zA-Z\/]*|Mẫu\s+số\s*[\dIVX\-a-zA-Z\/]*)(?:<br\s*\/?>|\s*<\/strong><\/p>\s*<p[^>]*><strong>|\s*[-–—:]\s*|\s*\n\s*)([^<]+?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>/gi;
+  const appendixPattern = /<p[^>]*>\s*(?:<strong>|<b>)?\s*(Phụ\s+lục\s*[\dIVX\-a-zA-Z\/]*|Biểu\s+mẫu\s*(?:số)?\s*[\dIVX\-a-zA-Z\/]*|Mẫu\s+số\s*[\dIVX\-a-zA-Z\/]*)(?:<br\s*\/?>|\s*<\/strong><\/p>\s*<p[^>]*><strong>|\s*[-–—:]\s*|\s*\n\s*)([\s\S]*?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>/gi;
 
   return html.replace(appendixPattern, (_match, appNum, appTitle) => {
-    const cleanNum = appNum.trim();
-    const cleanTitle = appTitle.trim();
+    const cleanNum = appNum.replace(/<[^>]+>/g, '').trim();
+    const cleanTitle = appTitle.replace(/<[^>]+>/g, '').trim();
+    const numPart = cleanNum.match(/[\dIVX]+/i)?.[0]?.toLowerCase() || '1';
+    const id = `phu-luc-${numPart}`;
     return `
-<div class="legal-appendix-block">
+<div class="legal-appendix-block" id="${id}">
   <p class="legal-appendix-num">${cleanNum}</p>
   <h3 class="legal-appendix-title">${cleanTitle}</h3>
 </div>`;
   });
 }
-
 /**
  * Wraps tables for smooth horizontal scrolling and enhances signature blocks.
  */

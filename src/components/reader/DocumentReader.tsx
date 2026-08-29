@@ -1084,8 +1084,7 @@ export function DocumentReader({
       {/* ================================================================
           2. STICKY TOOLBAR (Compact 44-48px)
           ================================================================ */}
-      <div className="sticky top-0 z-20 px-3.5 sm:px-6 border-b border-slate-200 bg-white/95 backdrop-blur-md flex items-center justify-between gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs">
-        {/* Left: Main content tabs */}
+      <div className="sticky top-0 z-20 w-full px-3.5 sm:px-6 border-b border-slate-200 bg-white flex items-center justify-between gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs">
         <div className="flex items-center gap-1.5 py-1 overflow-x-auto scrollbar-none min-w-0">
           {isScrolledHeader && doc.document_number && (
             <span className="font-mono text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/80 shrink-0 hidden sm:inline-block animate-in fade-in duration-150">
@@ -1495,7 +1494,7 @@ export function DocumentReader({
       )}
 
           {/* ── TAB: NOIDUNG ── */}
-          <div className={activeTab === 'noidung' ? '' : 'hidden'}>
+          <div className={activeTab === 'noidung' ? 'reader-canvas' : 'hidden'}>
             <div className="document-page">
               <div
                 className="document-content select-text"
@@ -1939,8 +1938,9 @@ export function DocumentReader({
               doc.summary_main || doc.summary_new_points || doc.summary_accounting_impact || doc.summary_actions_needed
             );
             return (
-              <div className="document-page my-4">
-                <div className="p-6 md:p-8 space-y-4">
+              <div className="reader-canvas">
+                <div className="document-page my-2">
+                  <div className="p-6 md:p-8 space-y-4">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
                     <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Tóm tắt & Tác động nghiệp vụ</h3>
                     <span className="text-[11px] text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200 font-semibold">Tóm tắt hỗ trợ — cần đối chiếu văn bản gốc</span>
@@ -1995,9 +1995,9 @@ export function DocumentReader({
                   )}
                 </div>
               </div>
+            </div>
             );
           })()}
-
           {/* Back to top */}
           {showBackToTop && (
             <button

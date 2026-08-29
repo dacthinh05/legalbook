@@ -24,8 +24,8 @@ import { DEMO_CATEGORY_LINKS } from '@/lib/demo-data';
 import { getDescendantCategoryIds, injectVirtualSubcategories, VIRTUAL_DOC_TYPE_CONFIG } from '@/lib/tree-utils';
 import { X, ChevronLeft, ChevronRight, FolderTree, ListFilter, Search, BookmarkCheck } from 'lucide-react';
 
-const MIN_SIDEBAR = 240;
-const MAX_SIDEBAR = 340;
+const MIN_SIDEBAR = 230;
+const MAX_SIDEBAR = 320;
 const MIN_LIST = 320;
 const MAX_LIST = 460;
 
@@ -38,7 +38,7 @@ const STORAGE_KEY_SELECTED_DOC = 'lb_selected_doc';
 
 export default function MainPage() {
   // Layout state synchronized via SSR-safe external store hooks
-  const [sidebarWidth, setSidebarWidth] = useLocalStorageNumber(STORAGE_KEY_SIDEBAR, 280, MIN_SIDEBAR, MAX_SIDEBAR);
+  const [sidebarWidth, setSidebarWidth] = useLocalStorageNumber(STORAGE_KEY_SIDEBAR, 260, MIN_SIDEBAR, MAX_SIDEBAR);
   const [listWidth, setListWidth] = useLocalStorageNumber(STORAGE_KEY_LIST, 360, MIN_LIST, MAX_LIST);
   const [sidebarOpen, setSidebarOpen] = useLocalStorageBoolean(STORAGE_KEY_SIDEBAR_OPEN, true);
   const [listOpen, setListOpen] = useLocalStorageBoolean(STORAGE_KEY_LIST_OPEN, true);

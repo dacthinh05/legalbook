@@ -2663,3 +2663,271 @@ describe('26. Rich Markdown Renderer for AI Chat, Inline Tokens, Headers, Lists 
     assert.strictEqual(searchModalCode.includes('Khớp tại:'), false, 'SearchModal must not render redundant Khớp tại: label');
   });
 });
+
+describe('27. Cross-Document Analysis Redesign & Exact Amendment Diff Separation (13 Acceptance Tests)', () => {
+  test('1. Acceptance Test 1: Unrelated documents (e.g. 67/2011/QH12 vs 1293/QĐ-BTC) are rejected for exact diff', async () => {
+    const { verifyExactAmendmentEligibility } = await import('../src/lib/cross-document-analysis/verifier.ts');
+    const doc67 = {
+      id: 'doc-67-2011',
+      title: 'Luật Thuế bảo vệ môi trường số 67/2011/QH12',
+      document_number: '67/2011/QH12',
+      document_type: 'luat',
+      html_content: '<h2>Điều 1. Phạm vi điều chỉnh</h2><p>Quy định về đối tượng chịu thuế môi trường.</p>',
+    };
+    const doc1293 = {
+      id: 'doc-1293-btc',
+      title: 'Quyết định 1293/QĐ-BTC về quy chế công tác',
+      document_number: '1293/QĐ-BTC',
+      document_type: 'quyet_dinh',
+      html_content: '<h2>Điều 1. Phạm vi điều chỉnh</h2><p>Quy chế công tác nội bộ của Bộ Tài chính.</p>',
+    };
+
+    const result = verifyExactAmendmentEligibility(doc67, doc1293, []);
+    assert.strictEqual(result.isEligibleForExactDiff, false);
+    assert.ok(result.reason.includes('không phải hai phiên bản trước–sau'));
+  });
+
+  test('2. Acceptance Test 2: Shared article numbers with different content are not falsely mapped as amendments', async () => {
+    const { verifyExactAmendmentEligibility } = await import('../src/lib/cross-document-analysis/verifier.ts');
+    const docLaw = {
+      id: 'doc-law-1',
+      title: 'Luật Kế toán số 88/2015/QH13',
+      document_number: '88/2015/QH13',
+      document_type: 'luat',
+      html_content: '<h2>Điều 5. Tiêu chuẩn đạo đức nghề nghiệp</h2><p>Người làm kế toán phải trung thực.</p>',
+    };
+    const docDispatch = {
+      id: 'doc-cv-572',
+      title: 'Công văn 572/TNG-QLDN2 về hóa đơn thanh toán',
+      document_number: '572/TNG-QLDN2',
+      document_type: 'cong_van',
+      html_content: '<h2>Điều 5. Quy trình duyệt chi</h2><p>Duyệt chi qua chuyển khoản ngân hàng.</p>',
+    };
+
+    const eligibility = verifyExactAmendmentEligibility(docLaw, docDispatch, []);
+    assert.strictEqual(eligibility.isEligibleForExactDiff, false);
+  });
+
+  test('3. Acceptance Test 3: Verified amending documents map target articles and extract legal basis accurately', async () => {
+    const { verifyExactAmendmentEligibility } = await import('../src/lib/cross-document-analysis/verifier.ts');
+    const { DEMO_DOCUMENTS, DEMO_RELATIONS } = await import('../src/lib/demo-data.ts');
+
+    const doc109 = DEMO_DOCUMENTS.find((d) => d.document_number === '109/2025/QH15');
+    const docResolution = DEMO_DOCUMENTS.find((d) => d.document_number?.includes('110/2025'));
+
+    assert.ok(doc109);
+    assert.ok(docResolution);
+
+    const result = verifyExactAmendmentEligibility(doc109, docResolution, DEMO_RELATIONS);
+    assert.strictEqual(result.isEligibleForExactDiff, true);
+    assert.ok(result.legalBasis);
+    assert.strictEqual(result.sourceDoc?.id, doc109.id);
+    assert.strictEqual(result.amendingDoc?.id, docResolution.id);
+  });
+
+  test('4. Acceptance Test 4: AI Document Suggestions prioritize 8 signal levels with transparent reasons', async () => {
+    const { getRelatedDocumentSuggestions } = await import('../src/lib/cross-document-analysis/suggestion-engine.ts');
+    const { DEMO_DOCUMENTS, DEMO_RELATIONS } = await import('../src/lib/demo-data.ts');
+
+    const doc109 = DEMO_DOCUMENTS.find((d) => d.document_number === '109/2025/QH15');
+    assert.ok(doc109);
+
+    const suggestions = getRelatedDocumentSuggestions(doc109, DEMO_DOCUMENTS, DEMO_RELATIONS);
+    assert.ok(suggestions.length >= 1);
+
+    // Priority ordering check: priority must be monotonic (non-decreasing)
+    for (let i = 1; i < suggestions.length; i++) {
+      assert.ok(suggestions[i].priority >= suggestions[i - 1].priority);
+    }
+
+    // Every suggestion must carry a reason and valid signalCategory
+    for (const sug of suggestions) {
+      assert.ok(sug.reason.length > 5);
+      assert.ok(['verified_relation', 'rule_detected', 'ai_suggested'].includes(sug.signalCategory));
+    }
+  });
+
+  test('5. Acceptance Test 5: Users can select and analyze up to 5 documents concurrently', async () => {
+    const { analyzeMultipleDocumentsLocal } = await import('../src/lib/cross-document-analysis/analysis-engine.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    const primary = DEMO_DOCUMENTS[0];
+    const selected = DEMO_DOCUMENTS.slice(1, 6); // 5 candidate docs
+
+    const analysis = analyzeMultipleDocumentsLocal({
+      primaryDoc: primary,
+      selectedDocs: selected,
+      objective: 'overview',
+    });
+
+    assert.ok(analysis);
+    assert.ok(analysis.selectedDocIds.length <= 5, 'Must cap selected documents at 5');
+    assert.strictEqual(analysis.documentRoles.length, analysis.selectedDocIds.length);
+    assert.ok(analysis.comparisonMatrix.length >= 3);
+  });
+
+  test('6. Acceptance Test 6: AI answers include structured citations with exact document and article references', async () => {
+    const { analyzeMultipleDocumentsLocal } = await import('../src/lib/cross-document-analysis/analysis-engine.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    const doc109 = DEMO_DOCUMENTS.find((d) => d.document_number === '109/2025/QH15');
+    const doc253 = DEMO_DOCUMENTS.find((d) => d.document_number === '253/2026/NĐ-CP');
+    assert.ok(doc109);
+    assert.ok(doc253);
+
+    const res = analyzeMultipleDocumentsLocal({
+      primaryDoc: doc109,
+      selectedDocs: [doc253],
+      objective: 'custom_question',
+      customQuestion: 'Doanh nghiệp thanh toán hóa đơn trên 5 triệu bằng tiền mặt thì chi phí có được trừ không?',
+    });
+
+    assert.ok(res.citations.length >= 1);
+    assert.ok(res.citations[0].documentNumber);
+    assert.ok(res.citations[0].snippet);
+    assert.ok(res.executiveConclusion.includes('tiền mặt') || res.executiveConclusion.includes('chi phí'));
+  });
+
+  test('7. Acceptance Test 7: Hallucinated citations failing document article verification are stripped', async () => {
+    const { validateCitations } = await import('../src/lib/cross-document-analysis/analysis-engine.ts');
+
+    const fakeCitations = [
+      {
+        id: 'cit-fake-1',
+        documentId: 'doc-real',
+        documentNumber: '109/2025/QH15',
+        documentTitle: 'Luật Thuế TNCN',
+        articleNumber: 'Điều 9999', // Does not exist
+        snippet: 'Fake content',
+        fullCitationText: '109/2025/QH15 · Điều 9999',
+      },
+      {
+        id: 'cit-real-1',
+        documentId: 'doc-real',
+        documentNumber: '109/2025/QH15',
+        documentTitle: 'Luật Thuế TNCN',
+        articleNumber: 'Điều 1',
+        snippet: 'Phạm vi điều chỉnh',
+        fullCitationText: '109/2025/QH15 · Điều 1',
+      },
+    ];
+
+    const docArticlesMap = {
+      'doc-real': [
+        { id: 'dieu-1', label: 'Điều 1', number: 'Điều 1', title: 'Phạm vi điều chỉnh', body: 'Quy định thuế' },
+      ],
+    };
+
+    const validated = validateCitations(fakeCitations, docArticlesMap);
+    assert.strictEqual(validated.length, 1);
+    assert.strictEqual(validated[0].articleNumber, 'Điều 1');
+  });
+
+  test('8. Acceptance Test 8: AI analysis does not automatically mutate official database legal relationships', async () => {
+    const { DEMO_RELATIONS } = await import('../src/lib/demo-data.ts');
+    const initialCount = DEMO_RELATIONS.length;
+
+    const { analyzeMultipleDocumentsLocal } = await import('../src/lib/cross-document-analysis/analysis-engine.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    analyzeMultipleDocumentsLocal({
+      primaryDoc: DEMO_DOCUMENTS[0],
+      selectedDocs: [DEMO_DOCUMENTS[1]],
+      objective: 'overview',
+    });
+
+    assert.strictEqual(DEMO_RELATIONS.length, initialCount, 'Database relations must remain untouched by AI analysis');
+  });
+
+  test('9. Acceptance Test 9: Results clearly distinguish between Fact, Inference, and Uncertainty', async () => {
+    const { analyzeMultipleDocumentsLocal } = await import('../src/lib/cross-document-analysis/analysis-engine.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    const res = analyzeMultipleDocumentsLocal({
+      primaryDoc: DEMO_DOCUMENTS[0],
+      selectedDocs: [DEMO_DOCUMENTS[1]],
+      objective: 'overview',
+    });
+
+    const confidences = res.comparisonMatrix.map((m) => m.confidence);
+    assert.ok(confidences.includes('fact'), 'Matrix must classify statutory provisions as fact');
+    assert.ok(confidences.includes('inference'), 'Matrix must classify analysis extrapolations as inference');
+    assert.ok(res.uncertaintiesAndWarnings.length >= 1, 'Must include uncertainty and warning section');
+  });
+
+  test('10. Acceptance Test 10: Expired documents trigger prominent uncertainty warnings', async () => {
+    const { analyzeMultipleDocumentsLocal } = await import('../src/lib/cross-document-analysis/analysis-engine.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    const expiredDoc = {
+      ...DEMO_DOCUMENTS[0],
+      status: 'het_hieu_luc_toan_bo',
+      title: 'Thông tư cũ đã hết hiệu lực',
+    };
+
+    const res = analyzeMultipleDocumentsLocal({
+      primaryDoc: expiredDoc,
+      selectedDocs: [DEMO_DOCUMENTS[1]],
+      objective: 'overview',
+    });
+
+    const hasExpiredWarning = res.uncertaintiesAndWarnings.some((w) => w.type === 'expired_document');
+    assert.strictEqual(hasExpiredWarning, true, 'Expired document must trigger expired_document warning');
+  });
+
+  test('11. Acceptance Test 11: Stale warning triggers when source document content changes', async () => {
+    const { analyzeMultipleDocumentsLocal } = await import('../src/lib/cross-document-analysis/analysis-engine.ts');
+    const { checkIsSessionStale } = await import('../src/lib/cross-document-analysis/persistence.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    const docA = { ...DEMO_DOCUMENTS[0] };
+    const docB = { ...DEMO_DOCUMENTS[1] };
+
+    const sessionResult = analyzeMultipleDocumentsLocal({
+      primaryDoc: docA,
+      selectedDocs: [docB],
+      objective: 'overview',
+    });
+
+    // Initially not stale
+    assert.strictEqual(checkIsSessionStale(sessionResult, [docA, docB]), false);
+    // Mutate docA content
+    const modifiedDocA = {
+      ...docA,
+      html_content: '<p>Nội dung mới đã được cập nhật sửa đổi.</p>',
+      updated_at: '2026-08-30T10:00:00Z',
+    };
+
+    // Should now be flagged as stale
+    assert.strictEqual(checkIsSessionStale(sessionResult, [modifiedDocA, docB]), true);
+  });
+
+  test('12. Acceptance Test 12: Seamless switching between AI analysis and Exact Diff is supported', async () => {
+    const { verifyExactAmendmentEligibility } = await import('../src/lib/cross-document-analysis/verifier.ts');
+    const { DEMO_DOCUMENTS, DEMO_RELATIONS } = await import('../src/lib/demo-data.ts');
+
+    const doc109 = DEMO_DOCUMENTS.find((d) => d.document_number === '109/2025/QH15');
+    const docResolution = DEMO_DOCUMENTS.find((d) => d.document_number?.includes('110/2025'));
+
+    const eligibility = verifyExactAmendmentEligibility(doc109, docResolution, DEMO_RELATIONS);
+    assert.strictEqual(eligibility.isEligibleForExactDiff, true);
+    assert.strictEqual(eligibility.relationType, 'sua_doi');
+  });
+
+  test('13. Acceptance Test 13: UI files contain no indiscriminate full-text red/green diff for unrelated pairs', async () => {
+    const fs = await import('fs');
+    const diffViewerCode = fs.readFileSync('src/components/reader/LegalDiffViewer.tsx', 'utf8');
+    const crossDocModalCode = fs.readFileSync('src/components/reader/CrossDocAnalysisModal.tsx', 'utf8');
+
+    // Check guard notice exists in LegalDiffViewer
+    assert.ok(diffViewerCode.includes('Không thể tạo diff sửa đổi đáng tin cậy'));
+    assert.ok(diffViewerCode.includes('không phải hai phiên bản'));
+    assert.ok(diffViewerCode.includes('Chuyển sang Phân tích bằng AI'));
+
+    // Check CrossDocAnalysisModal has all 4 tabs and export options
+    assert.ok(crossDocModalCode.includes('PHÂN TÍCH LIÊN VĂN BẢN'));
+    assert.ok(crossDocModalCode.includes('overview') && crossDocModalCode.includes('matrix'));
+    assert.ok(crossDocModalCode.includes('citations') && crossDocModalCode.includes('qa'));
+    assert.ok(crossDocModalCode.includes('exportReport') || crossDocModalCode.includes('handleExportDownload'));
+  });
+});
