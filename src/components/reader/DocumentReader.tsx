@@ -59,6 +59,7 @@ import { buildAnnotationFromSelection, sanitizeNoteContent } from '@/lib/annotat
 import { useAnnotations } from '@/lib/useAnnotations';
 import { DocumentUndoManager } from '@/lib/undo-engine';
 import { ReaderContextPanel } from './ReaderContextPanel';
+import { LegalAiChatPanel } from './LegalAiChatPanel';
 import { SelectionToolbar } from './SelectionToolbar';
 import { HighlightLayer } from './HighlightLayer';
 import { LegalEffectPanel } from './LegalEffectPanel';
@@ -1981,23 +1982,42 @@ export function DocumentReader({
               aria-hidden
             />
             <div className="relative z-30 md:z-auto md:relative flex-shrink-0">
-              <ReaderContextPanel
-                mode={panelMode}
-                onClose={() => setPanelMode('closed')}
-                tocItems={tocItems}
-                activeTocId={activeTocId}
-                onTocItemClick={handleTocClick}
-                tocCount={tocItems.length}
-                annotations={annotations}
-                annotationsLoading={annotationsLoading}
-                annotationsError={annotationsError}
-                onNoteClick={handleNoteClick}
-                onAddNote={handleAddNoteFromPanel}
-                onDeleteAnnotation={handleDeleteAnnotationWithUndo}
-                notesCount={totalAnnotationsCount}
-                hasFullText={hasFullText}
-                currentUserId={currentUserId}
-              />
+              {panelMode === 'ai' ? (
+                <LegalAiChatPanel
+                  document={doc}
+                  onClose={() => setPanelMode('closed')}
+                  onCitationClick={(artNum?: string) => {
+                    if (artNum) {
+                      const digits = artNum.replace(/[^\d]/g, '');
+                      const el =
+                        document.getElementById(`dieu-${digits}`) ||
+                        document.getElementById(`dieu_${digits}`) ||
+                        Array.from(document.querySelectorAll('h1, h2, h3, p strong')).find((h) =>
+                          h.textContent?.includes(`Điều ${digits}`)
+                        );
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                />
+              ) : (
+                <ReaderContextPanel
+                  mode={panelMode}
+                  onClose={() => setPanelMode('closed')}
+                  tocItems={tocItems}
+                  activeTocId={activeTocId}
+                  onTocItemClick={handleTocClick}
+                  tocCount={tocItems.length}
+                  annotations={annotations}
+                  annotationsLoading={annotationsLoading}
+                  annotationsError={annotationsError}
+                  onNoteClick={handleNoteClick}
+                  onAddNote={handleAddNoteFromPanel}
+                  onDeleteAnnotation={handleDeleteAnnotationWithUndo}
+                  notesCount={totalAnnotationsCount}
+                  hasFullText={hasFullText}
+                  currentUserId={currentUserId}
+                />
+              )}
             </div>
           </>
         )}
