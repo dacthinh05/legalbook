@@ -1,0 +1,48 @@
+name: Daily Legal Updates Crawler (Tax & Audit)
+
+on:
+  schedule:
+    # 23:00 UTC = 06:00 AM UTC+7 (Hanoi) every day
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+    inputs:
+      category_focus:
+        description: 'Chuyên ngành cần quét'
+        required: true
+        default: 'tax_accounting_audit'
+        type: choice
+        options:
+          - 'tax_accounting_audit'
+          - 'tax_only'
+          - 'accounting_audit_only'
+
+jobs:
+  crawl_and_stage:
+    name: Crawl & Stage Legal Documents for Review
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Execute Tax & Auditing Legal Crawler
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          node scripts/crawl_2025_2026_tax_accounting_audit.js
+
+      - name: Log Staging Results
+        run: |
+          echo "✅ Đã quét thành công các văn bản pháp luật Thuế & Kiểm toán mới."
+          echo "📋 Văn bản được đưa vào Hàng đợi chờ duyệt (Staging / Pending Review) để người dùng chọn lọc."

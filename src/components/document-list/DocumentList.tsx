@@ -1,0 +1,377 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import { Search, FileText, ChevronDown, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { 
+  DOCUMENT_STATUS_COLORS, 
+  DOCUMENT_STATUS_LABELS,
+  DOCUMENT_TYPE_ABBREV,
+  DOCUMENT_TYPE_COLORS,
+  formatDate, 
+  formatShortTitle 
+} from '@/lib/utils';
+import { matchesDocumentQuery } from '@/lib/search';
+import type { LegalDocument, DocumentType } from '@/types';
+
+interface DocumentListProps {
+  documents: LegalDocument[];
+  selectedDocumentId: string | null;
+  onSelectDocument: (id: string) => void;
+  categoryName?: string;
+  selectedDocType?: DocumentType | null;
+  readDocuments: Set<string>;
+  bookmarkedDocuments?: Set<string>;
+}
+
+type SortField = 'effective_date' | 'issued_date' | 'title';
+type SortDir = 'asc' | 'desc';
+
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: 'all', label: 'Tất cả trạng thái' },
+  { value: 'hieu_luc', label: 'Đang có hiệu lực' },
+  { value: 'chua_hieu_luc', label: 'Sắp có hiệu lực' },
+  { value: 'het_hieu_luc_mot_phan', label: 'Thay đổi hiệu lực' },
+  { value: 'het_hieu_luc_toan_bo', label: 'Hết hiệu lực' },
+];
+
+const TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'all', label: 'Tất cả loại' },
+  { value: 'luat', label: 'Luật / Bộ luật' },
+  { value: 'nghi_dinh', label: 'Nghị định' },
+  { value: 'thong_tu', label: 'Thông tư' },
+  { value: 'cong_van', label: 'Công văn' },
+  { value: 'quyet_dinh', label: 'Quyết định' },
+  { value: 'khac', label: 'Khác' },
+];
+
+const SORT_OPTIONS: { value: SortField; label: string }[] = [
+  { value: 'effective_date', label: 'Ngày hiệu lực' },
+  { value: 'issued_date', label: 'Ngày ban hành' },
+  { value: 'title', label: 'Tên A–Z' },
+];
+
+function FilterSelect({
+  value,
+  onChange,
+  options,
+  id,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  id: string;
+  label: string;
+}) {
+  const isFiltered = value !== 'all' && value !== options[0]?.value;
+
+  return (
+    <div className="relative min-w-0 flex-1">
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        className={`
+          w-full min-w-0 appearance-none pl-2 pr-5 py-1
+          border rounded text-[11px] font-medium cursor-pointer
+          focus:outline-none focus:ring-1 focus:ring-blue-500
+          transition-colors
+          ${isFiltered
+            ? 'bg-blue-50 border-blue-300 text-blue-800'
+            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+          }
+        `}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 shrink-0"
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
+
+export function DocumentList({
+  documents,
+  selectedDocumentId,
+  onSelectDocument,
+  categoryName,
+  selectedDocType,
+  readDocuments,
+}: DocumentListProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [issuerFilter, setIssuerFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortField>('effective_date');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  // Check if all documents in the active scope share a single document type
+  const isSingleType = useMemo(() => {
+    if (selectedDocType) return true;
+    if (documents.length === 0) return false;
+    const firstType = documents[0].document_type;
+    return documents.every((d) => d.document_type === firstType);
+  }, [documents, selectedDocType]);
+
+  // Dynamic Issuing Body Options when type filter is not needed
+  const issuerOptions = useMemo(() => {
+    const issuers = Array.from(new Set(documents.map((d) => d.issuing_body).filter(Boolean))) as string[];
+    issuers.sort();
+    return [
+      { value: 'all', label: 'Tất cả cơ quan' },
+      ...issuers.map((i) => ({ value: i, label: i })),
+    ];
+  }, [documents]);
+
+  const filteredDocuments = useMemo(() => {
+    return documents
+      .filter((doc) => {
+        if (searchQuery.trim() && !matchesDocumentQuery(doc, searchQuery)) {
+          return false;
+        }
+        if (statusFilter !== 'all' && doc.status !== statusFilter) return false;
+        if (!isSingleType && typeFilter !== 'all' && doc.document_type !== typeFilter) return false;
+        if (isSingleType && issuerFilter !== 'all' && doc.issuing_body !== issuerFilter) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const valA = String(a[sortBy] || '');
+        const valB = String(b[sortBy] || '');
+        if (sortDir === 'desc') return valA < valB ? 1 : valA > valB ? -1 : 0;
+        return valA > valB ? 1 : valA < valB ? -1 : 0;
+      });
+  }, [documents, searchQuery, statusFilter, isSingleType, typeFilter, issuerFilter, sortBy, sortDir]);
+
+  const totalCount = filteredDocuments.length;
+  const hasActiveFilter =
+    statusFilter !== 'all' ||
+    (!isSingleType && typeFilter !== 'all') ||
+    (isSingleType && issuerFilter !== 'all') ||
+    searchQuery.trim() !== '';
+
+  const clearAllFilters = () => {
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setIssuerFilter('all');
+    setSearchQuery('');
+  };
+
+  const toggleSortDir = () => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+
+  // Clean title without redundant "Loại:" prefix
+  const displayCategoryTitle = useMemo(() => {
+    if (!categoryName) return 'Tất cả văn bản';
+    return categoryName.replace(/^Loại:\s*/i, '').trim();
+  }, [categoryName]);
+
+  return (
+    <div className="flex flex-col h-full bg-white overflow-hidden text-xs">
+      {/* Header */}
+      <div className="shrink-0 border-b border-slate-200 bg-white p-2.5 space-y-2">
+        {/* Title & count */}
+        <div className="flex items-baseline justify-between gap-2">
+          <h2
+            className="font-bold text-xs text-slate-900 truncate leading-tight"
+            title={displayCategoryTitle}
+          >
+            {displayCategoryTitle}
+          </h2>
+          <span className="text-[11px] text-slate-500 font-mono shrink-0 font-semibold">
+            {totalCount} văn bản
+          </span>
+        </div>
+
+        {/* Search input */}
+        <div className="relative">
+          <Search
+            className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Tìm theo số hiệu, tên..."
+            aria-label="Tìm kiếm trong danh sách"
+            className="w-full pl-7 pr-6 py-1 bg-slate-50 border border-slate-200 rounded text-xs placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-500 transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              aria-label="Xóa tìm kiếm"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter dropdowns */}
+        <div className="flex items-center gap-1.5">
+          <FilterSelect
+            id="dl-status-filter"
+            label="Trạng thái"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={STATUS_OPTIONS}
+          />
+          {isSingleType ? (
+            <FilterSelect
+              id="dl-issuer-filter"
+              label="Cơ quan"
+              value={issuerFilter}
+              onChange={setIssuerFilter}
+              options={issuerOptions}
+            />
+          ) : (
+            <FilterSelect
+              id="dl-type-filter"
+              label="Loại VB"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              options={TYPE_OPTIONS}
+            />
+          )}
+          {hasActiveFilter && (
+            <button
+              onClick={clearAllFilters}
+              className="px-1.5 py-1 text-[11px] text-red-600 hover:bg-red-50 rounded cursor-pointer shrink-0"
+              title="Xóa bộ lọc"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+
+        {/* Sort controls */}
+        <div className="flex items-center justify-between text-[11px] pt-0.5 text-slate-500">
+          <div className="flex items-center gap-1">
+            <span>Sắp xếp:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortField)}
+              className="bg-transparent text-slate-700 font-medium cursor-pointer focus:outline-none"
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={toggleSortDir}
+            className="flex items-center gap-0.5 text-slate-600 hover:text-slate-900 cursor-pointer"
+            title={sortDir === 'asc' ? 'Tăng dần' : 'Giảm dần'}
+          >
+            {sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+            <span>{sortDir === 'asc' ? 'Cũ → Mới' : 'Mới → Cũ'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Document List Items */}
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+        {filteredDocuments.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 space-y-1">
+            <FileText className="w-6 h-6 mx-auto text-slate-300" aria-hidden="true" />
+            <p className="font-medium text-xs">Không tìm thấy văn bản</p>
+            {hasActiveFilter && (
+              <button
+                onClick={clearAllFilters}
+                className="mt-2 text-xs text-blue-600 hover:underline cursor-pointer"
+              >
+                Xóa bộ lọc
+              </button>
+            )}
+          </div>
+        ) : (
+          filteredDocuments.map((doc) => {
+            const isSelected = selectedDocumentId === doc.id;
+            const isRead = readDocuments.has(doc.id);
+            const cardTitle = isSingleType ? formatShortTitle(doc.title, doc.document_type) : doc.title;
+
+            return (
+              <div
+                key={doc.id}
+                onClick={() => onSelectDocument(doc.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && onSelectDocument(doc.id)}
+                className={`p-3 cursor-pointer select-none transition-colors relative ${
+                  isSelected
+                    ? 'bg-blue-50/70 border-l-3 border-blue-700 pl-2.5'
+                    : 'hover:bg-slate-50'
+                }`}
+              >
+                {/* Top Row: Doc number, Type (if mixed), Read status, Date */}
+                <div className="flex items-center justify-between gap-1.5 mb-1 text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {!isRead && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" title="Chưa đọc" />
+                    )}
+                    {!isSingleType && (
+                      <span
+                        className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold shrink-0 ${
+                          DOCUMENT_TYPE_COLORS[doc.document_type] || 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {DOCUMENT_TYPE_ABBREV[doc.document_type]}
+                      </span>
+                    )}
+                    <span className="font-mono font-bold text-slate-900 truncate">
+                      {doc.document_number}
+                    </span>
+                  </div>
+                  <span className="text-slate-400 font-mono shrink-0 text-[11px]">
+                    {formatDate(doc.effective_date)}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <p
+                  className={`text-xs md:text-sm leading-snug line-clamp-2 mb-1.5 ${
+                    isSelected ? 'text-slate-950 font-semibold' : 'text-slate-800'
+                  }`}
+                >
+                  {cardTitle}
+                </p>
+
+                {/* Status & Issuer */}
+                <div className="flex items-center gap-2 text-xs text-slate-500 min-w-0">
+                  <span
+                    className={`shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded text-[11px] font-semibold border ${
+                      DOCUMENT_STATUS_COLORS[doc.status]
+                    }`}
+                  >
+                    {DOCUMENT_STATUS_LABELS[doc.status] || doc.status}
+                  </span>
+
+                  {doc.issuing_body && (
+                    <>
+                      <span className="text-slate-300 shrink-0 select-none">·</span>
+                      <span className="text-slate-400 truncate text-[11px] min-w-0" title={doc.issuing_body}>
+                        {doc.issuing_body}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
