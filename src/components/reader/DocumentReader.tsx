@@ -419,9 +419,13 @@ export function DocumentReader({
 
   // ── Scroll utilities ───────────────────────────────────────────────────
 
+  const [isScrolledHeader, setIsScrolledHeader] = useState(false);
+
   const handleScroll = () => {
     if (viewportRef.current) {
-      setShowBackToTop(viewportRef.current.scrollTop > 300);
+      const top = viewportRef.current.scrollTop;
+      setShowBackToTop(top > 300);
+      setIsScrolledHeader(top > 120);
     }
   };
   const scrollToTop = () => viewportRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -604,11 +608,11 @@ export function DocumentReader({
       {/* ================================================================
           1. DOCUMENT HEADER (Standardized Spacing & Refined Actions)
           ================================================================ */}
-      <header className="px-4 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
-        {/* Dòng 1: Breadcrumb + Actions (Cách số hiệu 16px: mb-4) */}
-        <div className="flex items-center justify-between gap-2.5 mb-4 min-w-0">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 min-w-0 truncate">
+      <header className="px-4 sm:px-6 py-2 sm:py-2.5 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
+        {/* Dòng 1: Breadcrumb + Số hiệu (trái) + Trạng thái & Actions (phải) */}
+        <div className="flex items-center justify-between gap-2.5 mb-1.5 min-w-0">
+          {/* Breadcrumb + Document Number */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 min-w-0 truncate">
             {onBack && (
               <button
                 onClick={onBack}
@@ -619,22 +623,71 @@ export function DocumentReader({
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <span className="text-slate-600 font-medium truncate">
-              {topicName || 'Pháp luật'}
-            </span>
+            <span className="text-slate-500 font-medium truncate">{topicName || 'Pháp luật'}</span>
             <span className="text-slate-300">/</span>
-            <span className="text-slate-600 font-medium truncate">
-              {DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}
-            </span>
+            <span className="text-slate-500 font-medium truncate">{DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}</span>
+            {doc.document_number && (
+              <>
+                <span className="text-slate-300">/</span>
+                <span className="font-mono text-blue-900 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/80 truncate">
+                  {doc.document_number}
+                </span>
+              </>
+            )}
           </div>
 
-          {/* Actions */}
+          {/* Actions & Status Badges */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Đánh dấu đã đọc / chưa đọc button */}
+            {/* Status Badge */}
+            <span className={cn('px-2 py-0.5 rounded text-[11px] font-semibold border', DOCUMENT_STATUS_COLORS[doc.status])}>
+              {DOCUMENT_STATUS_LABELS[doc.status]}
+            </span>
+
+            {/* Verification status badge with tooltip */}
+            {(() => {
+              const breakdown = getVerificationBreakdown(doc);
+              return (
+                <div className="relative group">
+                  <button
+                    className={cn(
+                      'px-2 py-0.5 rounded text-[11px] font-semibold border transition-colors flex items-center gap-1 cursor-help',
+                      breakdown.primaryBadge.badgeColor
+                    )}
+                    title={breakdown.primaryBadge.tooltip}
+                  >
+                    <span>{breakdown.primaryBadge.label}</span>
+                    <Info className="w-3 h-3 opacity-60" />
+                  </button>
+                  <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 hidden group-hover:block group-focus-within:block text-xs space-y-2 animate-in fade-in duration-150">
+                    <div className="font-bold text-slate-900 border-b border-slate-100 pb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-700">
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                      Trạng thái đối chiếu dữ liệu
+                    </div>
+                    <div className="space-y-1.5 text-[11px]">
+                      {[
+                        { label: 'Thuộc tính:', info: breakdown.metadata },
+                        { label: 'Toàn văn:', info: breakdown.content },
+                        { label: 'Nguồn dữ liệu:', info: breakdown.source },
+                        { label: 'Quan hệ pháp lý:', info: breakdown.relationship },
+                      ].map(({ label, info }) => (
+                        <div key={label} className="flex items-center justify-between p-1.5 rounded bg-slate-50 border border-slate-100">
+                          <span className="text-slate-500">{label}</span>
+                          <span className={cn('px-1.5 py-0.2 rounded font-semibold text-[10px]', info.badgeColor)}>
+                            {info.label.replace(/^[^:]+:\s*/, '')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Read status button */}
             <button
               onClick={onMarkRead}
               className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border transition-colors cursor-pointer',
+                'inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border transition-colors cursor-pointer',
                 isRead
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                   : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
@@ -643,7 +696,7 @@ export function DocumentReader({
               aria-label={isRead ? 'Đánh dấu chưa đọc' : 'Đánh dấu đã đọc'}
             >
               <Check className={cn('w-3.5 h-3.5', isRead ? 'text-emerald-600 stroke-[2.5]' : 'text-slate-400')} />
-              <span>{isRead ? 'Đánh dấu chưa đọc' : 'Đánh dấu đã đọc'}</span>
+              <span className="hidden sm:inline">{isRead ? 'Đã đọc' : 'Chưa đọc'}</span>
             </button>
 
             {/* Bookmark button */}
@@ -661,12 +714,12 @@ export function DocumentReader({
               <Bookmark className="w-3.5 h-3.5" fill={isBookmarked ? 'currentColor' : 'none'} />
             </button>
 
-            {/* Focus Mode action (Single clear action, no duplicate expand icon) */}
+            {/* Focus Mode action */}
             {onToggleFocusMode && (
               <button
                 onClick={onToggleFocusMode}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium transition-colors cursor-pointer hidden md:inline-flex',
+                  'inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-medium transition-colors cursor-pointer hidden md:inline-flex',
                   isFocusMode
                     ? 'bg-blue-700 text-white border-blue-700 font-semibold'
                     : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-100'
@@ -675,7 +728,7 @@ export function DocumentReader({
                 aria-label={isFocusMode ? 'Thoát tập trung đọc' : 'Tập trung đọc'}
               >
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span>{isFocusMode ? 'Thoát tập trung' : 'Tập trung đọc'}</span>
+                <span className="hidden lg:inline">{isFocusMode ? 'Thoát tập trung' : 'Tập trung'}</span>
               </button>
             )}
 
@@ -756,129 +809,54 @@ export function DocumentReader({
           </div>
         </div>
 
-        {/* Dòng 2: Số hiệu (cách tiêu đề 6px: mb-1.5) & Tiêu đề (cách metadata 12px: mb-3) */}
-        <div className="min-w-0">
-          {doc.document_number && (
-            <div className="font-mono text-xs sm:text-sm font-bold text-blue-900 mb-1.5">
-              {doc.document_number}
-            </div>
-          )}
-          <h1 className="text-base sm:text-lg md:text-xl font-bold text-slate-950 leading-snug break-words mb-3">
+        {/* Dòng 2: Tiêu đề văn bản (Max 2 dòng, line-clamp-2) */}
+        <div className="py-0.5 min-w-0">
+          <h1
+            className="text-[15px] sm:text-[16px] md:text-[17px] font-bold text-slate-950 leading-snug line-clamp-2 break-words"
+            title={doc.title}
+          >
             {displayTitle}
           </h1>
         </div>
 
-        {/* Dòng 3: Metadata gọn gàng (cách trạng thái 12px: mb-3) */}
-        <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-slate-600 flex-wrap leading-relaxed mb-3">
+        {/* Dòng 3: Metadata gọn gàng (Ngày ban hành → Ngày hiệu lực · Cơ quan · Người ký · Nguồn ↗) */}
+        <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-slate-600 flex-wrap pt-0.5 leading-normal">
           {doc.issued_date && (
-            <span className="whitespace-nowrap">
-              Ban hành: <strong className="text-slate-800 font-medium">{formatDate(doc.issued_date)}</strong>
+            <span className="whitespace-nowrap text-slate-700 font-medium">
+              {formatDate(doc.issued_date)}
+              {doc.effective_date && (
+                <>
+                  <span className="text-slate-400 font-normal mx-1">→</span>
+                  <strong className="text-slate-900 font-semibold">{formatDate(doc.effective_date)}</strong>
+                </>
+              )}
             </span>
           )}
-          {doc.effective_date && (
-            <>
-              <span className="text-slate-300">·</span>
-              <span className="whitespace-nowrap">
-                Hiệu lực: <strong className="text-slate-800 font-medium">{formatDate(doc.effective_date)}</strong>
-              </span>
-            </>
-          )}
+
           {doc.issuing_body && (
             <>
               <span className="text-slate-300">·</span>
-              <span className="whitespace-nowrap">
-                Cơ quan: <strong className="text-slate-800 font-medium">{doc.issuing_body}</strong>
-              </span>
+              <span className="whitespace-nowrap text-slate-700">{doc.issuing_body}</span>
             </>
           )}
+
           {doc.signer && (
             <>
               <span className="text-slate-300">·</span>
-              <span className="whitespace-nowrap">
-                Người ký: <strong className="text-slate-800 font-medium">{doc.signer}</strong>
-              </span>
+              <span className="whitespace-nowrap text-slate-600">{doc.signer}</span>
             </>
           )}
-        </div>
 
-        {/* Dòng 4: Status Badges & Ghost Link Nguồn */}
-        <div className="flex items-center justify-between gap-2.5 flex-wrap pt-0.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            {doc.document_type === 'cong_van' ? (
-              <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-300">
-                Hướng dẫn tình huống
-              </span>
-            ) : (
-              <span
-                className={cn('px-2.5 py-0.5 rounded text-[11px] font-semibold', DOCUMENT_STATUS_COLORS[doc.status])}
-              >
-                {DOCUMENT_STATUS_LABELS[doc.status]}
-              </span>
-            )}
-
-            {/* Verification badge with detail tooltip accessible on hover & focus */}
-            {(() => {
-              const breakdown = getVerificationBreakdown(doc);
-              return (
-                <div className="relative group">
-                  <button
-                    type="button"
-                    tabIndex={0}
-                    aria-label={`Trạng thái đối chiếu: ${breakdown.primaryBadge.label}`}
-                    className={cn(
-                      'px-2.5 py-0.5 rounded text-[11px] font-semibold border transition-colors flex items-center gap-1 cursor-help focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
-                      breakdown.primaryBadge.badgeColor
-                    )}
-                    title={breakdown.primaryBadge.tooltip}
-                  >
-                    <span>{breakdown.primaryBadge.label}</span>
-                    <Info className="w-3 h-3 opacity-60" aria-label="Thông tin chi tiết" />
-                  </button>
-                  <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 hidden group-hover:block group-focus-within:block text-xs space-y-2 animate-in fade-in duration-150">
-                    <div className="font-bold text-slate-900 border-b border-slate-100 pb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-700">
-                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                      Trạng thái đối chiếu dữ liệu
-                    </div>
-                    <div className="space-y-1.5 text-[11px]">
-                      {[
-                        { label: 'Thuộc tính:', info: breakdown.metadata },
-                        { label: 'Toàn văn:', info: breakdown.content },
-                        { label: 'Nguồn dữ liệu:', info: breakdown.source },
-                        { label: 'Quan hệ pháp lý:', info: breakdown.relationship },
-                      ].map(({ label, info }) => (
-                        <div key={label} className="flex items-center justify-between p-1.5 rounded bg-slate-50 border border-slate-100">
-                          <span className="text-slate-500">{label}</span>
-                          <span className={cn('px-1.5 py-0.2 rounded font-semibold text-[10px]', info.badgeColor)}>
-                            {info.label.replace(/^[^:]+:\s*/, '')}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    {breakdown.isFullyMatchedFullText ? (
-                      <p className="text-[10px] text-emerald-700 pt-1 border-t border-slate-100">
-                        ✓ Toàn văn đã đối chiếu với file gốc ({doc.verified_by || 'Ban biên tập'}, {formatDate(doc.verified_at)})
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-slate-500 pt-1 border-t border-slate-100">
-                        Dữ liệu chưa được quản trị viên đối chiếu đầy đủ với nguồn chính thức.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Link nguồn: Ghost link */}
+          <span className="text-slate-300">·</span>
           <a
             href={tvplUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-blue-700 hover:underline transition-colors ml-auto shrink-0 cursor-pointer"
-            title="Mở nguồn tại Thư Viện Pháp Luật"
+            className="inline-flex items-center gap-0.5 text-blue-700 hover:text-blue-900 font-medium hover:underline ml-auto sm:ml-0"
+            title="Mở nguồn chính thức Thư Viện Pháp Luật"
           >
-            <span>Nguồn: Thư Viện Pháp Luật</span>
-            <ExternalLink className="w-3 h-3 text-slate-400" />
+            <span>Nguồn</span>
+            <ExternalLink className="w-3 h-3 text-blue-600" />
           </a>
         </div>
       </header>
@@ -901,13 +879,17 @@ export function DocumentReader({
           )}
         </div>
       )}
-
       {/* ================================================================
-          2. STICKY TOOLBAR (Clean Border Hierarchy & Compact Controls)
+          2. STICKY TOOLBAR (Compact 44-48px)
           ================================================================ */}
-      <div className="sticky top-0 z-20 px-3 sm:px-5 border-b border-slate-200 bg-white flex items-center justify-between gap-2 shrink-0 min-h-[46px] max-h-[50px] overflow-visible">
-        {/* Left: Main content tabs (shrink-0: NEVER gets squeezed) */}
-        <div className="flex items-center gap-1 py-1 shrink-0">
+      <div className="sticky top-0 z-20 px-3.5 sm:px-6 border-b border-slate-200 bg-white/95 backdrop-blur-xs flex items-center justify-between gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs">
+        {/* Left: Main content tabs */}
+        <div className="flex items-center gap-1.5 py-1 overflow-x-auto scrollbar-none min-w-0">
+          {isScrolledHeader && doc.document_number && (
+            <span className="font-mono text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/80 shrink-0 hidden sm:inline-block animate-in fade-in duration-150">
+              {doc.document_number}
+            </span>
+          )}
           {(
             [
               { id: 'noidung', label: 'Nội dung' },
@@ -1061,97 +1043,90 @@ export function DocumentReader({
             </button>
           )}
 
-          {/* Font size control (Consolidated compact group: A- / 16px / A+) */}
-          <div className="flex items-center border border-slate-200/90 rounded-md bg-white relative shrink-0 shadow-2xs" ref={fontSizeMenuRef}>
-            <button
-              onClick={() => handleFontSizeChange(-1)}
-              disabled={fontSize <= 13}
-              className="px-1.5 sm:px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors cursor-pointer"
-              title="Giảm cỡ chữ (Ctrl + -)"
-              aria-label="Giảm cỡ chữ"
-            >
-              A-
-            </button>
+          {/* Unified Typography & Display Popover [Aa] */}
+          <div className="relative shrink-0" ref={fontSizeMenuRef}>
             <button
               onClick={() => setShowFontSizeMenu(!showFontSizeMenu)}
-              className="px-1 sm:px-1.5 py-1 text-xs font-mono text-slate-700 hover:bg-slate-50 border-x border-slate-100 transition-colors cursor-pointer"
-              aria-label={`Cỡ chữ hiện tại: ${fontSize}px`}
+              className={cn(
+                'px-2.5 py-1 text-xs font-semibold rounded-md border flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs',
+                showFontSizeMenu
+                  ? 'bg-blue-50 text-blue-900 border-blue-300'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+              )}
+              title="Tùy chỉnh cỡ chữ và giao diện đọc (Aa)"
+              aria-label="Tùy chỉnh cỡ chữ và giao diện đọc"
+              aria-expanded={showFontSizeMenu}
             >
-              {fontSize}px
+              <span className="font-serif text-sm font-bold leading-none">Aa</span>
+              <span className="text-[11px] font-mono text-slate-500 font-normal hidden xs:inline">
+                {fontSize}px
+              </span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
-            <button
-              onClick={() => handleFontSizeChange(1)}
-              disabled={fontSize >= 24}
-              className="px-1.5 sm:px-2 py-1 hover:bg-slate-100 text-xs font-semibold text-slate-600 disabled:opacity-30 disabled:hover:bg-white transition-colors cursor-pointer"
-              title="Tăng cỡ chữ (Ctrl + +)"
-              aria-label="Tăng cỡ chữ"
-            >
-              A+
-            </button>
-            {showFontSizeMenu && (
-              <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50 text-xs animate-in fade-in duration-100">
-                <div className="px-3 py-1 font-semibold text-slate-400 text-[10px] uppercase">Cỡ chữ văn bản</div>
-                {FONT_SIZE_PRESETS.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => handleSetExactFontSize(size)}
-                    className={cn(
-                      'w-full px-3 py-1.5 text-left flex items-center justify-between transition-colors cursor-pointer',
-                      fontSize === size ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-100'
-                    )}
-                  >
-                    <span>{size}px {size === 16 ? '— Mặc định' : ''}</span>
-                    {fontSize === size && <Check className="w-3.5 h-3.5 text-blue-600" />}
-                  </button>
-                ))}
-                <div className="border-t border-slate-100 my-1" />
-                <button
-                  onClick={handleResetDefaults}
-                  className="w-full px-3 py-1.5 text-left text-slate-500 hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>Khôi phục mặc định</span>
-                </button>
-              </div>
-            )}
-          </div>
 
-          {/* Display settings dropdown (Collapses on <900px, visible on wider screens) */}
-          <div className="relative shrink-0 hidden min-[900px]:block" ref={displayMenuRef}>
-            <button
-              onClick={() => setShowDisplayMenu(!showDisplayMenu)}
-              className="px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-200/90 rounded-md flex items-center gap-1 transition-colors whitespace-nowrap cursor-pointer shadow-2xs"
-              title="Tùy chỉnh hiển thị"
-              aria-label="Tùy chỉnh hiển thị"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-              <span className="hidden sm:inline">Hiển thị</span>
-              <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
-            </button>
-            {showDisplayMenu && (
-              <div className="absolute right-0 top-full mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-xl p-3 z-50 space-y-3 text-xs animate-in fade-in duration-100">
-                {/* Font size slider */}
+            {showFontSizeMenu && (
+              <div className="absolute right-0 top-full mt-1.5 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-3.5 z-50 text-xs space-y-3.5 animate-in fade-in duration-100">
+                {/* 1. Cỡ chữ (Font size) */}
                 <div>
-                  <div className="flex items-center justify-between text-slate-600 mb-1.5">
-                    <span className="font-semibold text-slate-900">Cỡ chữ</span>
-                    <span className="font-mono text-slate-500">{fontSize}px</span>
+                  <div className="flex items-center justify-between text-slate-700 mb-1.5">
+                    <span className="font-semibold text-slate-900">Cỡ chữ văn bản</span>
+                    <span className="font-mono text-slate-500 font-semibold">{fontSize}px</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleFontSizeChange(-1)} disabled={fontSize <= 13} className="px-2.5 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-30 font-semibold">A-</button>
-                    <input type="range" min="13" max="24" value={fontSize} onChange={(e) => handleSetExactFontSize(Number(e.target.value))} className="flex-1 accent-blue-600" />
-                    <button onClick={() => handleFontSizeChange(1)} disabled={fontSize >= 24} className="px-2.5 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-30 font-semibold">A+</button>
+                    <button
+                      onClick={() => handleFontSizeChange(-1)}
+                      disabled={fontSize <= 13}
+                      className="px-2.5 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-30 font-semibold text-xs transition-colors cursor-pointer"
+                      title="Giảm cỡ chữ (A-)"
+                    >
+                      A-
+                    </button>
+                    <input
+                      type="range"
+                      min="13"
+                      max="24"
+                      value={fontSize}
+                      onChange={(e) => handleSetExactFontSize(Number(e.target.value))}
+                      className="flex-1 accent-blue-600 cursor-pointer"
+                      aria-label="Thanh trượt cỡ chữ"
+                    />
+                    <button
+                      onClick={() => handleFontSizeChange(1)}
+                      disabled={fontSize >= 24}
+                      className="px-2.5 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-30 font-semibold text-xs transition-colors cursor-pointer"
+                      title="Tăng cỡ chữ (A+)"
+                    >
+                      A+
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-1 pt-1.5">
+                    {FONT_SIZE_PRESETS.map((sz) => (
+                      <button
+                        key={sz}
+                        onClick={() => handleSetExactFontSize(sz)}
+                        className={cn(
+                          'flex-1 py-0.5 text-[10.5px] font-mono rounded border transition-colors cursor-pointer text-center',
+                          fontSize === sz
+                            ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                            : 'border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                        )}
+                      >
+                        {sz}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                {/* Content width */}
+
+                {/* 2. Độ rộng trang giấy (Content Width) */}
                 <div>
-                  <span className="font-semibold text-slate-900 block mb-1.5">Độ rộng nội dung</span>
-                  <div className="grid grid-cols-3 gap-1">
+                  <span className="font-semibold text-slate-900 block mb-1.5">Độ rộng trang</span>
+                  <div className="grid grid-cols-3 gap-1.5">
                     {CONTENT_WIDTH_PRESETS.map((p) => (
                       <button
                         key={p.value}
                         onClick={() => setContentWidth(p.value)}
                         className={cn(
-                          'p-1.5 border rounded text-center text-[11px] transition-colors',
+                          'py-1 px-1.5 border rounded text-center text-[11px] transition-colors cursor-pointer',
                           contentWidth === p.value
                             ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
                             : 'border-slate-200 hover:bg-slate-50 text-slate-600'
@@ -1162,16 +1137,17 @@ export function DocumentReader({
                     ))}
                   </div>
                 </div>
-                {/* Line height */}
+
+                {/* 3. Khoảng cách dòng (Line Height) */}
                 <div>
-                  <span className="font-semibold text-slate-900 block mb-1.5">Khoảng cách dòng</span>
-                  <div className="grid grid-cols-3 gap-1">
+                  <span className="font-semibold text-slate-900 block mb-1.5">Giãn dòng</span>
+                  <div className="grid grid-cols-3 gap-1.5">
                     {LINE_HEIGHT_PRESETS.map((p) => (
                       <button
                         key={p.value}
                         onClick={() => setLineHeight(p.value)}
                         className={cn(
-                          'p-1.5 border rounded text-center text-[11px] transition-colors',
+                          'py-1 px-1.5 border rounded text-center text-[11px] transition-colors cursor-pointer',
                           lineHeight === p.value
                             ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
                             : 'border-slate-200 hover:bg-slate-50 text-slate-600'
@@ -1182,13 +1158,21 @@ export function DocumentReader({
                     ))}
                   </div>
                 </div>
-                <div className="pt-2 border-t border-slate-100">
+
+                {/* Reset button */}
+                <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
                   <button
                     onClick={handleResetDefaults}
-                    className="w-full py-1.5 text-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded flex items-center justify-center gap-1.5 font-medium transition-colors"
+                    className="text-slate-500 hover:text-slate-800 text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-3 h-3" />
                     <span>Đặt lại mặc định</span>
+                  </button>
+                  <button
+                    onClick={() => setShowFontSizeMenu(false)}
+                    className="px-2.5 py-0.5 bg-slate-900 text-white rounded text-[11px] font-semibold hover:bg-slate-800 cursor-pointer"
+                  >
+                    Đóng
                   </button>
                 </div>
               </div>
@@ -1332,36 +1316,68 @@ export function DocumentReader({
                   <>
                     {/* Quality banners */}
                     {qualityResult.isScanNeedingOcr && (
-                      <div className="mb-6 p-3.5 bg-purple-50 border border-purple-200 rounded-lg text-xs text-purple-900 flex items-center justify-between gap-3">
+                      <div className="mb-6 p-3.5 bg-purple-50 border border-purple-200 rounded-lg text-xs text-purple-900 flex items-center justify-between gap-3 flex-wrap">
                         <div>
                           <span className="font-bold block">PDF là bản scan và chưa được OCR</span>
-                          <span className="text-[11px] text-purple-700">Tệp đính kèm chứa hình ảnh scan chưa được số hóa.</span>
+                          <span className="text-[11px] text-purple-700">Tệp đính kèm chứa hình ảnh scan chưa được số hóa đầy đủ.</span>
                         </div>
-                        <a href="/admin/upload" className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white font-semibold rounded text-xs shrink-0">
-                          Kích hoạt OCR
-                        </a>
+                        <div className="flex items-center gap-2">
+                          {hasPdfUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('banggoc')}
+                              className="px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-900 font-semibold rounded text-xs shrink-0 cursor-pointer transition-colors"
+                            >
+                              Xem Bản Gốc →
+                            </button>
+                          )}
+                          <a href="/admin/upload" className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white font-semibold rounded text-xs shrink-0">
+                            Kích hoạt OCR
+                          </a>
+                        </div>
                       </div>
                     )}
                     {qualityResult.status === 'partial' && (
-                      <div className="mb-6 p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r text-xs text-amber-900 space-y-1">
-                        <div className="font-semibold flex items-center gap-1.5">
-                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                          Nội dung chưa đầy đủ — Đang đối chiếu với bản gốc
+                      <div className="mb-6 p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r text-xs text-amber-900 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="space-y-1">
+                          <div className="font-semibold flex items-center gap-1.5">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                            Nội dung chưa đầy đủ — Đang đối chiếu với bản gốc
+                          </div>
+                          <p className="text-amber-800 text-[11px] leading-relaxed">
+                            Bản số hóa hiện tại có thể thiếu một số phụ lục hoặc biểu mẫu.
+                          </p>
                         </div>
-                        <p className="text-amber-800 text-[11px] leading-relaxed">
-                          Bản số hóa hiện tại có thể thiếu một số phụ lục hoặc điều khoản.
-                        </p>
+                        {hasPdfUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('banggoc')}
+                            className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 font-semibold rounded text-xs shrink-0 cursor-pointer transition-colors"
+                          >
+                            Đối chiếu Bản Gốc (PDF) →
+                          </button>
+                        )}
                       </div>
                     )}
                     {qualityResult.status === 'complete' &&
                       doc.review_status !== 'published' &&
                       doc.content_status !== 'verified' && (
-                        <div className="mb-4 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-600 flex items-center gap-1.5">
-                          <span className="font-medium text-slate-800">Bản trích xuất tự động — chưa kiểm duyệt</span>
-                          <span className="text-slate-400">· Vui lòng đối chiếu với bản gốc khi áp dụng pháp lý.</span>
+                        <div className="mb-4 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-600 flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-medium text-slate-800">Bản trích xuất tự động — chưa kiểm duyệt</span>
+                            <span className="text-slate-400">· Vui lòng đối chiếu với bản gốc khi áp dụng pháp lý.</span>
+                          </div>
+                          {hasPdfUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('banggoc')}
+                              className="text-blue-700 hover:text-blue-900 font-semibold cursor-pointer underline shrink-0"
+                            >
+                              Xem Bản Gốc →
+                            </button>
+                          )}
                         </div>
                       )}
-
                     {/* Actual document body */}
                     <div
                       ref={contentRef}

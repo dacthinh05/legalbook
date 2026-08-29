@@ -65,9 +65,13 @@ export function formatLegalHtmlContent(htmlContent: string | null | undefined, d
   html = formatChapterHeadings(html);
 
   // 7. Format Articles, Clauses, and Points (Điều, Khoản 1., Điểm a))
+  // 7. Format Articles, Clauses, and Points (Điều, Khoản 1., Điểm a))
   html = formatArticlesAndClauses(html);
 
-  // 8. Wrap tables for smooth horizontal scrolling and enhance signature blocks
+  // 8. Format Appendices & Forms (Phụ lục, Biểu mẫu)
+  html = formatAppendixAndForms(html);
+
+  // 9. Wrap tables for smooth horizontal scrolling and enhance signature blocks
   html = wrapTablesAndSignatures(html);
 
   return html;
@@ -248,6 +252,23 @@ function formatArticlesAndClauses(html: string): string {
   );
 
   return res;
+}
+
+/**
+ * Formats Appendices and Forms (Phụ lục I, Biểu mẫu số...) with semantic classes.
+ */
+function formatAppendixAndForms(html: string): string {
+  const appendixPattern = /<p[^>]*>\s*(?:<strong>|<b>)?\s*(Phụ\s+lục\s*[\dIVX\-a-zA-Z\/]*|Biểu\s+mẫu\s*(?:số)?\s*[\dIVX\-a-zA-Z\/]*|Mẫu\s+số\s*[\dIVX\-a-zA-Z\/]*)(?:<br\s*\/?>|\s*<\/strong><\/p>\s*<p[^>]*><strong>|\s*[-–—:]\s*|\s*\n\s*)([^<]+?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>/gi;
+
+  return html.replace(appendixPattern, (_match, appNum, appTitle) => {
+    const cleanNum = appNum.trim();
+    const cleanTitle = appTitle.trim();
+    return `
+<div class="legal-appendix-block">
+  <p class="legal-appendix-num">${cleanNum}</p>
+  <h3 class="legal-appendix-title">${cleanTitle}</h3>
+</div>`;
+  });
 }
 
 /**

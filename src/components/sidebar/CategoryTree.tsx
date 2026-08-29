@@ -30,6 +30,7 @@ import {
   getDescendantCategoryIds,
   getTreeIndentation,
   flattenVisibleTree,
+  injectVirtualSubcategories,
 } from '@/lib/tree-utils';
 
 export interface CategoryTreeProps {
@@ -280,8 +281,17 @@ export function CategoryTree({
   selectedDocType,
   onSelectCategory,
   onSelectDocType,
+  readDocuments,
 }: CategoryTreeProps) {
   const [viewMode, setViewMode] = useState<'topic' | 'type'>('topic');
+
+  // Dynamic calculation of document counts and smart dynamic subcategories from allDocuments
+  const docsList = useMemo(() => allDocuments || (DEMO_DOCUMENTS as unknown as LegalDocument[]), [allDocuments]);
+  const totalDocsCount = docsList.length;
+
+  const enrichedCategories = useMemo(() => {
+    return injectVirtualSubcategories(categories, docsList, DEMO_CATEGORY_LINKS);
+  }, [categories, docsList]);
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     const initialSet = new Set<string>();
@@ -299,12 +309,12 @@ export function CategoryTree({
     }
 
     if (selectedCategoryId) {
-      const ancestors = getAncestorCategoryIds(selectedCategoryId, categories);
+      const ancestors = getAncestorCategoryIds(selectedCategoryId, enrichedCategories);
       ancestors.forEach((aId) => initialSet.add(aId));
     }
 
     if (initialSet.size === 0) {
-      categories.forEach((c) => {
+      enrichedCategories.forEach((c) => {
         if (c.slug === 'thue' || c.slug === 'ke-toan') {
           initialSet.add(c.id);
         }
@@ -333,7 +343,7 @@ export function CategoryTree({
   const handleSelectCategoryAndExpandAncestors = useCallback(
     (catId: string | null) => {
       if (catId) {
-        const ancestors = getAncestorCategoryIds(catId, categories);
+        const ancestors = getAncestorCategoryIds(catId, enrichedCategories);
         if (ancestors.length > 0) {
           setExpandedIds((prev) => {
             let hasChange = false;
@@ -357,7 +367,7 @@ export function CategoryTree({
       }
       onSelectCategory(catId);
     },
-    [categories, onSelectCategory, onSelectDocType, saveExpandedState]
+    [enrichedCategories, onSelectCategory, onSelectDocType, saveExpandedState]
   );
 
   const handleSelectDocType = useCallback(
@@ -399,10 +409,10 @@ export function CategoryTree({
         }
       });
     };
-    collect(categories);
+    collect(enrichedCategories);
     setExpandedIds(allIds);
     saveExpandedState(allIds);
-  }, [categories, saveExpandedState]);
+  }, [enrichedCategories, saveExpandedState]);
 
   const collapseAll = useCallback(() => {
     const emptySet = new Set<string>();
@@ -432,7 +442,7 @@ export function CategoryTree({
       return isMatch || childMatch;
     };
 
-    categories.forEach(checkMatch);
+    enrichedCategories.forEach(checkMatch);
 
     if (matchingAncestorIds.size > 0) {
       const timer = setTimeout(() => {
@@ -444,10 +454,10 @@ export function CategoryTree({
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [filterText, categories]);
+  }, [filterText, enrichedCategories]);
 
   const filteredCategories = useMemo(() => {
-    if (!filterText.trim()) return categories;
+    if (!filterText.trim()) return enrichedCategories;
     const lower = filterText.toLowerCase();
 
     const filterNode = (cat: Category): Category | null => {
@@ -465,25 +475,41 @@ export function CategoryTree({
       return null;
     };
 
-    return categories.map(filterNode).filter(Boolean) as Category[];
-  }, [categories, filterText]);
-
-  // Dynamic calculation of document counts from allDocuments
-  const docsList = useMemo(() => allDocuments || (DEMO_DOCUMENTS as unknown as LegalDocument[]), [allDocuments]);
-  const totalDocsCount = docsList.length;
+    return enrichedCategories.map(filterNode).filter(Boolean) as Category[];
+  }, [enrichedCategories, filterText]);
 
   const categoryCounts = useMemo(() => {
     const map = new Map<string, number>();
-    categories.forEach((cat) => {
-      const descendantIds = new Set(getDescendantCategoryIds(cat.id, categories));
-      const count = docsList.filter((d) => {
-        const links = DEMO_CATEGORY_LINKS.filter((l) => l.document_id === d.id);
-        return links.some((l) => descendantIds.has(l.category_id));
-      }).length;
-      map.set(cat.id, count);
-    });
+
+    const compute = (cat: Category) => {
+      if (cat.id.includes('__type__')) {
+        const [baseId, docType] = cat.id.split('__type__');
+        const count = docsList.filter((d) => {
+          const links = DEMO_CATEGORY_LINKS.filter((l) => l.document_id === d.id);
+          const matchesCat = links.some((l) => l.category_id === baseId);
+          if (docType === 'khac') {
+            return matchesCat && (d.document_type === 'khac' || d.document_type === 'huong_dan');
+          }
+          return matchesCat && d.document_type === docType;
+        }).length;
+        map.set(cat.id, count);
+      } else {
+        const descendantIds = new Set(getDescendantCategoryIds(cat.id, enrichedCategories));
+        const count = docsList.filter((d) => {
+          const links = DEMO_CATEGORY_LINKS.filter((l) => l.document_id === d.id);
+          return links.some((l) => descendantIds.has(l.category_id));
+        }).length;
+        map.set(cat.id, count);
+      }
+
+      if (cat.children && cat.children.length > 0) {
+        cat.children.forEach(compute);
+      }
+    };
+
+    enrichedCategories.forEach(compute);
     return map;
-  }, [categories, docsList]);
+  }, [enrichedCategories, docsList]);
 
   const docTypesWithCounts = useMemo(() => {
     return DOC_TYPE_METAS.map((meta) => {
@@ -516,9 +542,9 @@ export function CategoryTree({
         }
       });
     };
-    countExpandable(categories);
+    countExpandable(enrichedCategories);
     return totalExpandable > 0 && expandedIds.size >= totalExpandable;
-  }, [categories, expandedIds]);
+  }, [enrichedCategories, expandedIds]);
 
   // Keyboard navigation handler for accessibility
   const handleKeyDown = useCallback(

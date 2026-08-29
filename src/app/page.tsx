@@ -21,7 +21,7 @@ import {
 import type { LegalDocument, Category, DocumentType } from '@/types';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/utils';
 import { DEMO_CATEGORY_LINKS } from '@/lib/demo-data';
-import { getDescendantCategoryIds } from '@/lib/tree-utils';
+import { getDescendantCategoryIds, injectVirtualSubcategories, VIRTUAL_DOC_TYPE_CONFIG } from '@/lib/tree-utils';
 import { X, ChevronLeft, ChevronRight, FolderTree, ListFilter, Search, BookmarkCheck } from 'lucide-react';
 
 const MIN_SIDEBAR = 240;
@@ -248,6 +248,18 @@ export default function MainPage() {
     if (!selectedCategoryId) {
       return allDocList;
     }
+    if (selectedCategoryId.includes('__type__')) {
+      const [baseCatId, docType] = selectedCategoryId.split('__type__');
+      const descendantIds = new Set(getDescendantCategoryIds(baseCatId, categoryData.categories));
+      return allDocList.filter((d) => {
+        const links = DEMO_CATEGORY_LINKS.filter((l) => l.document_id === d.id);
+        const matchesCat = links.some((l) => descendantIds.has(l.category_id));
+        if (docType === 'khac') {
+          return matchesCat && (d.document_type === 'khac' || d.document_type === 'huong_dan');
+        }
+        return matchesCat && d.document_type === docType;
+      });
+    }
     const descendantIds = new Set(getDescendantCategoryIds(selectedCategoryId, categoryData.categories));
     return allDocList.filter((d) => {
       const links = DEMO_CATEGORY_LINKS.filter((l) => l.document_id === d.id);
@@ -261,10 +273,33 @@ export default function MainPage() {
       : allDocList.find((d) => d.id === selectedDocumentId) || null
     : null;
 
-  const categoryTree = categoryData.tree.length > 0 ? categoryData.tree : categoryData.categories;
-  const activeCategory = selectedCategoryId
-    ? categoryData.categories.find((c) => c.id === selectedCategoryId) || null
-    : null;
+  const categoryTree = useMemo(() => {
+    const baseTree = categoryData.tree.length > 0 ? categoryData.tree : categoryData.categories;
+    return injectVirtualSubcategories(baseTree, allDocList, DEMO_CATEGORY_LINKS);
+  }, [categoryData.tree, categoryData.categories, allDocList]);
+
+  const activeCategory = useMemo(() => {
+    if (!selectedCategoryId) return null;
+    if (selectedCategoryId.includes('__type__')) {
+      const [baseCatId, docType] = selectedCategoryId.split('__type__');
+      const baseCat = categoryData.categories.find((c) => c.id === baseCatId);
+      const typeConfig = VIRTUAL_DOC_TYPE_CONFIG.find((t) => t.type === docType);
+      const typeLabel = typeConfig?.label || DOCUMENT_TYPE_LABELS[docType as DocumentType] || docType;
+      return {
+        id: selectedCategoryId,
+        parent_id: baseCatId,
+        name: baseCat ? `${baseCat.name} › ${typeLabel}` : typeLabel,
+        slug: `${baseCat?.slug || 'cat'}-${docType}`,
+        description: null,
+        order_index: typeConfig?.order || 0,
+        icon: null,
+        is_active: true,
+        created_at: '',
+        updated_at: '',
+      } as Category;
+    }
+    return categoryData.categories.find((c) => c.id === selectedCategoryId) || null;
+  }, [selectedCategoryId, categoryData.categories]);
 
   const handleCategorySelect = (categoryId: string | null) => {
     setSelectedCategoryId(categoryId);
