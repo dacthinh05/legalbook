@@ -24,12 +24,20 @@ export async function POST(request: NextRequest) {
 async function handleCronCrawl(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    const isVercelCron = request.headers.get('x-vercel-cron') === 'true';
     const cronSecret = process.env.CRON_SECRET;
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    // Verify secret in production if configured
-    if (cronSecret && !isVercelCron) {
-      if (authHeader !== `Bearer ${cronSecret}`) {
+    // In production, CRON_SECRET is strictly required to protect the crawler pipeline
+    if (isProduction && !cronSecret) {
+      return NextResponse.json(
+        { error: 'Server misconfiguration: CRON_SECRET is required in production environment.' },
+        { status: 500 }
+      );
+    }
+
+    // Strictly verify Bearer CRON_SECRET token when configured or in production
+    if (cronSecret || isProduction) {
+      if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json(
           { error: 'Unauthorized. Invalid or missing CRON_SECRET token.' },
           { status: 401 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Sparkles,
   X,
@@ -45,7 +45,7 @@ export function AiSummaryModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'structured' | 'markdown'>('structured');
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await summarizeDocumentWithAi(doc);
@@ -55,13 +55,28 @@ export function AiSummaryModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [doc]);
 
   useEffect(() => {
-    if (isOpen && !summary) {
-      fetchSummary();
-    }
-  }, [isOpen, doc.id]);
+    if (!isOpen || summary) return;
+    let active = true;
+    summarizeDocumentWithAi(doc)
+      .then((res) => {
+        if (active) {
+          setSummary(res);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          console.error('Error generating AI summary:', err);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [isOpen, doc, summary]);
 
   if (!isOpen) return null;
 
@@ -199,8 +214,8 @@ export function AiSummaryModal({
                     <BookOpen className="w-4 h-4 text-blue-700" />
                     <h3>1. Tổng quan & Mục đích ban hành</h3>
                   </div>
-                  <p className="text-sm text-slate-700 leading-relaxed font-serif">
-                    {summary.overview}
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-sans">
+                    {summary.overview?.normalize('NFC')}
                   </p>
                 </div>
 
@@ -247,8 +262,8 @@ export function AiSummaryModal({
                               <span>{art.articleTitle}</span>
                               <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-0.5" />
                             </div>
-                            <p className="text-[11px] text-slate-600 line-clamp-2 mt-1 font-serif leading-relaxed">
-                              {art.summary}
+                            <p className="text-[11.5px] text-slate-600 line-clamp-2 mt-1 font-sans leading-relaxed">
+                              {art.summary?.normalize('NFC')}
                             </p>
                           </div>
                         ))}

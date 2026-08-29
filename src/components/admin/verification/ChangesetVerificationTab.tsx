@@ -109,7 +109,7 @@ export function ChangesetVerificationTab({
                         <span>Trước sửa đổi (Bãi bỏ / Thay thế):</span>
                         <span className="text-red-600 font-mono text-[9px]">[CŨ]</span>
                       </div>
-                      <p className="text-red-950 font-serif leading-relaxed line-through decoration-red-400">
+                      <p className="text-red-950 font-sans leading-relaxed line-through decoration-red-400">
                         {chg.old_content}
                       </p>
                     </div>
@@ -126,7 +126,7 @@ export function ChangesetVerificationTab({
                         <span>Sau sửa đổi (Nội dung áp dụng mới):</span>
                         <span className="text-emerald-600 font-mono text-[9px]">[MỚI]</span>
                       </div>
-                      <p className="text-emerald-950 font-serif leading-relaxed font-medium">
+                      <p className="text-emerald-950 font-sans leading-relaxed font-medium">
                         {chg.new_content}
                       </p>
                     </div>

@@ -277,10 +277,9 @@ export async function compareDocumentsWithAi(
  * Generates a high-quality local fallback legal summary from structured document metadata & articles.
  */
 export function generateLocalDocumentSummary(doc: LegalDocument): LegalDocumentSummary {
-  const docNum = doc.document_number || 'Văn bản';
-  const shortTitle = formatShortTitle(doc.title, doc.document_type, doc.document_number);
-  const overview = doc.summary_main || `Văn bản ${docNum} quy định chi tiết về ${doc.title.toLowerCase()}.`;
-  
+  const docNum = (doc.document_number || 'Văn bản').normalize('NFC');
+  const shortTitle = formatShortTitle(doc.title, doc.document_type, doc.document_number).normalize('NFC');
+  const overview = (doc.summary_main || `Văn bản ${docNum} quy định chi tiết về ${doc.title.toLowerCase()}.`).normalize('NFC');
   const newPoints = doc.summary_new_points
     ? doc.summary_new_points.split(/[\n;]+/).map((p) => p.replace(/^[-*•\d.]+\s*/, '').trim()).filter(Boolean)
     : [
@@ -303,14 +302,13 @@ export function generateLocalDocumentSummary(doc: LegalDocument): LegalDocumentS
     'Tuân thủ đúng thời hạn và chế độ báo cáo theo biểu mẫu quy định.',
   ];
 
-  // Extract key articles
+  // Extract key articles with NFC normalization
   const articles = doc.html_content ? extractStructuredArticles(doc.html_content) : [];
   const keyArticles = articles.slice(0, 6).map((art) => ({
-    articleNumber: art.title.match(/^Điều\s+\d+[a-z]?/i)?.[0] || art.title,
-    articleTitle: art.title,
-    summary: art.body.slice(0, 240) + (art.body.length > 240 ? '...' : ''),
+    articleNumber: (art.title.match(/^Điều\s+\d+[a-z]?/i)?.[0] || art.title).normalize('NFC'),
+    articleTitle: art.title.normalize('NFC'),
+    summary: (art.body.slice(0, 240) + (art.body.length > 240 ? '...' : '')).normalize('NFC'),
   }));
-
   const fullMarkdown = `### 1. 📌 TỔNG QUAN & MỤC ĐÍCH BAN HÀNH
 **${docNum}** — ${doc.title}
 

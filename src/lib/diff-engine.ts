@@ -233,12 +233,12 @@ export function extractStructuredArticles(html: string): ExtractedArticle[] {
 
   while ((match = regex.exec(html)) !== null) {
     const rawHeading = match[1] || '';
-    const cleanHeading = rawHeading.replace(/<[^>]*>/g, '').trim();
-    const num = match[2] || '';
+    const cleanHeading = rawHeading.replace(/<[^>]*>/g, '').trim().normalize('NFC');
+    const num = (match[2] || '').trim();
     matches.push({
       index: match.index,
       fullHeading: cleanHeading,
-      num: `Điều ${num}`,
+      num: `Điều ${num}`.normalize('NFC'),
     });
   }
 
@@ -252,7 +252,7 @@ export function extractStructuredArticles(html: string): ExtractedArticle[] {
     const m = matches[i];
     const nextIdx = i + 1 < matches.length ? matches[i + 1].index : html.length;
     const sectionHtml = html.slice(m.index, nextIdx);
-    const bodyText = cleanHtmlToText(sectionHtml);
+    const bodyText = cleanHtmlToText(sectionHtml).normalize('NFC');
 
     articles.push({
       id: `dieu-${m.num.replace(/\s+/g, '-').toLowerCase()}`,

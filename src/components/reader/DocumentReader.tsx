@@ -787,6 +787,16 @@ export function DocumentReader({
         '--reader-background': '#f8fafc',
       } as React.CSSProperties}
     >
+      <div className="reader-workspace flex flex-1 overflow-hidden h-full">
+        {/* ── Scrollable Document Viewport (Centered Canvas) ── */}
+        <div
+          ref={viewportRef}
+          onScroll={handleScroll}
+          className={cn(
+            "reader-viewport flex-1 overflow-y-auto relative min-w-0 flex flex-col",
+            activeTab === 'banggoc' ? 'p-0 flex flex-col h-full overflow-hidden bg-slate-900/5' : ''
+          )}
+        >
       {/* ================================================================
           1. DOCUMENT HEADER (Standardized Spacing & Refined Actions)
           ================================================================ */}
@@ -1475,20 +1485,6 @@ export function DocumentReader({
         </div>
       )}
 
-      {/* ================================================================
-          3. READER WORKSPACE = Viewport + Paper + Context Panel
-          ================================================================ */}
-      <div className="reader-workspace flex flex-1 overflow-hidden">
-
-        {/* ── Scrollable Document Viewport (Centered Canvas) ── */}
-        <div
-          ref={viewportRef}
-          onScroll={handleScroll}
-          className={cn(
-            "reader-viewport flex-1 overflow-y-auto relative min-w-0",
-            activeTab === 'banggoc' ? 'p-0 flex flex-col h-full overflow-hidden bg-slate-900/5' : ''
-          )}
-        >
           {/* ── TAB: NOIDUNG ── */}
           <div className={activeTab === 'noidung' ? '' : 'hidden'}>
             <div className="document-page">

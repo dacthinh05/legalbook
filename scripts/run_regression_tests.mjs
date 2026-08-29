@@ -1483,6 +1483,67 @@ describe('14. Multi-Source Dispatch Lookup & Crawler Fallback Architecture', () 
     assert.strictEqual(emptySources.length, 6);
     assert.ok(emptySources.every(s => s.url.startsWith('https://')));
   });
+
+  test('4. crawl-legal-updates cron rejects request with missing/invalid Bearer token when CRON_SECRET is set', async () => {
+    const { GET } = await import('../src/app/api/cron/crawl-legal-updates/route.ts');
+    const prevSecret = process.env.CRON_SECRET;
+    process.env.CRON_SECRET = 'test-secret-12345';
+    
+    try {
+      const reqWithoutAuth = new Request('http://localhost:3000/api/cron/crawl-legal-updates', {
+        headers: {},
+      });
+      const resWithoutAuth = await GET(reqWithoutAuth);
+      assert.strictEqual(resWithoutAuth.status, 401);
+
+      const reqWithWrongAuth = new Request('http://localhost:3000/api/cron/crawl-legal-updates', {
+        headers: { authorization: 'Bearer wrong-secret' },
+      });
+      const resWithWrongAuth = await GET(reqWithWrongAuth);
+      assert.strictEqual(resWithWrongAuth.status, 401);
+    } finally {
+      process.env.CRON_SECRET = prevSecret;
+    }
+  });
+
+  test('5. crawl-legal-updates cron accepts request when valid Bearer CRON_SECRET is provided', async () => {
+    const { GET } = await import('../src/app/api/cron/crawl-legal-updates/route.ts');
+    const prevSecret = process.env.CRON_SECRET;
+    process.env.CRON_SECRET = 'test-secret-12345';
+
+    try {
+      const req = new Request('http://localhost:3000/api/cron/crawl-legal-updates', {
+        headers: { authorization: 'Bearer test-secret-12345' },
+      });
+      const res = await GET(req);
+      assert.strictEqual(res.status, 200);
+      const json = await res.json();
+      assert.strictEqual(json.success, true);
+      assert.ok(json.stagedCount >= 1);
+      assert.ok(Array.isArray(json.stagedDocs) && json.stagedDocs.length >= 1);
+    } finally {
+      process.env.CRON_SECRET = prevSecret;
+    }
+  });
+
+  test('6. crawl-legal-updates cron fails closed with 500 in production when CRON_SECRET is missing', async () => {
+    const { GET } = await import('../src/app/api/cron/crawl-legal-updates/route.ts');
+    const prevEnv = process.env.NODE_ENV;
+    const prevSecret = process.env.CRON_SECRET;
+    process.env.NODE_ENV = 'production';
+    delete process.env.CRON_SECRET;
+
+    try {
+      const req = new Request('http://localhost:3000/api/cron/crawl-legal-updates');
+      const res = await GET(req);
+      assert.strictEqual(res.status, 500);
+      const json = await res.json();
+      assert.ok(json.error.includes('Server misconfiguration'));
+    } finally {
+      process.env.NODE_ENV = prevEnv;
+      process.env.CRON_SECRET = prevSecret;
+    }
+  });
 });
 
 describe('15. Document Reader Layout, Legal Letterhead (ND 30/2020) & Typography', () => {

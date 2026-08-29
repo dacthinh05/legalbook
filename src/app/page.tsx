@@ -46,7 +46,7 @@ export default function MainPage() {
   const [readerFullscreen, setReaderFullscreen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Content state (active session selection; defaults to Homepage Feed on fresh load)
+  // Content state (deterministic SSR-safe initialization; defaults to Homepage Feed)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [selectedDocType, setSelectedDocType] = useState<DocumentType | null>(null);
@@ -54,14 +54,16 @@ export default function MainPage() {
   const [searchInitialQuery, setSearchInitialQuery] = useState('');
   const [importModalOpen, setImportModalOpen] = useState(false);
 
-  // Support direct URL query parameter deep linking (?doc=... or ?cat=...)
+  // Post-mount synchronization for URL query parameters (?doc=... or ?cat=...)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const docParam = params.get('doc');
-      const catParam = params.get('cat');
-      if (docParam) setSelectedDocumentId(docParam);
-      if (catParam) setSelectedCategoryId(catParam);
+    const params = new URLSearchParams(window.location.search);
+    const docParam = params.get('doc');
+    const catParam = params.get('cat');
+    if (docParam || catParam) {
+      setTimeout(() => {
+        if (docParam) setSelectedDocumentId(docParam);
+        if (catParam) setSelectedCategoryId(catParam);
+      }, 0);
     }
   }, []);
 

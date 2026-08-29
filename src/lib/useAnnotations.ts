@@ -198,11 +198,41 @@ export function useAnnotations({
 
   useEffect(() => {
     let ignore = false;
-    fetchAnnotations();
+    const load = async () => {
+      const localList = loadLocalAnnotations(documentId);
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('document_annotations')
+          .select('*')
+          .eq('document_id', documentId)
+          .neq('anchor_status', 'deleted')
+          .order('created_at', { ascending: true });
+
+        if (ignore) return;
+        if (fetchError) {
+          setAnnotations(localList);
+        } else if (data && Array.isArray(data)) {
+          const remoteList = (data as AnnotationRow[]).map(rowToAnnotation);
+          const remoteIds = new Set(remoteList.map((r) => r.id));
+          const nonDuplicateLocals = localList.filter((l) => !remoteIds.has(l.id));
+          const combined = [...remoteList, ...nonDuplicateLocals];
+          persistLocally(combined);
+        }
+      } catch {
+        if (!ignore) {
+          setAnnotations(localList);
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    };
+    load();
     return () => {
       ignore = true;
     };
-  }, [fetchAnnotations]);
+  }, [documentId, supabase, persistLocally]);
   // ── Realtime subscription (team/org notes) ───────────────────────────────
 
   useEffect(() => {

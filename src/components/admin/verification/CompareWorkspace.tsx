@@ -269,8 +269,7 @@ export function CompareWorkspace({
                   {effectivePage === 1 ? (
                     <div className="space-y-6 flex-1 flex flex-col">
                       {/* Letterhead & Doc Number */}
-                      <div className="grid grid-cols-2 gap-4 text-xs font-serif leading-tight">
-                        {/* Box 1: Issuing Body */}
+                      <div className="grid grid-cols-2 gap-4 text-xs font-sans leading-tight">
                         <div
                           onClick={() => onSelectField?.('issuing_body')}
                           className={`p-2 rounded cursor-pointer transition-all relative border ${
@@ -309,7 +308,7 @@ export function CompareWorkspace({
                                 : 'border-transparent hover:border-slate-300 hover:bg-slate-50/60'
                             }`}
                           >
-                            <span className="italic text-[11px] text-slate-800 font-serif block">
+                            <span className="italic text-[11px] text-slate-800 font-sans block">
                               {activePageData?.blocks.find((b) => b.blockType === 'date')?.text || 'Thái Nguyên, ngày 26 tháng 01 năm 2026'}
                             </span>
                             {activeFieldKey === 'issued_date' && (
@@ -330,7 +329,7 @@ export function CompareWorkspace({
                             : 'border-transparent hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <span className="font-serif font-bold text-xs text-slate-900">
+                        <span className="font-sans font-bold text-xs text-slate-900">
                           Số: {docNumber}
                         </span>
                         {activeFieldKey === 'document_number' && (
@@ -349,10 +348,10 @@ export function CompareWorkspace({
                             : 'border-transparent hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <span className="font-bold text-sm font-serif uppercase tracking-wide block mb-1 text-slate-950">
+                        <span className="font-bold text-sm font-sans uppercase tracking-wide block mb-1 text-slate-950">
                           CÔNG VĂN
                         </span>
-                        <p className="font-bold text-xs font-serif text-slate-900 leading-snug">
+                        <p className="font-bold text-xs font-sans text-slate-900 leading-snug">
                           {doc.title}
                         </p>
                       </div>
@@ -360,7 +359,7 @@ export function CompareWorkspace({
                       {/* Body Paragraphs */}
                       <div
                         onClick={() => onSelectField?.('ocr_content')}
-                        className={`p-3 rounded-lg border text-justify leading-relaxed font-serif text-xs text-slate-800 space-y-2 flex-1 cursor-pointer transition-all ${
+                        className={`p-3 rounded-lg border text-justify leading-relaxed font-sans text-xs text-slate-800 space-y-2 flex-1 cursor-pointer transition-all ${
                           activeFieldKey === 'ocr_content'
                             ? 'bg-blue-50/40 border-blue-400 ring-1 ring-blue-400/20'
                             : 'border-slate-100 hover:border-slate-300'
@@ -383,7 +382,7 @@ export function CompareWorkspace({
                     <div className="space-y-8 flex-1 flex flex-col">
                       <div
                         onClick={() => onSelectField?.('ocr_content')}
-                        className={`p-3 rounded-lg border text-justify leading-relaxed font-serif text-xs text-slate-800 space-y-2 cursor-pointer transition-all ${
+                        className={`p-3 rounded-lg border text-justify leading-relaxed font-sans text-xs text-slate-800 space-y-2 cursor-pointer transition-all ${
                           activeFieldKey === 'ocr_content'
                             ? 'bg-blue-50/40 border-blue-400 ring-1 ring-blue-400/20'
                             : 'border-slate-100 hover:border-slate-300'
@@ -396,10 +395,8 @@ export function CompareWorkspace({
                           Cục Thuế tỉnh thông báo để Quý Công ty biết và thực hiện theo đúng quy định pháp luật./.
                         </p>
                       </div>
-
                       {/* Bottom Split: Recipients (Left) and Signature (Right) */}
-                      <div className="mt-auto grid grid-cols-2 gap-4 font-serif text-xs pt-8 border-t border-slate-100">
-                        {/* Recipients */}
+                      <div className="mt-auto grid grid-cols-2 gap-4 font-sans text-xs pt-8 border-t border-slate-100">
                         <div
                           onClick={() => onSelectField?.('recipient')}
                           className={`p-2 rounded cursor-pointer transition-all border text-[11px] ${
@@ -436,7 +433,7 @@ export function CompareWorkspace({
                           <div className="inline-block border border-red-500 text-red-600 rounded px-2 py-0.5 text-[9px] font-bold rotate-[-4deg] mb-2 bg-red-50/40">
                             ĐÃ KÝ ĐIỆN TỬ
                           </div>
-                          <p className="font-bold text-xs text-slate-950 font-serif">
+                          <p className="font-bold text-xs text-slate-950 font-sans">
                             {doc.signer || 'Phạm Đức Huỳnh'}
                           </p>
                           {activeFieldKey === 'signer' && (
