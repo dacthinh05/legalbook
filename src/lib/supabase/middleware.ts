@@ -40,9 +40,21 @@ export async function updateSession(request: NextRequest) {
         },
       },
     });
+    // Refresh auth session token
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Refresh auth session token if available
-    await supabase.auth.getUser();
+    // Admin route protection on strict production mode
+    const pathname = request.nextUrl.pathname;
+    const isStrictProd = process.env.NEXT_PUBLIC_STRICT_PROD === 'true';
+    const isDemoExplicit = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+    if (isStrictProd && !isDemoExplicit && pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+      if (!user) {
+        const loginUrl = new URL('/', request.url);
+        loginUrl.searchParams.set('auth_required', 'admin');
+        return NextResponse.redirect(loginUrl);
+      }
+    }
 
     return supabaseResponse;
   } catch (error) {

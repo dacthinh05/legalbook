@@ -255,9 +255,11 @@ export function extractStructuredArticles(html: string): ExtractedArticle[] {
     const nextIdx = i + 1 < matches.length ? matches[i + 1].index : html.length;
     const sectionHtml = html.slice(m.index, nextIdx);
     const bodyText = cleanHtmlToText(sectionHtml).normalize('NFC');
+    const numOnly = m.num.replace(/^[^\d]*/, '').replace(/[^\da-z]/gi, '').toLowerCase();
+    const articleId = numOnly ? `dieu-${numOnly}` : `dieu-${i + 1}`;
 
     articles.push({
-      id: `dieu-${m.num.replace(/\s+/g, '-').toLowerCase()}`,
+      id: articleId,
       number: m.num,
       label: m.num,
       title: m.fullHeading,

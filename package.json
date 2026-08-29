@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test scripts/run_regression_tests.mjs"
+    "test": "tsx --test scripts/run_regression_tests.mjs",
+    "seed:supabase": "tsx scripts/seed_supabase_production.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

@@ -128,11 +128,11 @@ function formatAdministrativeMasthead(html: string, doc?: Partial<LegalDocument>
   const matchBoundary = html.match(boundaryRegex);
 
   let bodySection = '';
-
-  if (matchBoundary && matchBoundary.index !== undefined && matchBoundary.index > 0) {
+  if (matchBoundary && matchBoundary.index !== undefined && matchBoundary.index >= 0) {
     bodySection = html.slice(matchBoundary.index);
+  } else {
+    bodySection = html;
   }
-
   const hasBodyWrapper = html.startsWith('<div class="document-full-body">');
   if (bodySection) {
     const cleanBody = bodySection.replace(/<\/div>\s*$/, '');

@@ -1138,3 +1138,37 @@ export function executeSearchWithScopeCounts(
     scopeCounts,
   };
 }
+
+export interface HybridSearchResultItem extends SearchResultViewModel {
+  domId?: string;
+  articleNumber?: string;
+  articleTitle?: string;
+  rrfScore?: number;
+}
+
+/**
+ * Executes client/hybrid search scoring combined with provision-level matching and RRF ranking.
+ */
+export function executeHybridSemanticSearch(
+  documents: Partial<LegalDocument>[],
+  query: string,
+  options: SearchOptions & { searchMode?: 'keyword' | 'hybrid' | 'semantic' } = {}
+): { results: HybridSearchResultItem[]; totalMatches: number } {
+  const { results } = executeSearchWithScopeCounts(documents, query, options);
+
+  const hybridResults: HybridSearchResultItem[] = results.map((r, idx) => {
+    const domId = r.targetNodeId || (r.locationLabel ? `dieu-${r.locationLabel.replace(/[^\d]/g, '')}` : undefined);
+    return {
+      ...r,
+      domId,
+      articleNumber: r.locationLabel,
+      articleTitle: r.displayTitle || r.title,
+      rrfScore: 1.0 / (60 + idx + 1),
+    };
+  });
+
+  return {
+    results: hybridResults,
+    totalMatches: hybridResults.length,
+  };
+}

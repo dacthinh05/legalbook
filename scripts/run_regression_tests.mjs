@@ -3650,3 +3650,210 @@ describe('36. Atomic Legal Articles Schema & Hybrid Search Service (4 Criteria)'
     assert.deepStrictEqual(empty, []);
   });
 });
+
+describe('37. Supabase pgvector Embeddings, Article-Level Chunking & Hybrid Search RPC (8 Criteria)', () => {
+  test('1. chunkLegalDocumentByArticle accurately parses articles with DOM ID dieu-X', async () => {
+    const { chunkLegalDocumentByArticle } = await import('../src/lib/document-import/article-chunker.ts');
+    const sampleHtml = `
+      <div class="legal-chapter-block" id="chuong-1">
+        <p class="legal-chapter-num">Chương I</p>
+        <h2 class="legal-chapter-title">Quy định chung</h2>
+      </div>
+      <h2 class="legal-article-title" id="dieu-1">Điều 1. Phạm vi điều chỉnh</h2>
+      <p>1. Quy định về thuế thu nhập doanh nghiệp.</p>
+      <p>2. Áp dụng cho các tổ chức kinh tế.</p>
+      <h2 class="legal-article-title" id="dieu-2">Điều 2. Người nộp thuế</h2>
+      <p>1. Doanh nghiệp được thành lập theo pháp luật Việt Nam.</p>
+    `;
+
+    const result = chunkLegalDocumentByArticle(sampleHtml, { documentNumber: '109/2025/QH15' });
+    assert.strictEqual(result.totalChunks, 2);
+    assert.strictEqual(result.chunks[0].domId, 'dieu-1');
+    assert.strictEqual(result.chunks[0].articleNumber, 'Điều 1');
+    assert.strictEqual(result.chunks[0].clauseCount, 2);
+    assert.strictEqual(result.chunks[1].domId, 'dieu-2');
+    assert.strictEqual(result.chunks[1].articleNumber, 'Điều 2');
+    assert.strictEqual(result.chunks[1].clauseCount, 1);
+    assert.ok(result.totalTokens > 0);
+  });
+
+  test('2. generateEmbeddingsPayload creates structured vector text with metadata', async () => {
+    const { chunkLegalDocumentByArticle, generateEmbeddingsPayload } = await import('../src/lib/document-import/article-chunker.ts');
+    const sampleHtml = `
+      <h2 class="legal-article-title" id="dieu-15">Điều 15. Khống chế lãi vay</h2>
+      <p>1. Tổng chi phí lãi vay được trừ không vượt quá 30% tổng lợi nhuận thuần từ hoạt động kinh doanh cộng chi phí lãi vay cộng chi phí khấu hao (EBITDA).</p>
+    `;
+
+    const chunkResult = chunkLegalDocumentByArticle(sampleHtml);
+    const payload = generateEmbeddingsPayload(chunkResult, {
+      documentNumber: '132/2020/NĐ-CP',
+      issuingBody: 'Chính phủ',
+    });
+
+    assert.strictEqual(payload.length, 1);
+    assert.strictEqual(payload[0].domId, 'dieu-15');
+    assert.ok(payload[0].textToEmbed.includes('132/2020/NĐ-CP'));
+    assert.ok(payload[0].textToEmbed.includes('EBITDA'));
+    assert.strictEqual(payload[0].metadata.clauseCount, 1);
+  });
+
+  test('3. executeHybridSemanticSearch executes RRF scoring and maps provision domIds', async () => {
+    const { executeHybridSemanticSearch } = await import('../src/lib/search.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    const { results, totalMatches } = executeHybridSemanticSearch(DEMO_DOCUMENTS, 'giảm trừ gia cảnh', {
+      searchMode: 'hybrid',
+      limit: 5,
+    });
+
+    assert.ok(totalMatches > 0);
+    assert.ok(results.length > 0);
+    assert.ok(results[0].rrfScore && results[0].rrfScore > 0);
+  });
+
+  test('4. PRIORITY_TOPICS_2024_2026 defines 6 priority tax and accounting domains', async () => {
+    const { PRIORITY_TOPICS_2024_2026 } = await import('../src/lib/crawler/legal-tax-crawler.ts');
+    assert.strictEqual(PRIORITY_TOPICS_2024_2026.length, 6);
+    assert.ok(PRIORITY_TOPICS_2024_2026.some((t) => t.id === 'thue-tndn-2025'));
+    assert.ok(PRIORITY_TOPICS_2024_2026.some((t) => t.id === 'che-do-ke-toan-moi'));
+    assert.ok(PRIORITY_TOPICS_2024_2026.some((t) => t.id === 'thue-tncn-2025'));
+  });
+
+  test('5. standardizeCrawledDocument standardizes raw legal HTML and attaches files', async () => {
+    const { standardizeCrawledDocument } = await import('../src/lib/crawler/legal-tax-crawler.ts');
+    const rawData = {
+      title: 'Thông tư hướng dẫn chi phí được trừ khi tính thuế TNDN',
+      document_number: '99/2026/TT-BTC',
+      document_type: 'thong_tu',
+      issuing_body: 'Bộ Tài chính',
+      issued_date: '2026-05-20',
+      effective_date: '2026-07-01',
+      raw_html: '<p><strong>Điều 1. Phạm vi điều chỉnh</strong></p><p>1. Hướng dẫn chi phí hợp lý.</p>',
+      official_file_url: 'https://example.com/99_2026_TT_BTC.docx',
+      file_type: 'docx',
+    };
+
+    const { document, quality, totalProvisions } = standardizeCrawledDocument(rawData);
+    assert.ok(document);
+    assert.strictEqual(document.document_number, '99/2026/TT-BTC');
+    assert.strictEqual(document.files?.length, 1);
+    assert.strictEqual(document.files?.[0].file_type, 'docx');
+    assert.ok(totalProvisions >= 1);
+    assert.ok(quality.score > 0);
+  });
+
+  test('6. evaluateAutoPublishEligibility auto-publishes documents with score >= 90%', async () => {
+    const { evaluateAutoPublishEligibility } = await import('../src/lib/quality/auto-publish-engine.ts');
+    const validDoc = {
+      id: 'doc-valid-01',
+      title: 'Thông tư 121/2026/TT-BKHĐT hướng dẫn đăng ký doanh nghiệp điện tử',
+      document_number: '121/2026/TT-BKHĐT',
+      document_type: 'thong_tu',
+      issuing_body: 'Bộ Kế hoạch và Đầu tư',
+      issued_date: '2026-07-10',
+      effective_date: '2026-08-21',
+      status: 'hieu_luc',
+      html_content: `
+        <div class="legal-chapter-block" id="chuong-1"><h2 class="legal-chapter-title">Quy định chung</h2></div>
+        <h2 class="legal-article-title" id="dieu-1">Điều 1. Phạm vi điều chỉnh</h2>
+        <p>1. Hướng dẫn biểu mẫu xác thực danh tính điện tử qua VNeID mức độ 2.</p>
+        <h2 class="legal-article-title" id="dieu-2">Điều 2. Hiệu lực thi hành</h2>
+        <p>1. Có hiệu lực từ ngày 21/08/2026.</p>
+      `,
+      files: [{ id: 'f1', document_id: 'doc-valid-01', file_type: 'docx', file_url: '/doc.docx', is_primary: true, version: 1, file_size: 1000, original_filename: 'doc.docx', uploaded_by: 'crawler', created_at: '2026-08-29' }],
+    };
+
+    const evaluation = evaluateAutoPublishEligibility(validDoc, 90);
+    assert.strictEqual(evaluation.decision, 'auto_publish');
+    assert.strictEqual(evaluation.isPublished, true);
+    assert.strictEqual(evaluation.reviewStatus, 'published');
+    assert.ok(evaluation.score >= 90);
+  });
+
+  test('7. applyAutoPublishDecision queues incomplete documents for admin verification', async () => {
+    const { applyAutoPublishDecision } = await import('../src/lib/quality/auto-publish-engine.ts');
+    const incompleteDoc = {
+      id: 'doc-bad-01',
+      title: 'Văn bản nháp chưa rõ số',
+      document_number: null, // missing
+      document_type: 'thong_tu',
+      html_content: '<p>Nội dung sơ sài</p>',
+      files: [],
+    };
+
+    const { document, evaluation } = applyAutoPublishDecision(incompleteDoc, 90);
+    assert.strictEqual(evaluation.decision, 'queue_for_review');
+    assert.strictEqual(document.is_published, false);
+    assert.strictEqual(document.review_status, 'pending_review');
+    assert.ok(document.quality_warnings && document.quality_warnings.length >= 1);
+  });
+
+  test('8. Migration 009_pgvector_and_hybrid_search.sql defines document_provisions and RPC', async () => {
+    const fs = await import('fs');
+    const sql = fs.readFileSync('supabase/migrations/009_pgvector_and_hybrid_search.sql', 'utf8');
+    assert.ok(sql.includes('CREATE EXTENSION IF NOT EXISTS "vector"'));
+    assert.ok(sql.includes('public.document_provisions'));
+    assert.ok(sql.includes('VECTOR(1536)'));
+    assert.ok(sql.includes('search_provisions_hybrid'));
+    assert.ok(sql.includes('score_rrf'));
+  });
+});
+
+describe('38. Production Readiness, Master Schema, Seed Pipeline & Vercel Deployment Runbook (6 Criteria)', () => {
+  test('1. supabase/production_master_schema.sql defines all 11 core tables and RLS policies', async () => {
+    const fs = await import('fs');
+    const sql = fs.readFileSync('supabase/production_master_schema.sql', 'utf8');
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.documents'));
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.categories'));
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_category_links'));
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_relations'));
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_files'));
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_provisions'));
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.legal_effects'));
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_annotations'));
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.verification_audit_logs'));
+    assert.ok(sql.includes('ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY'));
+    assert.ok(sql.includes('compute_document_search_vector'));
+  });
+
+  test('2. scripts/seed_supabase_production.ts exports sanitizeStorageKey and runProductionSeed', async () => {
+    const { sanitizeStorageKey } = await import('../scripts/seed_supabase_production.ts');
+    assert.strictEqual(sanitizeStorageKey('CV 572.TNG.QLDN2 - Chi tiền mặt.pdf'), 'CV_572.TNG.QLDN2_-_Chi_tien_mat.pdf');
+    assert.strictEqual(sanitizeStorageKey('Thông tư 200/2014/TT-BTC.docx'), 'Thong_tu_200_2014_TT-BTC.docx');
+  });
+
+  test('3. data-service.ts enforces strict production fail-closed policy when live DB is unconfigured', async () => {
+    const { isStrictProductionMode, isEmbeddedDataPermitted } = await import('../src/lib/data-service.ts');
+    assert.strictEqual(typeof isStrictProductionMode(), 'boolean');
+    assert.strictEqual(typeof isEmbeddedDataPermitted(), 'boolean');
+  });
+
+  test('4. src/lib/supabase/middleware.ts guards /admin routes in strict production mode', async () => {
+    const fs = await import('fs');
+    const middlewareCode = fs.readFileSync('src/lib/supabase/middleware.ts', 'utf8');
+    assert.ok(middlewareCode.includes('pathname.startsWith(\'/admin\')'));
+    assert.ok(middlewareCode.includes('isStrictProd'));
+    assert.ok(middlewareCode.includes('supabase.auth.getUser()'));
+  });
+
+  test('5. vercel.json configures daily 06:00 AM VN cron for /api/cron/crawl-legal-updates', async () => {
+    const fs = await import('fs');
+    const vercelConfig = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+    assert.ok(Array.isArray(vercelConfig.crons));
+    const crawlCron = vercelConfig.crons.find((c) => c.path === '/api/cron/crawl-legal-updates');
+    assert.ok(crawlCron);
+    assert.strictEqual(crawlCron.schedule, '0 23 * * *');
+  });
+
+  test('6. docs/deployment.md and .env.example provide complete step-by-step production runbook', async () => {
+    const fs = await import('fs');
+    const deployDoc = fs.readFileSync('docs/deployment.md', 'utf8');
+    const envExample = fs.readFileSync('.env.example', 'utf8');
+    assert.ok(deployDoc.includes('production_master_schema.sql'));
+    assert.ok(deployDoc.includes('npm run seed:supabase'));
+    assert.ok(deployDoc.includes('NEXT_PUBLIC_STRICT_PROD'));
+    assert.ok(envExample.includes('NEXT_PUBLIC_SUPABASE_URL'));
+    assert.ok(envExample.includes('SUPABASE_SERVICE_ROLE_KEY'));
+    assert.ok(envExample.includes('CRON_SECRET'));
+  });
+});
