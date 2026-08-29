@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { scanGovernmentLegalPortals } from '@/lib/crawler/portal-crawler';
 import { getSafeSourceUrl } from '@/lib/utils';
-
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60s max execution time on Vercel
 /**
@@ -55,13 +55,15 @@ async function handleCronCrawl(request: NextRequest) {
       'Chuẩn mực Kiểm toán độc lập (VSA)'
     ];
 
-    const portalsScanned = [
-      { name: 'Tổng cục Thuế', domain: 'gdt.gov.vn', status: 'scanned_ok' },
-      { name: 'Bộ Tài chính', domain: 'mof.gov.vn', status: 'scanned_ok' },
-      { name: 'Cổng TTĐT Chính Phủ', domain: 'vanban.chinhphu.vn', status: 'scanned_ok' },
-      { name: 'Cơ sở Dữ liệu Quốc gia', domain: 'vbpl.vn', status: 'scanned_ok' }
-    ];
-
+    // Execute live multi-portal scanning with network fallback
+    const liveScan = await scanGovernmentLegalPortals();
+    const portalsScanned = liveScan.portals.map((p) => ({
+      name: p.portalName,
+      domain: p.domain,
+      status: p.status,
+      discoveredCount: p.discoveredCount,
+      responseTimeMs: p.responseTimeMs,
+    }));
     // Simulated / Discovered Staging Feed for Tax, Overtime & Audit
     const stagedTaxAuditDocs = [
       {

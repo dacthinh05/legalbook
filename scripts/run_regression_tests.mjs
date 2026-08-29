@@ -3512,3 +3512,141 @@ describe('33. Complete Removal of Read/Unread Status & Legal Status Distribution
     assert.ok(headerCode.includes('Mở Bảng tin Cập nhật pháp luật'), 'AppHeader must provide link to legal updates feed');
   });
 });
+
+describe('34. Google NotebookLM Corpus Bundler & Exporter (4 Criteria)', () => {
+  test('1. generateNotebookLmBundle formats clean markdown headings with metadata and token estimation', async () => {
+    const { generateNotebookLmBundle } = await import('../src/lib/notebooklm/corpus-bundler.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    const bundle = generateNotebookLmBundle(DEMO_DOCUMENTS, 10);
+    assert.ok(bundle);
+    assert.strictEqual(bundle.totalDocuments, 10);
+    assert.ok(bundle.totalCharacters > 1000);
+    assert.ok(bundle.estimatedTokens > 300);
+    assert.ok(bundle.filename.startsWith('LegalBook-Corpus-NotebookLM-'));
+    assert.ok(bundle.markdownContent.includes('# TỔNG HỢP HỆ THỐNG VĂN BẢN PHÁP LUẬT THUẾ'));
+    assert.ok(bundle.markdownContent.includes('### TÓM TẮT NỘI DUNG CHÍNH:'));
+  });
+
+  test('2. formatDocumentForNotebookLm produces standardized markdown structure with legal metadata', async () => {
+    const { formatDocumentForNotebookLm } = await import('../src/lib/notebooklm/corpus-bundler.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc = DEMO_DOCUMENTS[0];
+
+    const text = formatDocumentForNotebookLm(doc);
+    assert.ok(text.includes('# VĂN BẢN:'));
+    assert.ok(text.includes('**Cơ quan ban hành:**'));
+    assert.ok(text.includes('**Ngày có hiệu lực:**'));
+  });
+
+  test('3. generateNotebookLmBundle limits corpus size to 50 sources by default', async () => {
+    const { generateNotebookLmBundle } = await import('../src/lib/notebooklm/corpus-bundler.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+
+    const bundle = generateNotebookLmBundle(DEMO_DOCUMENTS, 50);
+    assert.ok(bundle.totalDocuments <= 50);
+    assert.ok(bundle.documentList.length <= 50);
+  });
+
+  test('4. Admin upload page renders NotebookLM Corpus Export card with direct download', async () => {
+    const fs = await import('fs');
+    const uploadCode = fs.readFileSync('src/app/admin/upload/page.tsx', 'utf8');
+    assert.ok(uploadCode.includes('Google NotebookLM Integration'), 'Admin upload must render NotebookLM badge');
+    assert.ok(uploadCode.includes('Tải Bundle (.md)'), 'Admin upload must offer Bundle download button');
+  });
+});
+
+describe('35. Live Government Portal Crawler Worker (4 Criteria)', () => {
+  test('1. parseLegalSnippetFromHtml normalizes Vietnamese diacritics and identifies document number and domain', async () => {
+    const { parseLegalSnippetFromHtml } = await import('../src/lib/crawler/portal-crawler.ts');
+    const sample = `BỘ TÀI CHÍNH\nSố: 78/2026/TT-BTC\nHà Nội, ngày 20 tháng 06 năm 2026\nTHÔNG TƯ\nHướng dẫn về hóa đơn điện tử và kê khai thuế GTGT điện tử`;
+
+    const parsed = parseLegalSnippetFromHtml(sample, 'https://mof.gov.vn', 'mof_gov', 'Bộ Tài chính');
+    assert.ok(parsed);
+    assert.strictEqual(parsed.document_number, '78/2026/TT-BTC');
+    assert.strictEqual(parsed.domain, 'tax');
+    assert.strictEqual(parsed.issuing_body, 'Bộ Tài chính');
+    assert.strictEqual(parsed.issued_date, '2026-06-20');
+  });
+
+  test('2. scanGovernmentLegalPortals scans all 4 designated government portals with network fallback', async () => {
+    const { scanGovernmentLegalPortals } = await import('../src/lib/crawler/portal-crawler.ts');
+    const res = await scanGovernmentLegalPortals();
+
+    assert.ok(res);
+    assert.strictEqual(res.portals.length, 4);
+    assert.ok(res.portals.some((p) => p.portalId === 'gdt_gov'));
+    assert.ok(res.portals.some((p) => p.portalId === 'mof_gov'));
+    assert.ok(res.portals.some((p) => p.portalId === 'chinhphu'));
+    assert.ok(res.portals.some((p) => p.portalId === 'vbpl'));
+  });
+
+  test('3. crawl-legal-updates cron route executes live portal scanner and returns response time metrics', async () => {
+    const { GET } = await import('../src/app/api/cron/crawl-legal-updates/route.ts');
+    const prevSecret = process.env.CRON_SECRET;
+    process.env.CRON_SECRET = 'secret-test-crawler';
+
+    try {
+      const req = new Request('http://localhost:3000/api/cron/crawl-legal-updates', {
+        headers: { authorization: 'Bearer secret-test-crawler' },
+      });
+      const res = await GET(req);
+      const json = await res.json();
+      assert.strictEqual(res.status, 200);
+      assert.ok(json.portalsScanned.length >= 4);
+      assert.ok(json.portalsScanned[0].name);
+    } finally {
+      process.env.CRON_SECRET = prevSecret;
+    }
+  });
+
+  test('4. parseLegalSnippetFromHtml categorizes accounting and audit domains accurately', async () => {
+    const { parseLegalSnippetFromHtml } = await import('../src/lib/crawler/portal-crawler.ts');
+    const auditSample = `Số: 01/2026/TT-BTC\nQuy định về chuẩn mực kiểm toán độc lập VSA cho doanh nghiệp`;
+    const parsed = parseLegalSnippetFromHtml(auditSample, 'https://mof.gov.vn', 'mof_gov', 'Bộ Tài chính');
+    assert.ok(parsed);
+    assert.strictEqual(parsed.domain, 'audit');
+  });
+});
+
+describe('36. Atomic Legal Articles Schema & Hybrid Search Service (4 Criteria)', () => {
+  test('1. legal-articles-schema.sql contains HNSW vector index and unaccented tsvector definition', async () => {
+    const fs = await import('fs');
+    const sql = fs.readFileSync('src/lib/database/legal-articles-schema.sql', 'utf8');
+    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.legal_articles'));
+    assert.ok(sql.includes('USING hnsw (embedding vector_cosine_ops)'));
+    assert.ok(sql.includes('FUNCTION public.match_legal_articles_hybrid'));
+    assert.ok(sql.includes('rrf_k'));
+  });
+
+  test('2. searchLegalArticlesHybrid returns structured atomic articles ranked by RRF score', async () => {
+    const { searchLegalArticlesHybrid } = await import('../src/lib/database/hybrid-search-service.ts');
+    const results = await searchLegalArticlesHybrid('chi phí được trừ thuế TNDN', { matchCount: 5 });
+
+    assert.ok(results);
+    assert.ok(results.length > 0);
+    assert.ok(results[0].articleNumber.startsWith('Điều'));
+    assert.ok(results[0].rrfScore > 0);
+    assert.ok(results[0].contentPlain.length > 10);
+  });
+
+  test('3. searchLegalArticlesHybrid supports documentId scoping for in-document article retrieval', async () => {
+    const { searchLegalArticlesHybrid } = await import('../src/lib/database/hybrid-search-service.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const doc = DEMO_DOCUMENTS.find((d) => d.document_number?.includes('70/2025'));
+    assert.ok(doc);
+
+    const scopedResults = await searchLegalArticlesHybrid('thời điểm lập hóa đơn', {
+      documentId: doc.id,
+      matchCount: 3,
+    });
+    assert.ok(scopedResults.length >= 1);
+    assert.strictEqual(scopedResults[0].documentId, doc.id);
+  });
+
+  test('4. searchLegalArticlesHybrid handles empty queries gracefully returning empty array', async () => {
+    const { searchLegalArticlesHybrid } = await import('../src/lib/database/hybrid-search-service.ts');
+    const empty = await searchLegalArticlesHybrid('');
+    assert.deepStrictEqual(empty, []);
+  });
+});
