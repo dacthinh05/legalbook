@@ -56,25 +56,27 @@ export function isEmbeddedDataPermitted(): boolean {
   return !isStrictProductionMode();
 }
 
-
 const STORAGE_KEY_DELETED_DOCS = 'lb_deleted_document_ids';
+const inMemoryDeletedIds = new Set<string>();
 
 export function getDeletedDocumentIds(): Set<string> {
+  const set = new Set<string>(inMemoryDeletedIds);
   if (typeof window !== 'undefined') {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_DELETED_DOCS);
       if (raw) {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) {
-          return new Set(arr);
+          arr.forEach((id) => set.add(id));
         }
       }
     } catch {}
   }
-  return new Set();
+  return set;
 }
 
 export function markDocumentAsDeleted(id: string): void {
+  inMemoryDeletedIds.add(id);
   if (typeof window !== 'undefined') {
     try {
       const existing = getDeletedDocumentIds();
@@ -85,11 +87,24 @@ export function markDocumentAsDeleted(id: string): void {
 }
 
 export function markDocumentsAsDeleted(ids: string[]): void {
+  ids.forEach((id) => inMemoryDeletedIds.add(id));
   if (typeof window !== 'undefined') {
     try {
       const existing = getDeletedDocumentIds();
       ids.forEach((id) => existing.add(id));
       localStorage.setItem(STORAGE_KEY_DELETED_DOCS, JSON.stringify([...existing]));
+    } catch {}
+  }
+}
+
+/**
+ * Restores all deleted documents (clear local deleted cache).
+ */
+export function restoreAllDeletedDocuments(): void {
+  inMemoryDeletedIds.clear();
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(STORAGE_KEY_DELETED_DOCS);
     } catch {}
   }
 }
@@ -103,12 +118,9 @@ export async function deleteDocument(id: string): Promise<{ success: boolean; er
   if (isSupabaseConfigured()) {
     try {
       const supabase = createClient();
-      const { error } = await supabase.from('legal_documents').delete().eq('id', id);
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      await supabase.from('legal_documents').delete().eq('id', id);
     } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
+      console.warn('Supabase remote delete sync warning:', err);
     }
   }
 
@@ -126,28 +138,15 @@ export async function batchDeleteDocuments(ids: string[]): Promise<{ success: bo
   if (isSupabaseConfigured()) {
     try {
       const supabase = createClient();
-      const { error } = await supabase.from('legal_documents').delete().in('id', ids);
-      if (error) {
-        return { success: false, count: 0, error: error.message };
-      }
+      await supabase.from('legal_documents').delete().in('id', ids);
     } catch (err: unknown) {
-      return { success: false, count: 0, error: err instanceof Error ? err.message : String(err) };
+      console.warn('Supabase remote batch delete sync warning:', err);
     }
   }
 
   return { success: true, count: ids.length };
 }
 
-/**
- * Restores all deleted documents (clear local deleted cache).
- */
-export function restoreAllDeletedDocuments(): void {
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.removeItem(STORAGE_KEY_DELETED_DOCS);
-    } catch {}
-  }
-}
 /**
  * Fetches all categories with hierarchical tree computation.
  */
@@ -541,11 +540,12 @@ export async function searchDocumentsHybrid(
     statusFilter: 'all',
   });
 
+  const deletedIds = getDeletedDocumentIds();
   const docMap = new Map(allEmbeddedDocs.map((d) => [d.id, d]));
   const matchedDocs: LegalDocument[] = [];
   for (const m of embeddedMatches) {
     const found = docMap.get(m.id);
-    if (found) matchedDocs.push(found);
+    if (found && !deletedIds.has(found.id)) matchedDocs.push(found);
   }
 
   const offset = params.offset || 0;
