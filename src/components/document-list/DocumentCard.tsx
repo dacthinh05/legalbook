@@ -17,7 +17,6 @@ import type { LegalDocument } from '@/types';
 interface DocumentCardProps {
   document: LegalDocument;
   isSelected: boolean;
-  isRead: boolean;
   isBookmarked: boolean;
   hideTypeBadge?: boolean;
   onSelect: () => void;
@@ -26,7 +25,6 @@ interface DocumentCardProps {
 export function DocumentCard({
   document: doc,
   isSelected,
-  isRead,
   isBookmarked,
   hideTypeBadge = false,
   onSelect,
@@ -50,18 +48,6 @@ export function DocumentCard({
       {/* DÒNG 1: ĐỊNH DANH (SỐ HIỆU + TYPE) BÊN TRÁI + TRẠNG THÁI DUY NHẤT BÊN PHẢI */}
       <div className="flex items-center justify-between gap-1.5 mb-1">
         <div className="flex items-center gap-1.5 min-w-0">
-          {/* Read/Unread indicator */}
-          <span
-            className="flex-shrink-0"
-            title={isRead ? 'Đã đọc' : 'Chưa đọc'}
-          >
-            {isRead ? (
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
-            ) : (
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
-            )}
-          </span>
-
           {!hideTypeBadge && (
             <span
               className={cn(

@@ -69,15 +69,6 @@ export default function MainPage() {
 
   // User state
   const [bookmarksRaw, setBookmarksRaw] = useLocalStorageString('lb_bookmarks', '[]');
-  const [readRaw, setReadRaw] = useLocalStorageString('lb_read', '[]');
-
-  const readDocuments = useMemo(() => {
-    try {
-      return new Set<string>(JSON.parse(readRaw));
-    } catch {
-      return new Set<string>();
-    }
-  }, [readRaw]);
 
   const bookmarkedDocuments = useMemo(() => {
     try {
@@ -369,15 +360,6 @@ export default function MainPage() {
     setMobileSidebarOpen(false);
   }, [setSelectedCategoryId, setSelectedDocumentId, setSidebarOpen, setListOpen]);
 
-  const handleMarkRead = (documentId: string) => {
-    const next = new Set(readDocuments);
-    if (next.has(documentId)) {
-      next.delete(documentId);
-    } else {
-      next.add(documentId);
-    }
-    setReadRaw(JSON.stringify([...next]));
-  };
 
   const handleToggleBookmark = (documentId: string) => {
     const next = new Set(bookmarkedDocuments);
@@ -428,9 +410,7 @@ export default function MainPage() {
         <div className="flex-1 overflow-hidden">
           <DocumentReader
             document={selectedDocument as LegalDocument}
-            isRead={readDocuments.has(selectedDocument.id!)}
             isBookmarked={bookmarkedDocuments.has(selectedDocument.id!)}
-            onMarkRead={() => handleMarkRead(selectedDocument.id!)}
             onToggleBookmark={() => handleToggleBookmark(selectedDocument.id!)}
             onSelectRelatedDocument={handleDocumentSelect}
             onFullscreen={() => setReaderFullscreen(false)}
@@ -453,7 +433,12 @@ export default function MainPage() {
       {/* 1. Global App Header */}
       <AppHeader
         onSearchClick={() => setSearchOpen(true)}
-        unreadCount={allDocList.filter((d: LegalDocument) => !readDocuments.has(d.id!)).length}
+        newUpdatesCount={allDocList.filter((d: LegalDocument) => {
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          const threshold = thirtyDaysAgo.toISOString().slice(0, 10);
+          return (d.issued_date && d.issued_date >= threshold) || (d.effective_date && d.effective_date >= threshold);
+        }).length}
         onMobileSidebarToggle={() => setMobileSidebarOpen(true)}
         onOpenImportModal={() => setImportModalOpen(true)}
         onLogoClick={handleResetHome}
@@ -496,7 +481,6 @@ export default function MainPage() {
               selectedDocType={selectedDocType}
               onSelectCategory={handleCategorySelect}
               onSelectDocType={handleDocTypeSelect}
-              readDocuments={readDocuments}
               activeCategoryCount={categoryDocuments.length}
               onCollapse={() => setSidebarOpen(false)}
             />
@@ -556,7 +540,6 @@ export default function MainPage() {
               onSelectDocument={handleDocumentSelect}
               categoryName={listCategoryTitle}
               selectedDocType={selectedDocType}
-              readDocuments={readDocuments}
               bookmarkedDocuments={bookmarkedDocuments}
               onCollapse={() => setListOpen(false)}
             />
@@ -616,9 +599,7 @@ export default function MainPage() {
             /* Document Reader when a document is selected */
             <DocumentReader
               document={selectedDocument as LegalDocument}
-              isRead={readDocuments.has(selectedDocument.id!)}
               isBookmarked={bookmarkedDocuments.has(selectedDocument.id!)}
-              onMarkRead={() => handleMarkRead(selectedDocument.id!)}
               onToggleBookmark={() => handleToggleBookmark(selectedDocument.id!)}
               onSelectRelatedDocument={handleDocumentSelect}
               onFullscreen={() => setReaderFullscreen(true)}
@@ -638,7 +619,6 @@ export default function MainPage() {
               activeCategory={activeCategory}
               activeDocType={selectedDocType}
               categories={categoryData.categories}
-              readDocuments={readDocuments}
               bookmarkedDocuments={bookmarkedDocuments}
               onSelectDocument={handleDocumentSelect}
               onResetCategoryFilter={() => {

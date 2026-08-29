@@ -12,7 +12,6 @@ interface DocumentListProps {
   onSelectDocument: (id: string) => void;
   categoryName?: string;
   selectedDocType?: DocumentType | null;
-  readDocuments: Set<string>;
   bookmarkedDocuments?: Set<string>;
   onCollapse?: () => void;
 }
@@ -99,7 +98,6 @@ export function DocumentList({
   onSelectDocument,
   categoryName,
   selectedDocType,
-  readDocuments,
   bookmarkedDocuments,
   onCollapse,
 }: DocumentListProps) {
@@ -290,7 +288,6 @@ export function DocumentList({
               key={doc.id}
               document={doc}
               isSelected={selectedDocumentId === doc.id}
-              isRead={readDocuments.has(doc.id)}
               isBookmarked={bookmarkedDocuments?.has(doc.id) || false}
               hideTypeBadge={isSingleType}
               onSelect={() => onSelectDocument(doc.id)}

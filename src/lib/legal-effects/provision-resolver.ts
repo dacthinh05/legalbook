@@ -141,6 +141,31 @@ export function extractDocumentProvisions(
       contentText,
       contentHash,
     });
+
+    // Decompose sub-clauses (Khoản 1, Khoản 2...) and Points (Điểm a, Điểm b...) under parent article
+    if (isArticle) {
+      const bodyOnly = sectionHtml.replace(/^(?:<[^>]+>)*\s*(?:Điều|Chương|Phần|Mục|Phụ lục)\s+[\dIVXLCDM\w\.\-]+[^<\n]{0,120}(?:<\/[^>]+>)?/i, '');
+      const clauseRegex = /(?:<p[^>]*>\s*|^)\s*(\d+)\.\s+([^<\n]{10,})/gim;
+      let cMatch;
+      let cIdx = 0;
+      while ((cMatch = clauseRegex.exec(bodyOnly)) !== null) {
+        const cNum = cMatch[1];
+        const cText = cleanText(cMatch[0]);
+        provisions.push({
+          id: `prov-${documentId.slice(0, 8)}-${stableKey.replace(/\//g, '_')}_k${cNum}`,
+          documentId,
+          parentProvisionId: provId,
+          provisionType: 'clause',
+          numberLabel: `Khoản ${cNum}`,
+          headingTitle: `Khoản ${cNum} ${m.label}`,
+          normalizedPath: `${normalizedPath}/khoan_${cNum}`,
+          stableKey: `${stableKey}/clause_${cNum}`,
+          orderIndex: (i + 1) * 100 + (++cIdx),
+          contentText: cText,
+          contentHash: computeContentHash(cText),
+        });
+      }
+    }
   }
 
   return provisions;
@@ -271,7 +296,8 @@ export function getEffectVisualClass(effectType: LegalEffectType, reviewStatus: 
     case 'implements':
     case 'references':
     default:
-      return `legal-effect-guides bg-sky-50 text-sky-950 border-b-2 border-dashed border-sky-500 hover:bg-sky-100/90 ${pendingModifier}`;
+      // TVPL authentic yellow highlight (#fef08a / bg-yellow-200) with dashed bottom border
+      return `legal-effect-guides bg-yellow-200/90 text-yellow-950 border-b-2 border-dashed border-amber-600 hover:bg-yellow-300 transition-colors shadow-2xs ${pendingModifier}`;
   }
 }
 

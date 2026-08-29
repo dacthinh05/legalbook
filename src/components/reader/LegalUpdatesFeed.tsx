@@ -27,7 +27,6 @@ interface LegalUpdatesFeedProps {
   activeCategory: Category | null;
   activeDocType?: DocumentType | null;
   categories: Category[];
-  readDocuments: Set<string>;
   bookmarkedDocuments: Set<string>;
   onSelectDocument: (docId: string) => void;
   onResetCategoryFilter?: () => void;
@@ -46,8 +45,7 @@ interface CompactFeedRowProps {
   doc: LegalDocument;
   allDocs: LegalDocument[];
   categories: Category[];
-  activeCategoryName: string | null;
-  isRead: boolean;
+  activeCategoryName?: string | null;
   onSelect: () => void;
 }
 
@@ -56,7 +54,6 @@ function CompactFeedRow({
   allDocs,
   categories,
   activeCategoryName,
-  isRead,
   onSelect,
 }: CompactFeedRowProps) {
   const effStatus = getEffectiveStatus(doc);
@@ -89,17 +86,6 @@ function CompactFeedRow({
           {doc.document_number && (
             <span className="text-[12px] font-semibold text-slate-700 font-mono shrink-0 group-hover:text-blue-700 transition-colors">
               {doc.document_number}
-            </span>
-          )}
-
-          {/* Chưa đọc indicator */}
-          {!isRead && (
-            <span
-              className="inline-flex items-center gap-1 text-[10.5px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200 shrink-0"
-              title="Chưa đọc"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-              <span>Chưa đọc</span>
             </span>
           )}
         </div>
@@ -187,15 +173,13 @@ function CompactFeedRow({
   );
 }
 
-// ─── Main Feed Component ──────────────────────────────────────────────────────
-
 export function LegalUpdatesFeed({
   allDocuments,
   categoryDocuments,
   activeCategory,
   activeDocType,
   categories,
-  readDocuments,
+  bookmarkedDocuments,
   onSelectDocument,
   onResetCategoryFilter,
 }: LegalUpdatesFeedProps) {
@@ -403,21 +387,21 @@ export function LegalUpdatesFeed({
             </span>
           </button>
         </div>
-
-        {/* ── 3. Document Feed List (Scan 7-10 per screen) ── */}
-        {displayDocuments.length > 0 ? (
-          <div className="space-y-2.5">
-            {displayDocuments.map((doc) => (
-              <CompactFeedRow
-                key={doc.id}
-                doc={doc}
-                allDocs={allDocuments}
-                categories={categories}
-                activeCategoryName={activeCategory?.name || null}
-                isRead={readDocuments.has(doc.id)}
-                onSelect={() => onSelectDocument(doc.id)}
-              />
-            ))}
+        {/* ── 3. Document Feed List ── */}
+        {filteredDocuments.length > 0 ? (
+          <div className="space-y-3">
+            {filteredDocuments.map((doc) => {
+              return (
+                <CompactFeedRow
+                  key={doc.id}
+                  doc={doc}
+                  allDocs={allDocuments}
+                  categories={categories}
+                  activeCategoryName={activeCategory?.name || null}
+                  onSelect={() => onSelectDocument(doc.id)}
+                />
+              );
+            })}
           </div>
         ) : (
           /* Empty State */

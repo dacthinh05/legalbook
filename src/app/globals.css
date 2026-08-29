@@ -903,9 +903,18 @@ mark.legal-effect-corrects {
 }
 
 mark.legal-effect-guides {
-  background-color: #f0f9ff;
-  color: #0c4a6e;
-  border-bottom: 2px dashed #0284c7;
+  background-color: #fef08a !important;
+  color: #713f12 !important;
+  border-bottom: 2px dashed #ca8a04 !important;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 2px;
+  padding: 1px 2px;
+}
+
+mark.legal-effect-guides:hover {
+  background-color: #fde047 !important;
+  box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.25);
 }
 
 /* TOC Scroll Target Highlight */

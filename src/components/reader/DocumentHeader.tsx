@@ -1,47 +1,52 @@
 'use client';
 
-import { CheckCircle2, Circle, Bookmark, Maximize2, Minimize2, ArrowLeft, Info, GitFork, StickyNote, Share2, Printer } from 'lucide-react';
+import { Bookmark, Maximize2, Minimize2, ArrowLeft, Info, GitFork, StickyNote, Share2, Printer } from 'lucide-react';
 import { cn, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, getEffectiveStatus, formatDate } from '@/lib/utils';
 import type { LegalDocument } from '@/types';
 import { useState } from 'react';
 
 interface DocumentHeaderProps {
   document: LegalDocument;
-  isRead: boolean;
+  activePanel?: 'info' | 'relations' | 'toc' | 'notes' | null;
+  onTogglePanel: (panel: 'info' | 'relations' | 'toc' | 'notes') => void;
   isBookmarked: boolean;
-  onMarkRead: () => void;
   onToggleBookmark: () => void;
   onFullscreen?: () => void;
   isFullscreen?: boolean;
   onBack?: () => void;
-  activePanel: 'info' | 'relations' | 'notes' | null;
-  onTogglePanel: (panel: 'info' | 'relations' | 'notes') => void;
+  isMobile?: boolean;
 }
 
 export function DocumentHeader({
   document: doc,
-  isRead,
+  activePanel,
+  onTogglePanel,
   isBookmarked,
-  onMarkRead,
   onToggleBookmark,
   onFullscreen,
   isFullscreen,
   onBack,
-  activePanel,
-  onTogglePanel,
+  isMobile,
 }: DocumentHeaderProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleShare = () => {
-    if (typeof window !== 'undefined') {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: doc.title,
+          url: window.location.href,
+        });
+      } catch {}
+    } else if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   return (
@@ -110,44 +115,21 @@ export function DocumentHeader({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          {/* Read status button */}
-          <button
-            onClick={onMarkRead}
-            className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors',
-              isRead
-                ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-            )}
-            title={isRead ? 'Đã đánh dấu đã đọc' : 'Nhấn để đánh dấu đã đọc'}
-          >
-            {isRead ? (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                <span className="hidden sm:inline">Đã đọc</span>
-              </>
-            ) : (
-              <>
-                <Circle className="w-3.5 h-3.5 text-gray-400" />
-                <span className="hidden sm:inline">Chưa đọc</span>
-              </>
-            )}
-          </button>
-
           {/* Bookmark button */}
           <button
             onClick={onToggleBookmark}
             className={cn(
-              'p-1.5 rounded-md border transition-colors',
+              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors cursor-pointer',
               isBookmarked
-                ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'
-                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 font-semibold shadow-2xs'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
             )}
-            title={isBookmarked ? 'Bỏ ghim' : 'Ghim văn bản'}
+            title={isBookmarked ? 'Đã lưu — Bấm để bỏ lưu' : 'Lưu văn bản'}
+            aria-label={isBookmarked ? 'Bỏ lưu văn bản' : 'Lưu văn bản'}
           >
-            <Bookmark className={cn('w-4 h-4', isBookmarked && 'fill-amber-500')} />
+            <Bookmark className={cn('w-3.5 h-3.5', isBookmarked ? 'fill-amber-500 text-amber-600' : 'text-slate-400')} />
+            <span className="hidden sm:inline">{isBookmarked ? 'Đã lưu' : 'Lưu văn bản'}</span>
           </button>
-
           {/* Panel toggles */}
           <div className="h-4 w-px bg-gray-200 mx-1 hidden sm:block" />
 

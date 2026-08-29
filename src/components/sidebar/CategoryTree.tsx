@@ -38,7 +38,6 @@ export interface CategoryTreeProps {
   selectedDocType?: DocumentType | null;
   onSelectCategory: (id: string | null) => void;
   onSelectDocType?: (type: DocumentType | null) => void;
-  readDocuments?: Set<string>;
   activeCategoryCount?: number;
   onCollapse?: () => void;
 }
@@ -310,7 +309,6 @@ export function CategoryTree({
   selectedDocType,
   onSelectCategory,
   onSelectDocType,
-  readDocuments: _readDocuments,
   activeCategoryCount: _activeCategoryCount,
   onCollapse,
 }: CategoryTreeProps) {

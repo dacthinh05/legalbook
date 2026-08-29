@@ -61,29 +61,23 @@ import { useAnnotations } from '@/lib/useAnnotations';
 import { DocumentUndoManager } from '@/lib/undo-engine';
 import { ReaderContextPanel } from './ReaderContextPanel';
 import { LegalAiChatPanel } from './LegalAiChatPanel';
+import { AiSummaryModal } from './AiSummaryModal';
+import { createClient } from '@/lib/supabase/client';
+
+export type TabType = 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
 import { SelectionToolbar } from './SelectionToolbar';
 import { HighlightLayer } from './HighlightLayer';
 import { LegalEffectPanel } from './LegalEffectPanel';
 import { PointInTimeSelector } from './PointInTimeSelector';
+import { ProvisionDiffModal } from './ProvisionDiffModal';
 import { LegalEffectOverlay } from './LegalEffectOverlay';
 import { getDocumentLegalEffects } from '@/lib/legal-effects/demo-effects';
 import { calculatePointInTimeStats } from '@/lib/legal-effects/timeline-engine';
-import { AiSummaryModal } from './AiSummaryModal';
-import { DocumentSummaryView } from './DocumentSummaryView';
-import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
-import { createClient } from '@/lib/supabase/client';
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-/** Main content tabs — Mục lục and Ghi chú are context panels */
-type TabType = 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
-
 interface DocumentReaderProps {
   document: LegalDocument;
-  isRead: boolean;
-  isBookmarked: boolean;
-  onMarkRead: () => void;
-  onToggleBookmark: () => void;
-  onSelectRelatedDocument: (id: string) => void;
+  isBookmarked?: boolean;
+  onToggleBookmark?: () => void;
+  onSelectRelatedDocument?: (id: string) => void;
   onFullscreen?: () => void;
   isFullscreen?: boolean;
   onBack?: () => void;
@@ -113,17 +107,15 @@ const LINE_HEIGHT_PRESETS = [
 
 export function DocumentReader({
   document: doc,
-  isRead,
-  isBookmarked,
-  onMarkRead,
+  isBookmarked = false,
   onToggleBookmark,
   onSelectRelatedDocument,
   onFullscreen,
-  isFullscreen,
+  isFullscreen = false,
   onBack,
   initialSearchQuery,
   targetNodeId,
-  initialTab,
+  initialTab = 'noidung',
   initialPanel = 'closed',
   isFocusMode = false,
   onToggleFocusMode,
@@ -144,6 +136,7 @@ export function DocumentReader({
   );
   const [lineHeight, setLineHeight] = useState<number>(1.75);
   const [searchInputValue, setSearchInputValue] = useState<string>(initialSearchQuery || '');
+  const [activeDiffEffect, setActiveDiffEffect] = useState<LegalEffect | null>(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>(initialSearchQuery || '');
   const [activeMatchIndex, setActiveMatchIndex] = useState<number>(0);
   const [totalMatches, setTotalMatches] = useState<number>(0);
@@ -916,36 +909,21 @@ export function DocumentReader({
             })()}
 
             {/* Read status button */}
-            <button
-              onClick={onMarkRead}
-              className={cn(
-                'inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border transition-colors cursor-pointer',
-                isRead
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
-              )}
-              title={isRead ? 'Đã đọc — Nhấn để đánh dấu chưa đọc' : 'Nhấn để đánh dấu đã đọc'}
-              aria-label={isRead ? 'Đánh dấu chưa đọc' : 'Đánh dấu đã đọc'}
-            >
-              <Check className={cn('w-3.5 h-3.5', isRead ? 'text-emerald-600 stroke-[2.5]' : 'text-slate-400')} />
-              <span className="hidden sm:inline">{isRead ? 'Đã đọc' : 'Chưa đọc'}</span>
-            </button>
-
-            {/* Bookmark button */}
+            {/* Bookmark button (Lưu văn bản) */}
             <button
               onClick={onToggleBookmark}
               className={cn(
-                'p-1.5 rounded border transition-colors cursor-pointer',
+                'inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium border transition-colors cursor-pointer',
                 isBookmarked
-                  ? 'bg-amber-50 text-amber-700 border-amber-300'
-                  : 'text-slate-600 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-100'
+                  ? 'bg-amber-50 text-amber-800 border-amber-300 font-semibold shadow-2xs'
+                  : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-50'
               )}
-              title={isBookmarked ? 'Bỏ lưu văn bản' : 'Lưu văn bản'}
+              title={isBookmarked ? 'Đã lưu — Nhấn để bỏ lưu' : 'Lưu văn bản để tra cứu sau'}
               aria-label={isBookmarked ? 'Bỏ lưu văn bản' : 'Lưu văn bản'}
             >
-              <Bookmark className="w-3.5 h-3.5" fill={isBookmarked ? 'currentColor' : 'none'} />
+              <Bookmark className={cn('w-3.5 h-3.5', isBookmarked ? 'fill-amber-500 text-amber-600' : 'text-slate-400')} />
+              <span className="hidden sm:inline">{isBookmarked ? 'Đã lưu' : 'Lưu văn bản'}</span>
             </button>
-
             {/* Focus Mode action */}
             {onToggleFocusMode && (
               <button
@@ -1249,23 +1227,6 @@ export function DocumentReader({
             </button>
           )}
 
-          {/* AI Document Summary Quick Action */}
-          {/* Document Overview Quick Action */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('thongtin')}
-            className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs',
-              activeTab === 'thongtin'
-                ? 'bg-blue-100 text-blue-900 border-blue-300 font-bold'
-                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-            )}
-            title="Xem bản tổng quan pháp lý của văn bản"
-            aria-label="Tổng quan văn bản"
-          >
-            <FileText className="w-3.5 h-3.5 text-blue-700 shrink-0" />
-            <span className="hidden sm:inline">Tổng quan</span>
-          </button>
           {/* TOC context panel toggle */}
           {activeTab === 'noidung' && (
             <button
@@ -1699,6 +1660,8 @@ export function DocumentReader({
                         setActiveLegalEffect(eff);
                         setPanelMode('closed');
                       }}
+                      onOpenDiffModal={(eff) => setActiveDiffEffect(eff)}
+                      onSelectDocument={onSelectRelatedDocument}
                     />
                   </>
                 )}
@@ -2092,17 +2055,48 @@ export function DocumentReader({
                 <LegalAiChatPanel
                   document={doc}
                   onClose={() => setPanelMode('closed')}
-                  onCitationClick={(artNum?: string) => {
-                    if (artNum) {
-                      const digits = artNum.replace(/[^\d]/g, '');
-                      const el =
-                        document.getElementById(`dieu-${digits}`) ||
-                        document.getElementById(`dieu_${digits}`) ||
-                        Array.from(document.querySelectorAll('h1, h2, h3, p strong')).find((h) =>
-                          h.textContent?.includes(`Điều ${digits}`)
-                        );
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  onCitationClick={(artNum?: string, quoteSnippet?: string) => {
+                    if (activeTab !== 'noidung') {
+                      setActiveTab('noidung');
                     }
+                    setTimeout(() => {
+                      if (!contentRef.current || !viewportRef.current) return;
+                      let targetEl: HTMLElement | null = null;
+                      if (artNum) {
+                        const digits = artNum.replace(/[^\d]/g, '');
+                        targetEl =
+                          contentRef.current.querySelector(`#dieu-${digits}`) ||
+                          contentRef.current.querySelector(`#dieu_${digits}`) ||
+                          document.getElementById(`dieu-${digits}`) ||
+                          (Array.from(contentRef.current.querySelectorAll('h1, h2, h3, p strong')).find((h) =>
+                            h.textContent?.includes(`Điều ${digits}`)
+                          ) as HTMLElement | null);
+                      }
+
+                      // Deep search by snippet text in clauses or points if not found
+                      if (!targetEl && quoteSnippet) {
+                        const cleanSnippet = quoteSnippet.slice(0, 45).replace(/["'“”]/g, '').trim();
+                        const elements = contentRef.current.querySelectorAll('p, .legal-clause, .legal-point, h2, h3');
+                        for (const el of Array.from(elements)) {
+                          if (el.textContent?.includes(cleanSnippet)) {
+                            targetEl = el as HTMLElement;
+                            break;
+                          }
+                        }
+                      }
+
+                      if (targetEl && viewportRef.current) {
+                        const containerRect = viewportRef.current.getBoundingClientRect();
+                        const targetRect = targetEl.getBoundingClientRect();
+                        const nextTop = viewportRef.current.scrollTop + targetRect.top - containerRect.top - 16;
+                        viewportRef.current.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' });
+
+                        targetEl.classList.remove('is-navigation-target', 'toc-scroll-target');
+                        void targetEl.offsetWidth;
+                        targetEl.classList.add('is-navigation-target', 'toc-scroll-target');
+                        setTimeout(() => targetEl?.classList.remove('is-navigation-target', 'toc-scroll-target'), 1500);
+                      }
+                    }, 60);
                   }}
                 />
               ) : (
@@ -2217,6 +2211,14 @@ export function DocumentReader({
         onOpenExactDiff={() => {
           setShowCrossDocAnalysisModal(false);
         }}
+      />
+
+      {/* ── Provision Diff Modal (Side-by-Side Clause Comparison) ── */}
+      <ProvisionDiffModal
+        effect={activeDiffEffect}
+        isOpen={Boolean(activeDiffEffect)}
+        onClose={() => setActiveDiffEffect(null)}
+        onSelectDocument={onSelectRelatedDocument}
       />
 
       {/* ── Text Selection Toolbar ── */}

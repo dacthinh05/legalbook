@@ -424,11 +424,15 @@ export interface LegalEffect {
   targetDocumentNumber?: string;
   targetProvisionId?: string;
   targetProvisionLabel?: string;
+  clauseLabel?: string;
+  pointLabel?: string;
   effectiveFrom: string;
   effectiveTo?: string | null;
   impactScope: 'whole_document' | 'whole_provision' | 'text_range';
   legalCitation: string;
+  sourceProvisionCitation?: string;
   sourceExcerpt: string;
+  explanationSummary?: string;
   sourceUrl?: string;
   anchor?: ProvisionAnchor;
   previousContent?: string;

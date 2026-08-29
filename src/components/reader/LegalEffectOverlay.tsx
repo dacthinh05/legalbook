@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {
   applyLegalEffectOverlay,
   removeLegalEffectOverlay,
 } from '@/lib/legal-effects/provision-resolver';
 import { filterEffectsByDate } from '@/lib/legal-effects/timeline-engine';
 import type { LegalEffect } from '@/types';
+import { ProvisionEffectPopover } from './ProvisionEffectPopover';
 
 interface LegalEffectOverlayProps {
   containerRef: React.RefObject<HTMLElement | null>;
@@ -15,6 +16,8 @@ interface LegalEffectOverlayProps {
   selectedDate: string;
   isReady: boolean;
   onEffectClick?: (effect: LegalEffect) => void;
+  onOpenDiffModal?: (effect: LegalEffect) => void;
+  onSelectDocument?: (documentId: string) => void;
 }
 
 export function LegalEffectOverlay({
@@ -24,8 +27,12 @@ export function LegalEffectOverlay({
   selectedDate,
   isReady,
   onEffectClick,
+  onOpenDiffModal,
+  onSelectDocument,
 }: LegalEffectOverlayProps) {
   const applyTimeoutRef = useRef<NodeJS.Timeout | number | undefined>(undefined);
+  const [activePopoverEffect, setActivePopoverEffect] = useState<LegalEffect | null>(null);
+  const [popoverAnchorRect, setPopoverAnchorRect] = useState<DOMRect | null>(null);
 
   const applyOverlay = useCallback(() => {
     const container = containerRef.current;
@@ -55,7 +62,7 @@ export function LegalEffectOverlay({
   // Click delegation on legal effect marks
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !onEffectClick) return;
+    if (!container) return;
 
     const handleMarkClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -67,7 +74,10 @@ export function LegalEffectOverlay({
         const found = effects.find((eff) => eff.id === effectId);
         if (found) {
           e.stopPropagation();
-          onEffectClick(found);
+          const rect = mark.getBoundingClientRect();
+          setPopoverAnchorRect(rect);
+          setActivePopoverEffect(found);
+          onEffectClick?.(found);
         }
       }
     };
@@ -76,7 +86,7 @@ export function LegalEffectOverlay({
     return () => container.removeEventListener('click', handleMarkClick);
   }, [containerRef, effects, onEffectClick]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount or when overlay turned off
   useEffect(() => {
     const container = containerRef.current;
     return () => {
@@ -84,5 +94,26 @@ export function LegalEffectOverlay({
     };
   }, [containerRef]);
 
-  return null;
+  // Close popover when date or overlay toggle changes
+  useEffect(() => {
+    setActivePopoverEffect(null);
+    setPopoverAnchorRect(null);
+  }, [selectedDate, showOverlay]);
+
+  return (
+    <>
+      {activePopoverEffect && popoverAnchorRect && showOverlay && (
+        <ProvisionEffectPopover
+          effect={activePopoverEffect}
+          anchorRect={popoverAnchorRect}
+          onClose={() => {
+            setActivePopoverEffect(null);
+            setPopoverAnchorRect(null);
+          }}
+          onOpenDiffModal={onOpenDiffModal}
+          onSelectDocument={onSelectDocument}
+        />
+      )}
+    </>
+  );
 }

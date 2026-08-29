@@ -6,7 +6,7 @@ import { Search, Menu, ChevronDown, CheckSquare, RefreshCw, Database, Layers, Pl
 import { PacoLogo } from '@/components/common/PacoLogo';
 interface AppHeaderProps {
   onSearchClick: () => void;
-  unreadCount: number;
+  newUpdatesCount?: number;
   onMobileSidebarToggle: () => void;
   onOpenImportModal?: () => void;
   onLogoClick?: () => void;
@@ -14,7 +14,7 @@ interface AppHeaderProps {
 
 export function AppHeader({
   onSearchClick,
-  unreadCount,
+  newUpdatesCount = 0,
   onMobileSidebarToggle,
   onOpenImportModal,
   onLogoClick,
@@ -155,13 +155,14 @@ export function AppHeader({
         <div className="w-px h-4 bg-slate-200 mx-0.5 hidden sm:block" />
 
         {/* Notifications */}
+        {/* Notifications: New legal updates in 30 days */}
         <button
           className="relative p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
-          title={`${unreadCount} văn bản mới`}
-          aria-label="Thông báo văn bản"
+          title={newUpdatesCount > 0 ? `${newUpdatesCount} văn bản mới cập nhật trong 30 ngày` : 'Cập nhật pháp luật'}
+          aria-label="Thông báo văn bản mới"
         >
           <Bell className="w-4 h-4" />
-          {unreadCount > 0 && (
+          {newUpdatesCount > 0 && (
             <span className="absolute top-1 right-1 w-2 h-2 bg-blue-600 rounded-full" />
           )}
         </button>

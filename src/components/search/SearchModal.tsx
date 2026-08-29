@@ -260,8 +260,6 @@ export function SearchModal({
 }: SearchModalProps) {
   // Input state
   const [inputValue, setInputValue] = useState(initialQuery);
-  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-
   // Scope state
   const [scopeFilter, setScopeFilter] = useState<'all' | 'document' | 'provision'>('all');
 
@@ -303,10 +301,18 @@ export function SearchModal({
     });
   }, []);
 
-  // Focus input on mount
+  // Focus input on mount & sync initialQuery
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (initialQuery !== undefined) {
+      setInputValue(initialQuery);
+      setSelectedIndex(0);
+      setVisibleCount(INITIAL_VISIBLE_COUNT);
+    }
+  }, [initialQuery]);
 
   // Pre-index document cache on mount
   useEffect(() => {
@@ -315,20 +321,7 @@ export function SearchModal({
     }
   }, [allDocuments]);
 
-  // Micro-debounce query (80ms)
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(inputValue);
-      setSelectedIndex(0);
-      setVisibleCount(INITIAL_VISIBLE_COUNT);
-    }, 80);
-
-    return () => clearTimeout(handler);
-  }, [inputValue]);
-
-  const isSearching = inputValue !== debouncedQuery;
-  const deferredSearchQuery = useDeferredValue(debouncedQuery);
-
+  const effectiveQuery = inputValue.trim();
   // Compute category document links if category filter active
   const categoryDocIds = useMemo<Set<string> | null>(() => {
     if (categoryFilter === 'all') return null;
@@ -376,7 +369,7 @@ export function SearchModal({
     try {
       const { results: res, scopeCounts: counts } = executeSearchWithScopeCounts(
         allDocuments,
-        deferredSearchQuery,
+        effectiveQuery,
         {
           typeFilter,
           statusFilter,
@@ -394,7 +387,7 @@ export function SearchModal({
         searchError: 'Đã xảy ra sự cố khi xử lý kết quả tìm kiếm.',
       };
     }
-  }, [allDocuments, deferredSearchQuery, typeFilter, statusFilter, scopeFilter, categoryDocIds, sortBy]);
+  }, [allDocuments, effectiveQuery, typeFilter, statusFilter, scopeFilter, categoryDocIds, sortBy]);
 
   // Visible slice for DOM performance
   const visibleResults = useMemo(() => {
@@ -462,12 +455,12 @@ export function SearchModal({
       onSelectDocument(item.documentId, {
         targetNodeId: item.targetNodeId,
         locationLabel: item.locationLabel,
-        query: deferredSearchQuery,
+        query: effectiveQuery,
         tab: 'noidung',
       });
       onClose();
     },
-    [onSelectDocument, deferredSearchQuery, inputValue, saveRecentSearch, onClose]
+    [onSelectDocument, effectiveQuery, inputValue, saveRecentSearch, onClose]
   );
 
   const selectedResult = results[selectedIndex] || null;
@@ -499,15 +492,36 @@ export function SearchModal({
             aria-activedescendant={selectedResult ? `search-result-${selectedIndex}` : undefined}
             placeholder="Tìm số hiệu, tên văn bản, điều khoản, trích yếu hoặc nội dung..."
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              setSelectedIndex(0);
+              setVisibleCount(INITIAL_VISIBLE_COUNT);
+            }}
+            onInput={(e) => {
+              const val = (e.target as HTMLInputElement).value;
+              if (val !== inputValue) {
+                setInputValue(val);
+                setSelectedIndex(0);
+                setVisibleCount(INITIAL_VISIBLE_COUNT);
+              }
+            }}
+            onPaste={(e) => {
+              const val = e.clipboardData?.getData('text');
+              if (val) {
+                setInputValue(val);
+                setSelectedIndex(0);
+                setVisibleCount(INITIAL_VISIBLE_COUNT);
+              }
+            }}
+            onCompositionEnd={(e) => {
+              setInputValue((e.target as HTMLInputElement).value);
+              setSelectedIndex(0);
+              setVisibleCount(INITIAL_VISIBLE_COUNT);
+            }}
             className="flex-1 text-[16px] sm:text-[17px] bg-transparent outline-none text-slate-900 placeholder:text-slate-400 font-medium tracking-tight"
           />
 
-          {/* Loading Spinner */}
-          {isSearching && (
-            <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
-          )}
-
+          {/* Search Icon / Feedback */}
           {/* Clear Query Button */}
           {inputValue && (
             <button
@@ -755,7 +769,7 @@ export function SearchModal({
               <AlertCircle className="w-6 h-6 mx-auto text-red-500" />
               <p className="font-semibold">{searchError}</p>
             </div>
-          ) : !deferredSearchQuery.trim() ? (
+          ) : !effectiveQuery ? (
             /* STATE A: Empty Query — Recent Searches & Suggestions */
             <div className="p-6 sm:p-8 space-y-6">
               {/* Recent searches */}
@@ -845,7 +859,7 @@ export function SearchModal({
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-slate-900">
-                  Không tìm thấy văn bản nào khớp với &ldquo;{deferredSearchQuery}&rdquo;
+                  Không tìm thấy văn bản nào khớp với &ldquo;{effectiveQuery}&rdquo;
                 </h4>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   Thử tìm theo số hiệu văn bản (VD: 58/2026, 144/2026) hoặc xóa bớt các bộ lọc đang chọn.
@@ -869,7 +883,7 @@ export function SearchModal({
                   item={item}
                   index={idx}
                   isSelected={idx === selectedIndex}
-                  searchQuery={deferredSearchQuery}
+                  searchQuery={effectiveQuery}
                   onSelect={handleItemSelect}
                 />
               ))}
@@ -912,7 +926,7 @@ export function SearchModal({
           </div>
 
           <div className="text-[11.5px] font-medium ml-auto">
-            {deferredSearchQuery.trim() ? (
+            {effectiveQuery ? (
               <span>
                 Đã tìm thấy <strong className="text-slate-900 font-bold">{results.length}</strong> kết quả
               </span>

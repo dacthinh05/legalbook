@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   BookOpen,
   Sparkles,
@@ -21,9 +21,17 @@ import {
   MessageSquareText,
   Loader2,
   Info,
+  Scale,
+  Briefcase,
+  HelpCircle,
 } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
-import { summarizeDocumentWithAi, type LegalDocumentSummary, type SummaryCitation } from '@/lib/ai/legal-rag';
+import {
+  summarizeDocumentWithAi,
+  generateLocalDocumentSummary,
+  type LegalDocumentSummary,
+  type SummaryCitation,
+} from '@/lib/ai/legal-rag';
 import type { LegalDocument } from '@/types';
 
 interface DocumentSummaryViewProps {
@@ -35,6 +43,29 @@ interface DocumentSummaryViewProps {
   isModal?: boolean;
 }
 
+const CACHE_PREFIX = 'legalbook_doc_summary_';
+
+function getCachedSummary(docId: string, versionKey: string): LegalDocumentSummary | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const key = `${CACHE_PREFIX}${docId}_${versionKey}`;
+    const raw = sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as LegalDocumentSummary) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedSummary(docId: string, versionKey: string, summary: LegalDocumentSummary): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const key = `${CACHE_PREFIX}${docId}_${versionKey}`;
+    sessionStorage.setItem(key, JSON.stringify(summary));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
 export function DocumentSummaryView({
   document: doc,
   onNavigateToArticle,
@@ -43,36 +74,55 @@ export function DocumentSummaryView({
   className,
   isModal = false,
 }: DocumentSummaryViewProps) {
-  const [summary, setSummary] = useState<LegalDocumentSummary | null>(null);
+  const versionKey = `${doc.updated_at || doc.status || 'v1'}_${doc.html_content?.length || 0}`;
+
+  const [summary, setSummary] = useState<LegalDocumentSummary | null>(() => {
+    // 0ms instant cache hit
+    return getCachedSummary(doc.id, versionKey) || generateLocalDocumentSummary(doc);
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [copyMode, setCopyMode] = useState<'text' | 'markdown'>('text');
+
+  const isDispatch = doc.document_type === 'cong_van';
 
   const fetchSummary = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await summarizeDocumentWithAi(doc);
       setSummary(res);
+      setCachedSummary(doc.id, versionKey, res);
     } catch (err) {
       console.error('Error generating document overview:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [doc]);
+  }, [doc, versionKey]);
 
   useEffect(() => {
+    const cached = getCachedSummary(doc.id, versionKey);
+    if (cached) {
+      setSummary(cached);
+      setIsLoading(false);
+      return;
+    }
+
+    // If not in cache, fallback local immediately then fetch in background
+    const local = generateLocalDocumentSummary(doc);
+    setSummary(local);
+
     let active = true;
-    setIsLoading(true);
     summarizeDocumentWithAi(doc)
       .then((res) => {
         if (active) {
           setSummary(res);
+          setCachedSummary(doc.id, versionKey, res);
           setIsLoading(false);
         }
       })
       .catch((err) => {
         if (active) {
-          console.error('Error loading summary:', err);
+          console.warn('Background summary load fallback to local:', err);
           setIsLoading(false);
         }
       });
@@ -80,11 +130,14 @@ export function DocumentSummaryView({
     return () => {
       active = false;
     };
-  }, [doc]);
+  }, [doc, versionKey]);
 
   const handleCopy = (mode: 'text' | 'markdown' = 'text') => {
     if (!summary) return;
-    const content = mode === 'markdown' ? summary.fullMarkdown : `${summary.documentNumber} — ${summary.documentTitle}\n\n1. VĂN BẢN QUY ĐỊNH GÌ?\n${summary.scopeAndPurpose}\n\n2. NỘI DUNG ĐÁNG CHÚ Ý\n${summary.notableProvisions.map((p, i) => `${i + 1}. ${p.title}: ${p.text}`).join('\n')}\n\n3. ĐỐI TƯỢNG ÁP DỤNG\n${summary.impactedEntities.map((e) => `- ${e.name}`).join('\n')}\n\n4. VIỆC CẦN LƯU Ý\n${summary.complianceNotes.map((n) => `- ${n.title}: ${n.content}`).join('\n')}`;
+    const content =
+      mode === 'markdown'
+        ? summary.fullMarkdown
+        : `${summary.documentNumber} — ${summary.documentTitle}\n\n1. VĂN BẢN QUY ĐỊNH GÌ?\n${summary.scopeAndPurpose}\n\n2. NỘI DUNG ĐÁNG CHÚ Ý\n${summary.notableProvisions.map((p, i) => `${i + 1}. ${p.title}: ${p.text}`).join('\n')}\n\n3. ĐỐI TƯỢNG ÁP DỤNG\n${summary.impactedEntities.map((e) => `- ${e.name}`).join('\n')}\n\n4. VIỆC CẦN LƯU Ý\n${summary.complianceNotes.map((n) => `- ${n.title}: ${n.content}`).join('\n')}`;
 
     navigator.clipboard.writeText(content);
     setIsCopied(true);
@@ -96,9 +149,23 @@ export function DocumentSummaryView({
     window.print();
   };
 
+  const handleDownloadMarkdown = () => {
+    if (!summary) return;
+    const blob = new Blob([summary.fullMarkdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Tom-tat-${summary.documentNumber.replace(/\//g, '-') || 'van-ban'}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const docNumber = doc.document_number || 'Văn bản';
-  const effectiveDateFormatted = doc.effective_date ? formatDate(doc.effective_date) : (doc.issued_date ? formatDate(doc.issued_date) : 'Theo quy định');
-  const issuedDateFormatted = doc.issued_date ? formatDate(doc.issued_date) : 'Chưa cập nhật';
+  const effectiveDateFormatted = doc.effective_date
+    ? formatDate(doc.effective_date)
+    : doc.issued_date
+    ? formatDate(doc.issued_date)
+    : 'Theo quy định';
 
   return (
     <div className={cn('w-full max-w-4xl mx-auto space-y-6 select-text', className)}>
@@ -107,8 +174,15 @@ export function DocumentSummaryView({
         {/* Top Badges & Actions */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 font-bold text-xs rounded-md uppercase tracking-wider">
-              Tổng quan văn bản
+            <span
+              className={cn(
+                'px-2.5 py-1 font-bold text-xs rounded-md uppercase tracking-wider border',
+                isDispatch
+                  ? 'bg-amber-50 text-amber-900 border-amber-200'
+                  : 'bg-blue-50 text-blue-800 border-blue-200'
+              )}
+            >
+              {isDispatch ? 'Tóm tắt Công văn Hướng dẫn' : 'Tổng quan văn bản quy phạm'}
             </span>
             <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded">
               {docNumber}
@@ -130,19 +204,34 @@ export function DocumentSummaryView({
             <button
               type="button"
               onClick={() => handleCopy('text')}
-              disabled={!summary || isLoading}
-              className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              disabled={!summary}
+              className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Sao chép bản tóm tắt"
             >
-              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+              {isCopied ? (
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+              ) : (
+                <Copy className="w-3.5 h-3.5 text-slate-500" />
+              )}
               <span>{isCopied ? 'Đã sao chép' : 'Sao chép'}</span>
             </button>
 
             <button
               type="button"
+              onClick={handleDownloadMarkdown}
+              disabled={!summary}
+              className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Tải tệp Markdown Executive Brief"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">Xuất .MD</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handlePrint}
-              disabled={!summary || isLoading}
-              className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              disabled={!summary}
+              className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
               title="In hoặc xuất PDF"
             >
               <Printer className="w-3.5 h-3.5 text-slate-500" />
@@ -151,7 +240,7 @@ export function DocumentSummaryView({
           </div>
         </div>
 
-        {/* Document Title (Fully readable, max 2-3 lines, no ellipsis cutoff) */}
+        {/* Document Title */}
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-950 leading-snug break-words">
             {doc.title}
@@ -159,11 +248,15 @@ export function DocumentSummaryView({
           <div className="flex items-center gap-2 text-xs text-slate-600 mt-2 flex-wrap">
             <span className="font-medium text-slate-800">{doc.issuing_body || 'Bộ Tài chính'}</span>
             <span className="text-slate-300">•</span>
-            <span>Hiệu lực từ ngày: <strong className="text-slate-900 font-semibold">{effectiveDateFormatted}</strong></span>
+            <span>
+              Hiệu lực từ ngày: <strong className="text-slate-900 font-semibold">{effectiveDateFormatted}</strong>
+            </span>
             {doc.signer && (
               <>
                 <span className="text-slate-300">•</span>
-                <span>Người ký: <strong className="text-slate-800">{doc.signer}</strong></span>
+                <span>
+                  Người ký: <strong className="text-slate-800">{doc.signer}</strong>
+                </span>
               </>
             )}
           </div>
@@ -174,7 +267,10 @@ export function DocumentSummaryView({
           {summary?.reviewStatus === 'verified' ? (
             <div className="flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 font-medium">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>Tóm tắt đã kiểm duyệt · {summary.verifiedBy || 'Ban Pháp chế'} · {summary.verifiedAt || '29/08/2026'}</span>
+              <span>
+                Tóm tắt đã kiểm duyệt · {summary.verifiedBy || 'Ban Pháp chế'} ·{' '}
+                {summary.verifiedAt || '29/08/2026'}
+              </span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-amber-900 bg-amber-50/80 px-2.5 py-1 rounded-md border border-amber-200 font-medium">
@@ -185,31 +281,96 @@ export function DocumentSummaryView({
 
           {summary && (
             <span className="text-[11px] text-slate-400 font-mono">
-              Cập nhật lúc {new Date(summary.generatedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}, {new Date(summary.generatedAt).toLocaleDateString('vi-VN')}
+              Sẵn sàng lúc{' '}
+              {new Date(summary.generatedAt).toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
             </span>
           )}
         </div>
       </div>
 
-      {/* ── LOADING SKELETON STATE ── */}
-      {isLoading && (
-        <div className="space-y-4 animate-pulse">
-          <div className="p-5 bg-white rounded-xl border border-slate-200 space-y-2">
-            <div className="h-4 bg-slate-200 rounded w-1/4" />
-            <div className="h-3 bg-slate-100 rounded w-full" />
-            <div className="h-3 bg-slate-100 rounded w-5/6" />
-          </div>
-          <div className="p-5 bg-white rounded-xl border border-slate-200 space-y-3">
-            <div className="h-4 bg-slate-200 rounded w-1/3" />
-            <div className="h-16 bg-slate-100 rounded" />
-            <div className="h-16 bg-slate-100 rounded" />
+      {/* ── MAIN STRUCTURED SECTIONS ── */}
+      {summary && isDispatch ? (
+        /* ── SPECIALIZED DISPATCH (CÔNG VĂN) TEMPLATE ── */
+        <div className="space-y-5 animate-in fade-in duration-100">
+          {/* Section 1: Tình huống vướng mắc */}
+          <section className="bg-white rounded-xl border border-amber-200/90 p-5 sm:p-6 space-y-3 shadow-2xs">
+            <div className="flex items-center gap-2 text-slate-900 font-bold text-sm sm:text-base border-b border-amber-100 pb-2">
+              <HelpCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <h3>1. Tình huống & Vấn đề giải đáp của Công văn</h3>
+            </div>
+            <p className="text-slate-800 text-[14.5px] leading-relaxed">
+              {summary.scopeAndPurpose}
+            </p>
+          </section>
+
+          {/* Section 2: Quan điểm giải quyết của Cơ quan quản lý */}
+          <section className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-4 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm sm:text-base">
+                <Scale className="w-4 h-4 text-blue-700 shrink-0" />
+                <h3>2. Quan điểm & Nguyên tắc xử lý của Cơ quan quản lý</h3>
+              </div>
+              <span className="text-xs text-slate-500 font-medium font-mono">
+                {summary.notableProvisions.length} hướng dẫn cốt lõi
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {summary.notableProvisions.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1.5 hover:border-blue-200 transition-colors"
+                >
+                  <h4 className="font-bold text-xs sm:text-[13.5px] text-slate-900">
+                    {idx + 1}. {item.title}
+                  </h4>
+                  <p className="text-xs sm:text-[13px] text-slate-700 leading-relaxed">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Section 3 & 4: Hướng dẫn kế toán & Lưu ý rủi ro */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <section className="bg-white rounded-xl border border-slate-200 p-5 space-y-3 shadow-2xs flex flex-col">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm border-b border-slate-100 pb-2">
+                <Briefcase className="w-4 h-4 text-indigo-600 shrink-0" />
+                <h3>3. Hồ sơ & Chứng từ cần lưu trữ</h3>
+              </div>
+              <div className="space-y-2 text-xs sm:text-[13px] text-slate-700 flex-1">
+                {summary.complianceNotes.map((note, idx) => (
+                  <div key={idx} className="p-2.5 rounded-lg bg-blue-50/50 border border-blue-100 space-y-1">
+                    <span className="font-semibold text-blue-950 block">{note.title}</span>
+                    <p className="text-slate-700">{note.content}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="bg-white rounded-xl border border-slate-200 p-5 space-y-3 shadow-2xs flex flex-col">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm border-b border-slate-100 pb-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <h3>4. Phạm vi áp dụng & Lưu ý rủi ro</h3>
+              </div>
+              <div className="space-y-2 text-xs sm:text-[13px] text-slate-700 flex-1">
+                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg text-amber-950 space-y-1">
+                  <span className="font-bold block">⚠️ Lưu ý áp dụng:</span>
+                  <p className="text-slate-800 leading-relaxed">
+                    Công văn hướng dẫn mang tính chất giải đáp nghiệp vụ cho một tình huống cụ thể. Khi áp dụng
+                    cho doanh nghiệp, cần đối chiếu với các Nghị định/Thông tư quy định chung để đảm bảo tính
+                    pháp lý đồng bộ.
+                  </p>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
-      )}
-
-      {/* ── MAIN STRUCTURED SECTIONS ── */}
-      {!isLoading && summary && (
-        <div className="space-y-5">
+      ) : summary ? (
+        /* ── NORMATIVE LEGAL DOCUMENTS (LUẬT, NGHỊ ĐỊNH, THÔNG TƯ) TEMPLATE ── */
+        <div className="space-y-5 animate-in fade-in duration-100">
           {/* SECTION 1: Văn bản quy định gì? */}
           <section className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-3 shadow-2xs">
             <div className="flex items-center gap-2 text-slate-900 font-bold text-sm sm:text-base border-b border-slate-100 pb-2">
@@ -247,7 +408,9 @@ export function DocumentSummaryView({
                     {item.citations?.[0] && (
                       <button
                         type="button"
-                        onClick={() => onNavigateToArticle?.(item.citations[0].articleNumber || item.citations[0].label)}
+                        onClick={() =>
+                          onNavigateToArticle?.(item.citations[0].articleNumber || item.citations[0].label)
+                        }
                         className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors cursor-pointer shrink-0"
                         title={`Chuyển tới ${item.citations[0].label} trong toàn văn`}
                       >
@@ -257,15 +420,13 @@ export function DocumentSummaryView({
                     )}
                   </div>
 
-                  <p className="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
-                    {item.text}
-                  </p>
+                  <p className="text-xs sm:text-[13px] text-slate-700 leading-relaxed">{item.text}</p>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* SECTION 3 & 4: Grid 2 Columns (Đối tượng tác động + Việc cần lưu ý) */}
+          {/* SECTION 3 & 4: Grid 2 Columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* SECTION 3: Đối tượng chịu tác động */}
             <section className="bg-white rounded-xl border border-slate-200 p-5 space-y-3 shadow-2xs flex flex-col">
@@ -281,7 +442,9 @@ export function DocumentSummaryView({
                     <div>
                       <span className="font-semibold text-slate-900">{entity.name}</span>
                       {entity.description && (
-                        <p className="text-slate-600 text-[12px] mt-0.5 leading-snug">{entity.description}</p>
+                        <p className="text-slate-600 text-[12px] mt-0.5 leading-snug">
+                          {entity.description}
+                        </p>
                       )}
                     </div>
                   </li>
@@ -309,12 +472,18 @@ export function DocumentSummaryView({
                   >
                     <div className="flex items-center justify-between font-semibold">
                       <span className="text-[11px] uppercase tracking-wider text-slate-700 font-bold">
-                        {note.type === 'statutory' ? '📌 Quy định trong văn bản' : '💡 Gợi ý rà soát (Tham khảo)'}
+                        {note.type === 'statutory'
+                          ? '📌 Quy định trong văn bản'
+                          : '💡 Gợi ý rà soát (Tham khảo)'}
                       </span>
                       {note.citation && (
                         <button
                           type="button"
-                          onClick={() => onNavigateToArticle?.(note.citation?.articleNumber || note.citation?.label || '')}
+                          onClick={() =>
+                            onNavigateToArticle?.(
+                              note.citation?.articleNumber || note.citation?.label || ''
+                            )
+                          }
                           className="text-[10.5px] text-blue-700 hover:underline font-bold"
                         >
                           {note.citation.label} →
@@ -371,42 +540,44 @@ export function DocumentSummaryView({
               </div>
             </section>
           )}
+        </div>
+      ) : null}
 
-          {/* ── FOOTER ACTIONS & AI ASSISTANT PROMPT ── */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2 text-slate-600 text-center sm:text-left">
-              <span>Bạn cần làm rõ thêm các quy định cụ thể của văn bản này?</span>
-              {onOpenAiChat && (
-                <button
-                  type="button"
-                  onClick={() => onOpenAiChat('Hãy phân tích thêm các câu hỏi thường gặp về văn bản này.')}
-                  className="font-bold text-blue-700 hover:text-blue-900 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-                >
-                  <span>Hỏi trợ lý AI</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
+      {/* ── FOOTER ACTIONS & AI ASSISTANT PROMPT ── */}
+      {summary && (
+        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-slate-600 text-center sm:text-left">
+            <span>Bạn cần làm rõ thêm các quy định cụ thể của văn bản này?</span>
+            {onOpenAiChat && (
               <button
                 type="button"
-                onClick={() => handleCopy('text')}
-                className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg font-semibold text-slate-700 shadow-2xs transition-colors flex items-center gap-1.5"
+                onClick={() => onOpenAiChat('Hãy phân tích thêm các câu hỏi thường gặp về văn bản này.')}
+                className="font-bold text-blue-700 hover:text-blue-900 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
               >
-                <Copy className="w-3.5 h-3.5" />
-                <span>Sao chép</span>
+                <span>Hỏi trợ lý AI</span>
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
+            )}
+          </div>
 
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-2xs transition-colors flex items-center gap-1.5"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>In / Xuất PDF</span>
-              </button>
-            </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => handleCopy('text')}
+              className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg font-semibold text-slate-700 shadow-2xs transition-colors flex items-center gap-1.5"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>Sao chép</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-2xs transition-colors flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>In / Xuất PDF</span>
+            </button>
           </div>
         </div>
       )}

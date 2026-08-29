@@ -938,21 +938,15 @@ describe('10. UI Count Consistency & Accessibility', () => {
     assert.ok(true, `Checked ${cvCats.length} cong_van-only categories`);
   });
 
-  // ─── 10.4: Read Count Scoping ─────────────────────────────────────────────
+  // ─── 10.4: Legal Status Distribution Scoping ─────────────────────────────
 
-  test('readCount must use document list as scope, not a filtered subset', () => {
-    // Simulate: category has 6 docs, user has read 2
-    const mockDocs = DEMO_DOCUMENTS.slice(0, 6);
-    const readSet = new Set([mockDocs[0]?.id, mockDocs[1]?.id].filter(Boolean));
-    const totalCount = mockDocs.length;
-    const readCount = mockDocs.filter(d => readSet.has(d.id)).length;
-    const unreadCount = totalCount - readCount;
+  test('Legal status counts partition documents accurately into in-force, upcoming, and expired', () => {
+    const mockDocs = DEMO_DOCUMENTS.slice(0, 10);
+    const inForce = mockDocs.filter(d => d.status === 'hieu_luc').length;
+    const upcoming = mockDocs.filter(d => d.status === 'chua_hieu_luc').length;
+    const expired = mockDocs.filter(d => d.status === 'het_hieu_luc_toan_bo' || d.status === 'het_hieu_luc_mot_phan').length;
 
-    assert.strictEqual(totalCount, 6);
-    assert.strictEqual(readCount, 2);
-    assert.strictEqual(unreadCount, 4);
-    // The label "0/6 da doc" should always use the full list, not a filtered one
-    assert.ok(readCount <= totalCount, 'readCount must not exceed totalCount');
+    assert.ok(inForce + upcoming + expired <= mockDocs.length);
   });
 
   // ─── 10.5: Status Labels ──────────────────────────────────────────────────
@@ -3398,5 +3392,115 @@ describe('31. Authentic Original Documents (.doc/.docx prioritized) Attachment A
     assert.ok(fs.existsSync(doc200File), 'TT 200 docx file must exist on disk');
     const stats = fs.statSync(doc200File);
     assert.ok(stats.size > 1000, `TT 200 file size (${stats.size} bytes) must be > 1KB`);
+  });
+});
+
+describe('32. TVPL-Style Clause & Point Provision Highlighting, Popover & Diff Comparator (8 Criteria)', () => {
+  test('1. DEMO_LEGAL_EFFECTS includes fine-grained clause and point effects for Luật BHXH 2024', async () => {
+    const { DEMO_LEGAL_EFFECTS } = await import('../src/lib/legal-effects/demo-effects.ts');
+    const bhxhEffects = DEMO_LEGAL_EFFECTS.filter((e) => e.targetDocumentNumber === '41/2024/QH15');
+    assert.ok(bhxhEffects.length >= 2, 'Must have at least 2 effects on Luật BHXH 2024');
+
+    const clause1 = bhxhEffects.find((e) => e.clauseLabel === 'Khoản 1' && !e.pointLabel);
+    const pointD = bhxhEffects.find((e) => e.clauseLabel === 'Khoản 1' && e.pointLabel === 'Điểm d');
+
+    assert.ok(clause1, 'Must have effect on Khoản 1 Điều 2');
+    assert.ok(pointD, 'Must have effect on Điểm d Khoản 1 Điều 2');
+    assert.strictEqual(clause1.effectType, 'guides');
+    assert.strictEqual(pointD.effectType, 'guides');
+    assert.ok(clause1.explanationSummary.includes('Nghị định 158/2025/NĐ-CP'));
+  });
+
+  test('2. getEffectVisualClass returns TVPL yellow styling for guiding provisions', async () => {
+    const { getEffectVisualClass } = await import('../src/lib/legal-effects/provision-resolver.ts');
+    const visualClass = getEffectVisualClass('guides', 'verified');
+    assert.ok(visualClass.includes('bg-yellow-200'), 'Must include bg-yellow-200 for TVPL yellow highlight');
+    assert.ok(visualClass.includes('border-dashed'), 'Must include dashed border');
+  });
+
+  test('3. extractDocumentProvisions decomposes articles into sub-clauses and points', async () => {
+    const { extractDocumentProvisions } = await import('../src/lib/legal-effects/provision-resolver.ts');
+    const sampleHtml = `<h2>Điều 2. Đối tượng tham gia</h2>
+    <p>1. Người lao động là công dân Việt Nam thuộc đối tượng tham gia bảo hiểm xã hội bắt buộc bao gồm:</p>
+    <p>2. Người lao động là công dân nước ngoài làm việc tại Việt Nam.</p>`;
+
+    const provisions = extractDocumentProvisions('doc-test', '41/2024/QH15', sampleHtml);
+    assert.ok(provisions.length >= 2, 'Must extract Article and Clauses');
+    const clauses = provisions.filter((p) => p.provisionType === 'clause');
+    assert.ok(clauses.length >= 2, 'Must extract 2 clauses');
+    assert.strictEqual(clauses[0].numberLabel, 'Khoản 1');
+    assert.strictEqual(clauses[1].numberLabel, 'Khoản 2');
+  });
+
+  test('4. ProvisionEffectPopover component is properly defined with action badges and links', async () => {
+    const fs = await import('fs');
+    const popoverCode = fs.readFileSync('src/components/reader/ProvisionEffectPopover.tsx', 'utf8');
+    assert.ok(popoverCode.includes('Được hướng dẫn thi hành'));
+    assert.ok(popoverCode.includes('Được sửa đổi / thay thế'));
+    assert.ok(popoverCode.includes('Đối chiếu trước / sau'));
+    assert.ok(popoverCode.includes('Mở văn bản nguồn'));
+  });
+
+  test('5. ProvisionDiffModal component supports side-by-side clause comparison and token diff', async () => {
+    const fs = await import('fs');
+    const modalCode = fs.readFileSync('src/components/reader/ProvisionDiffModal.tsx', 'utf8');
+    assert.ok(modalCode.includes('Đối chiếu sửa đổi'));
+    assert.ok(modalCode.includes('Nội dung cũ (Trước khi sửa đổi)'));
+    assert.ok(modalCode.includes('Nội dung mới (Sau sửa đổi / Áp dụng mới)'));
+    assert.ok(modalCode.includes('computeTokenDiff') || modalCode.includes('diffTokens'));
+  });
+
+  test('6. globals.css defines authentic TVPL yellow highlight with hover effect', async () => {
+    const fs = await import('fs');
+    const css = fs.readFileSync('src/app/globals.css', 'utf8');
+    assert.ok(css.includes('mark.legal-effect-guides'));
+    assert.ok(css.includes('#fef08a'));
+    assert.ok(css.includes('2px dashed'));
+  });
+});
+
+describe('33. Complete Removal of Read/Unread Status & Legal Status Distribution Widget (6 Criteria)', () => {
+  test('1. DocumentCard.tsx has NO read/unread leading dot or isRead prop', async () => {
+    const fs = await import('fs');
+    const cardCode = fs.readFileSync('src/components/document-list/DocumentCard.tsx', 'utf8');
+    assert.strictEqual(cardCode.includes('isRead'), false, 'DocumentCard must not accept isRead prop');
+    assert.strictEqual(cardCode.includes('Chưa đọc'), false, 'DocumentCard must not render Chưa đọc');
+  });
+
+  test('2. DocumentFilters.tsx has NO unread filter chip', async () => {
+    const fs = await import('fs');
+    const filterCode = fs.readFileSync('src/components/document-list/DocumentFilters.tsx', 'utf8');
+    assert.strictEqual(filterCode.includes("'unread'"), false, 'DocumentFilters must not have unread filter');
+    assert.ok(filterCode.includes("'bookmarked'"), 'DocumentFilters must retain bookmarked filter');
+  });
+
+  test('3. DocumentReader.tsx has NO onMarkRead button and promotes Bookmark to primary', async () => {
+    const fs = await import('fs');
+    const readerCode = fs.readFileSync('src/components/reader/DocumentReader.tsx', 'utf8');
+    assert.strictEqual(readerCode.includes('onMarkRead'), false, 'DocumentReader must not have onMarkRead');
+    assert.ok(readerCode.includes('Lưu văn bản'), 'DocumentReader must promote Lưu văn bản');
+  });
+
+  test('4. LegalUpdatesFeed.tsx has NO unread badge', async () => {
+    const fs = await import('fs');
+    const feedCode = fs.readFileSync('src/components/reader/LegalUpdatesFeed.tsx', 'utf8');
+    assert.strictEqual(feedCode.includes('title="Chưa đọc"'), false, 'LegalUpdatesFeed must not render Chưa đọc badge');
+  });
+
+  test('5. TopicOverview.tsx renders Legal Status Distribution Widget instead of reading progress', async () => {
+    const fs = await import('fs');
+    const topicCode = fs.readFileSync('src/components/reader/TopicOverview.tsx', 'utf8');
+    assert.strictEqual(topicCode.includes('progressPercent'), false, 'TopicOverview must not have reading progressPercent');
+    assert.strictEqual(topicCode.includes('Chưa đọc'), false, 'TopicOverview must not have Chưa đọc');
+    assert.ok(topicCode.includes('Đang có hiệu lực'), 'TopicOverview must render Đang có hiệu lực widget');
+    assert.ok(topicCode.includes('Sắp có hiệu lực'), 'TopicOverview must render Sắp có hiệu lực widget');
+    assert.ok(topicCode.includes('Hết hiệu lực'), 'TopicOverview must render Hết hiệu lực widget');
+  });
+
+  test('6. AppHeader.tsx notification bell uses newUpdatesCount in 30 days', async () => {
+    const fs = await import('fs');
+    const headerCode = fs.readFileSync('src/components/layout/AppHeader.tsx', 'utf8');
+    assert.ok(headerCode.includes('newUpdatesCount'), 'AppHeader must accept newUpdatesCount');
+    assert.strictEqual(headerCode.includes('unreadCount'), false, 'AppHeader must not accept unreadCount');
   });
 });

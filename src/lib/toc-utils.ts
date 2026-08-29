@@ -60,7 +60,7 @@ export function extractToc(htmlContent: string | null | undefined): TocItem[] {
 
     // Phần / Chương / Mục / Phụ lục
     const chapterMatch = line.match(
-      /^(Phần\s+[IVXLCDM\d]+|Chương\s+[IVXLCDM\d]+|Mục\s+\d+|Phụ\s+lục\s*[\dIVX\-a-zA-Z\/]*)[.:)\s]*(.*)/i
+      /^(Phần\s+(?:thứ\s+[a-zđ]+|[IVXLCDM]+|\d+)\b|Chương\s+(?:[IVXLCDM]+|\d+)\b|Mục\s+\d+\b|Phụ\s+lục\s*[\dIVX\-a-zA-Z\/]*)(?:[.:)\s]+(.*)|$)/i
     );
     if (chapterMatch) {
       const prefix = chapterMatch[1].trim();
@@ -119,8 +119,7 @@ export function scrollToTocItem(
   item: TocItem,
   opts: { behavior?: ScrollBehavior; block?: ScrollLogicalPosition; stickyOffset?: number } = {}
 ): HTMLElement | null {
-  const { behavior = 'smooth', stickyOffset = 16 } = opts;
-
+  const { behavior = 'smooth', stickyOffset = 72 } = opts;
   const targetEl = findTocElement(container, item);
   if (!targetEl) return null;
 

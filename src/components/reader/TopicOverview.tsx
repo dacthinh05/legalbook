@@ -32,7 +32,6 @@ import {
 interface TopicOverviewProps {
   category: Category;
   documents: LegalDocument[];
-  readDocuments: Set<string>;
   onSelectDocument: (docId: string) => void;
 }
 
@@ -78,11 +77,9 @@ function TypeBadge({ type }: { type: DocumentType }) {
 
 function HighlightCard({
   doc,
-  isRead,
   onSelect,
 }: {
   doc: LegalDocument;
-  isRead: boolean;
   onSelect: () => void;
 }) {
   const effStatus = getEffectiveStatus(doc);
@@ -127,14 +124,6 @@ function HighlightCard({
                 Mới cập nhật
               </span>
             ) : null}
-            {!isRead && (
-              <span
-                className="w-2 h-2 rounded-full bg-blue-600 shrink-0"
-                role="img"
-                aria-label="Chưa đọc"
-                title="Chưa đọc"
-              />
-            )}
           </div>
 
           <StatusBadge status={effStatus} />
@@ -199,13 +188,11 @@ function HighlightCard({
   );
 }
 
-function DocRow({
+function CompactDocumentItem({
   doc,
-  isRead,
   onSelect,
 }: {
   doc: LegalDocument;
-  isRead: boolean;
   onSelect: () => void;
 }) {
   const effStatus = getEffectiveStatus(doc);
@@ -231,14 +218,6 @@ function DocRow({
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800">
               Mới
             </span>
-          )}
-          {!isRead && (
-            <span
-              className="w-2 h-2 rounded-full bg-blue-600 shrink-0"
-              role="img"
-              aria-label="Chưa đọc"
-              title="Chưa đọc"
-            />
           )}
         </div>
 
@@ -279,7 +258,6 @@ function SectionBlock({
   title,
   subtitle,
   docs,
-  readDocuments,
   onSelectDocument,
   icon: Icon,
   initialLimit = 4,
@@ -287,7 +265,6 @@ function SectionBlock({
   title: string;
   subtitle?: string;
   docs: LegalDocument[];
-  readDocuments: Set<string>;
   onSelectDocument: (docId: string) => void;
   icon?: React.ComponentType<{ className?: string }>;
   initialLimit?: number;
@@ -315,10 +292,9 @@ function SectionBlock({
 
       <div className="divide-y divide-slate-100">
         {displayDocs.map((doc) => (
-          <DocRow
+          <CompactDocumentItem
             key={doc.id}
             doc={doc}
-            isRead={readDocuments.has(doc.id)}
             onSelect={() => onSelectDocument(doc.id)}
           />
         ))}
@@ -341,16 +317,11 @@ function SectionBlock({
 export function TopicOverview({
   category,
   documents,
-  readDocuments,
   onSelectDocument,
 }: TopicOverviewProps) {
   const [activeTab, setActiveTab] = useState<'all_new' | 'laws' | 'circulars' | 'guidance' | 'upcoming'>('all_new');
   
   const totalCount = documents.length;
-  const readCount = documents.filter((d) => readDocuments.has(d.id)).length;
-  const unreadCount = totalCount - readCount;
-  const progressPercent = totalCount > 0 ? Math.round((readCount / totalCount) * 100) : 0;
-
   const latestDate = useMemo(() => {
     return [...documents]
       .map(d => d.effective_date || d.issued_date || d.updated_at || '')
@@ -371,8 +342,13 @@ export function TopicOverview({
 
   const activeInForce = useMemo(() => documents.filter(d => getEffectiveStatus(d) === 'hieu_luc').sort(byDateDesc), [documents]);
   const upcomingInForce = useMemo(() => documents.filter(d => getEffectiveStatus(d) === 'chua_hieu_luc').sort(byEffectiveDateDesc), [documents]);
-  
-  // Newly updated/issued documents (ordered by latest updated / issued date)
+  const expiredDocs = useMemo(() => documents.filter(d => getEffectiveStatus(d) === 'het_hieu_luc_toan_bo' || getEffectiveStatus(d) === 'het_hieu_luc_mot_phan').sort(byDateDesc), [documents]);
+  const new30DaysDocs = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const threshold = thirtyDaysAgo.toISOString().slice(0, 10);
+    return documents.filter(d => (d.issued_date && d.issued_date >= threshold) || (d.effective_date && d.effective_date >= threshold));
+  }, [documents]);
   const recentlyUpdatedDocs = useMemo(() => {
     return [...documents].sort(byUpdatedDateDesc);
   }, [documents]);
@@ -429,76 +405,49 @@ export function TopicOverview({
             </div>
           </div>
 
-          {/* Reading progress bar if user has started reading */}
-          {totalCount > 0 && (
-            <div className="mt-6 pt-5 border-t border-slate-100">
-              <div className="flex items-center justify-between text-[12px] text-slate-600 mb-2">
-                <span className="font-medium flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Tiến độ đọc tài liệu: <strong className="text-slate-900">{readCount}/{totalCount} văn bản ({progressPercent}%)</strong>
-                </span>
-                <span className="text-slate-400">
-                  {unreadCount > 0 ? `Còn ${unreadCount} văn bản chưa đọc` : '🎉 Đã hoàn thành đọc toàn bộ'}
-                </span>
-              </div>
-              <div
-                className="w-full bg-slate-100 h-2 rounded-full overflow-hidden"
-                role="progressbar"
-                aria-valuenow={progressPercent}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* 4 Key Metric Cards */}
+          {/* 4 Key Legal Status Metric Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mt-6">
-            <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3.5 flex flex-col justify-between">
-              <div className="text-[12px] font-semibold text-blue-900 flex items-center gap-1.5 mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                Mới cập nhật
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-black text-blue-950">{Math.min(totalCount, 12)}</span>
-                <span className="text-[11px] text-blue-700 font-medium">văn bản gần đây</span>
-              </div>
-            </div>
-
-            <div className="bg-emerald-50/70 border border-emerald-100 rounded-xl p-3.5 flex flex-col justify-between">
+            <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3.5 flex flex-col justify-between">
               <div className="text-[12px] font-semibold text-emerald-900 flex items-center gap-1.5 mb-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                 Đang có hiệu lực
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-black text-emerald-950">{activeInForce.length}</span>
-                <span className="text-[11px] text-emerald-700 font-medium">đang áp dụng</span>
+                <span className="text-[11px] text-emerald-700 font-medium">văn bản áp dụng</span>
               </div>
             </div>
 
-            <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-3.5 flex flex-col justify-between">
+            <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3.5 flex flex-col justify-between">
               <div className="text-[12px] font-semibold text-amber-900 flex items-center gap-1.5 mb-1">
                 <Clock className="w-3.5 h-3.5 text-amber-600" />
                 Sắp có hiệu lực
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-black text-amber-950">{upcomingInForce.length}</span>
-                <span className="text-[11px] text-amber-700 font-medium">cần theo dõi</span>
+                <span className="text-[11px] text-amber-700 font-medium">chuyển tiếp</span>
               </div>
             </div>
 
-            <div className="bg-slate-100/80 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between">
-              <div className="text-[12px] font-semibold text-slate-800 flex items-center gap-1.5 mb-1">
-                <FileText className="w-3.5 h-3.5 text-slate-600" />
-                Tổng quy mô
+            <div className="bg-rose-50/70 border border-rose-200/80 rounded-xl p-3.5 flex flex-col justify-between">
+              <div className="text-[12px] font-semibold text-rose-900 flex items-center gap-1.5 mb-1">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                Hết hiệu lực
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-black text-slate-950">{totalCount}</span>
-                <span className="text-[11px] text-slate-600 font-medium">toàn bộ kho</span>
+                <span className="text-2xl font-black text-rose-950">{expiredDocs.length}</span>
+                <span className="text-[11px] text-rose-700 font-medium">đã thay thế</span>
+              </div>
+            </div>
+
+            <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3.5 flex flex-col justify-between">
+              <div className="text-[12px] font-semibold text-blue-900 flex items-center gap-1.5 mb-1">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                Mới trong 30 ngày
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-black text-blue-950">{new30DaysDocs.length}</span>
+                <span className="text-[11px] text-blue-700 font-medium">cập nhật gần đây</span>
               </div>
             </div>
           </div>
@@ -583,7 +532,6 @@ export function TopicOverview({
               <HighlightCard
                 key={doc.id}
                 doc={doc}
-                isRead={readDocuments.has(doc.id)}
                 onSelect={() => onSelectDocument(doc.id)}
               />
             ))}
@@ -703,7 +651,6 @@ export function TopicOverview({
               title="Văn bản nền tảng (Luật & Bộ luật)"
               subtitle="Các đạo luật do Quốc hội ban hành làm căn cứ pháp lý cao nhất"
               docs={laws}
-              readDocuments={readDocuments}
               onSelectDocument={onSelectDocument}
               icon={Scale}
               initialLimit={4}
@@ -716,7 +663,6 @@ export function TopicOverview({
               title="Văn bản quy định chi tiết & Hướng dẫn thi hành (Nghị định)"
               subtitle="Các nghị định do Chính phủ ban hành hướng dẫn luật"
               docs={decrees}
-              readDocuments={readDocuments}
               onSelectDocument={onSelectDocument}
               icon={Building2}
               initialLimit={4}
@@ -729,7 +675,6 @@ export function TopicOverview({
               title="Thông tư nghiệp vụ & Biểu mẫu"
               subtitle="Quy định cụ thể của Bộ Tài chính, BHXH, Bộ LĐTBXH..."
               docs={circulars}
-              readDocuments={readDocuments}
               onSelectDocument={onSelectDocument}
               icon={FileText}
               initialLimit={4}
@@ -742,7 +687,6 @@ export function TopicOverview({
               title="Công văn & Hướng dẫn xử lý tình huống nghiệp vụ"
               subtitle="Trả lời vướng mắc thực tế cho doanh nghiệp và người nộp thuế"
               docs={guidance}
-              readDocuments={readDocuments}
               onSelectDocument={onSelectDocument}
               icon={Info}
               initialLimit={4}
@@ -755,7 +699,6 @@ export function TopicOverview({
               title="Chuẩn mực kế toán & kiểm toán (VAS / IFRS / VSA)"
               subtitle="Hệ thống chuẩn mực nghề nghiệp và lộ trình chuyển đổi"
               docs={standards}
-              readDocuments={readDocuments}
               onSelectDocument={onSelectDocument}
               icon={Layers}
               initialLimit={4}
@@ -767,7 +710,6 @@ export function TopicOverview({
             <SectionBlock
               title="Văn bản khác"
               docs={other}
-              readDocuments={readDocuments}
               onSelectDocument={onSelectDocument}
               icon={FileText}
               initialLimit={3}

@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils';
 import type { DocumentStatus } from '@/types';
 
-type FilterStatus = DocumentStatus | 'all' | 'unread' | 'bookmarked' | 'new';
+type FilterStatus = DocumentStatus | 'all' | 'bookmarked' | 'new';
 
 const FILTERS: { value: FilterStatus; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
@@ -11,7 +11,6 @@ const FILTERS: { value: FilterStatus; label: string }[] = [
   { value: 'chua_hieu_luc', label: 'Chưa HLực' },
   { value: 'het_hieu_luc_mot_phan', label: 'HLực một phần' },
   { value: 'het_hieu_luc_toan_bo', label: 'Hết HLực' },
-  { value: 'unread', label: 'Chưa đọc' },
   { value: 'bookmarked', label: 'Đã ghim' },
   { value: 'new', label: 'Mới' },
 ];

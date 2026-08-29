@@ -118,6 +118,8 @@ export function computeTokenDiff(textA: string, textB: string): DiffToken[] {
   return compressed;
 }
 
+export const diffWords = computeTokenDiff;
+
 /**
  * Strips HTML tags into clean plain text for diff comparison.
  */
