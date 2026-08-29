@@ -342,7 +342,7 @@ export function CategoryTree({
           onFocus={() => setFocusedId(category.id)}
           onClick={() => handleSelectCategoryAndExpandAncestors(category.id)}
           className={cn(
-            'group flex items-center gap-1.5 px-2 py-1.5 rounded text-xs cursor-pointer transition-colors relative focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
+            'group flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-xs cursor-pointer transition-colors relative focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
             isSelected
               ? 'bg-blue-50 text-blue-900 font-semibold'
               : isFocused
@@ -350,7 +350,7 @@ export function CategoryTree({
               : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900',
             isRoot && 'font-medium'
           )}
-          style={{ paddingLeft: `${Math.max(6, depth * 14 + 6)}px` }}
+          style={{ paddingLeft: `${depth * 16 + 8}px` }}
           title={category.name}
         >
           {hasChildren ? (
@@ -486,7 +486,7 @@ export function CategoryTree({
           aria-selected={selectedCategoryId === null && !selectedDocType}
           onClick={() => handleSelectCategoryAndExpandAncestors(null)}
           className={cn(
-            'flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer font-medium transition-colors mb-1.5 border',
+            'flex items-center justify-between h-9 px-3 rounded-lg text-xs cursor-pointer font-medium transition-colors mb-1.5 border',
             selectedCategoryId === null && !selectedDocType
               ? 'bg-blue-50 text-blue-900 border-blue-200 font-bold shadow-2xs'
               : 'text-slate-700 bg-slate-50/50 border-slate-200/60 hover:bg-slate-100 hover:text-slate-900'
@@ -494,7 +494,7 @@ export function CategoryTree({
         >
           <div className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Tất cả kho văn bản</span>
+            <span>{viewMode === 'topic' ? 'Tất cả chủ đề' : 'Tất cả văn bản'}</span>
           </div>
           <span className="text-[10.5px] font-mono font-bold text-slate-500 bg-white px-1.5 py-0.2 rounded border border-slate-200">
             {totalDocsCount}

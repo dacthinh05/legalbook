@@ -2,17 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { Search, FileText, ChevronDown, ArrowUp, ArrowDown, X } from 'lucide-react';
-import { 
-  DOCUMENT_STATUS_COLORS, 
-  DOCUMENT_STATUS_LABELS,
-  DOCUMENT_TYPE_ABBREV,
-  DOCUMENT_TYPE_COLORS,
-  formatDate, 
-  formatShortTitle 
-} from '@/lib/utils';
+import { DocumentCard } from './DocumentCard';
 import { matchesDocumentQuery } from '@/lib/search';
 import type { LegalDocument, DocumentType } from '@/types';
-
 interface DocumentListProps {
   documents: LegalDocument[];
   selectedDocumentId: string | null;
@@ -107,6 +99,7 @@ export function DocumentList({
   categoryName,
   selectedDocType,
   readDocuments,
+  bookmarkedDocuments,
 }: DocumentListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -297,79 +290,17 @@ export function DocumentList({
             )}
           </div>
         ) : (
-          filteredDocuments.map((doc) => {
-            const isSelected = selectedDocumentId === doc.id;
-            const isRead = readDocuments.has(doc.id);
-            const cardTitle = isSingleType ? formatShortTitle(doc.title, doc.document_type) : doc.title;
-
-            return (
-              <div
-                key={doc.id}
-                onClick={() => onSelectDocument(doc.id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && onSelectDocument(doc.id)}
-                className={`p-3 cursor-pointer select-none transition-colors relative ${
-                  isSelected
-                    ? 'bg-blue-50/70 border-l-3 border-blue-700 pl-2.5'
-                    : 'hover:bg-slate-50'
-                }`}
-              >
-                {/* Top Row: Doc number, Type (if mixed), Read status, Date */}
-                <div className="flex items-center justify-between gap-1.5 mb-1 text-xs">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    {!isRead && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" title="Chưa đọc" />
-                    )}
-                    {!isSingleType && (
-                      <span
-                        className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold shrink-0 ${
-                          DOCUMENT_TYPE_COLORS[doc.document_type] || 'bg-slate-100 text-slate-700'
-                        }`}
-                      >
-                        {DOCUMENT_TYPE_ABBREV[doc.document_type]}
-                      </span>
-                    )}
-                    <span className="font-mono font-bold text-slate-900 truncate">
-                      {doc.document_number}
-                    </span>
-                  </div>
-                  <span className="text-slate-400 font-mono shrink-0 text-[11px]">
-                    {formatDate(doc.effective_date)}
-                  </span>
-                </div>
-
-                {/* Title */}
-                <p
-                  className={`text-xs md:text-sm leading-snug line-clamp-2 mb-1.5 ${
-                    isSelected ? 'text-slate-950 font-semibold' : 'text-slate-800'
-                  }`}
-                >
-                  {cardTitle}
-                </p>
-
-                {/* Status & Issuer */}
-                <div className="flex items-center gap-2 text-xs text-slate-500 min-w-0">
-                  <span
-                    className={`shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded text-[11px] font-semibold border ${
-                      DOCUMENT_STATUS_COLORS[doc.status]
-                    }`}
-                  >
-                    {DOCUMENT_STATUS_LABELS[doc.status] || doc.status}
-                  </span>
-
-                  {doc.issuing_body && (
-                    <>
-                      <span className="text-slate-300 shrink-0 select-none">·</span>
-                      <span className="text-slate-400 truncate text-[11px] min-w-0" title={doc.issuing_body}>
-                        {doc.issuing_body}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          filteredDocuments.map((doc) => (
+            <DocumentCard
+              key={doc.id}
+              document={doc}
+              isSelected={selectedDocumentId === doc.id}
+              isRead={readDocuments.has(doc.id)}
+              isBookmarked={bookmarkedDocuments?.has(doc.id) || false}
+              hideTypeBadge={isSingleType}
+              onSelect={() => onSelectDocument(doc.id)}
+            />
+          ))
         )}
       </div>
     </div>
