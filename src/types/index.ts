@@ -384,6 +384,7 @@ export interface DocumentAnnotation {
   id: string;
   documentId: string;
   userId: string;
+  organizationId?: string;
   nodeId?: string;
   anchor: AnnotationAnchor;
   type: 'highlight' | 'note';
@@ -394,7 +395,6 @@ export interface DocumentAnnotation {
   createdAt: string;
   updatedAt: string;
 }
-
 export * from '@/lib/document-import/types';
 export * from '@/lib/quality/content-validator';
 

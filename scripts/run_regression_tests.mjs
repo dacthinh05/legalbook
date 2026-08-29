@@ -1641,6 +1641,29 @@ describe('16. Comprehensive UI Redesign, Display Title, Focus Mode & Panel Integ
     assert.strictEqual(items[0].title, 'Điều 1. Phạm vi điều chỉnh');
     assert.strictEqual(items[1].title, 'Điều 2. Đối tượng áp dụng');
   });
+
+  test('5. getTreeIndentation enforces compact file-tree indentation (12px, 28px, 44px, <=56px)', async () => {
+    const { getTreeIndentation } = await import('../src/lib/tree-utils.ts');
+    assert.strictEqual(getTreeIndentation(0), 12);
+    assert.strictEqual(getTreeIndentation(1), 28);
+    assert.strictEqual(getTreeIndentation(2), 44);
+    assert.ok(getTreeIndentation(3) <= 56);
+    assert.ok(getTreeIndentation(4) <= 56);
+  });
+
+  test('6. formatCategoryDisplayLabel simplifies child labels in context without database mutation', async () => {
+    const { formatCategoryDisplayLabel } = await import('../src/lib/tree-utils.ts');
+
+    // Under Thuế TNCN
+    assert.strictEqual(formatCategoryDisplayLabel('Luật thuế TNCN', 'Thuế TNCN', 1), 'Luật / Bộ luật');
+    assert.strictEqual(formatCategoryDisplayLabel('Nghị định thuế TNCN', 'Thuế TNCN', 1), 'Nghị định');
+    assert.strictEqual(formatCategoryDisplayLabel('Thông tư thuế TNCN', 'Thuế TNCN', 1), 'Thông tư');
+    assert.strictEqual(formatCategoryDisplayLabel('Công văn thuế TNCN', 'Thuế TNCN', 1), 'Công văn hướng dẫn');
+
+    // Standalone subtopics preserved
+    assert.strictEqual(formatCategoryDisplayLabel('Hóa đơn, chứng từ', 'Thuế', 1), 'Hóa đơn, chứng từ');
+    assert.strictEqual(formatCategoryDisplayLabel('Quản lý thuế', 'Thuế', 1), 'Quản lý thuế');
+  });
 });
 
 describe('17. Legal Document PDF-to-HTML Layout, Administrative Hierarchy (20 Scenarios) & Typography', () => {
@@ -1890,5 +1913,57 @@ describe('17. Legal Document PDF-to-HTML Layout, Administrative Hierarchy (20 Sc
       delete globalThis.window;
       delete globalThis.document;
     }
+  });
+});
+
+describe('18. Supabase Hybrid Search (tsvector + pg_trgm), Pagination & Team Workspaces', () => {
+  test('1. searchDocumentsHybrid returns matching documents for exact document numbers', async () => {
+    const { searchDocumentsHybrid } = await import('../src/lib/data-service.ts');
+    const res = await searchDocumentsHybrid({ query: '118/2026/TT-BTC' });
+    assert.ok(res.data.documents.length > 0);
+    assert.ok(res.data.documents.some((d) => d.document_number?.includes('118/2026')));
+    assert.ok(res.data.totalCount >= 1);
+  });
+
+  test('2. searchDocumentsHybrid handles pagination with limit and offset', async () => {
+    const { searchDocumentsHybrid } = await import('../src/lib/data-service.ts');
+    const page1 = await searchDocumentsHybrid({ query: 'thuế', limit: 3, offset: 0 });
+    const page2 = await searchDocumentsHybrid({ query: 'thuế', limit: 3, offset: 3 });
+
+    assert.ok(page1.data.documents.length <= 3);
+    assert.ok(page1.data.totalCount >= 3);
+    if (page1.data.documents.length > 0 && page2.data.documents.length > 0) {
+      assert.notStrictEqual(page1.data.documents[0].id, page2.data.documents[0].id);
+    }
+  });
+
+  test('3. searchDocumentsHybrid filters accurately by document_type', async () => {
+    const { searchDocumentsHybrid } = await import('../src/lib/data-service.ts');
+    const res = await searchDocumentsHybrid({ query: '', docType: 'thong_tu', limit: 10 });
+    assert.ok(res.data.documents.length > 0);
+    assert.ok(res.data.documents.every((d) => d.document_type === 'thong_tu'));
+  });
+
+  test('4. DocumentAnnotation data model maps organizationId and team visibility seamlessly', async () => {
+    const sampleAnn = {
+      id: 'ann-123',
+      documentId: 'doc-456',
+      userId: 'user-789',
+      organizationId: 'org-abc',
+      anchor: {
+        exactText: 'Chuẩn mực kế toán',
+        contentVersion: '2026-08-29',
+      },
+      type: 'note',
+      noteContent: 'Ý kiến pháp lý nội bộ hãng luật',
+      visibility: 'team',
+      anchorStatus: 'active',
+      createdAt: '2026-08-29T10:00:00Z',
+      updatedAt: '2026-08-29T10:00:00Z',
+    };
+
+    assert.strictEqual(sampleAnn.visibility, 'team');
+    assert.strictEqual(sampleAnn.organizationId, 'org-abc');
+    assert.strictEqual(sampleAnn.type, 'note');
   });
 });

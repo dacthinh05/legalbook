@@ -23,6 +23,7 @@ interface AnnotationRow {
   id: string;
   document_id: string;
   user_id: string;
+  organization_id?: string | null;
   node_id: string | null;
   anchor_exact_text: string;
   anchor_prefix: string | null;
@@ -47,6 +48,7 @@ function rowToAnnotation(row: AnnotationRow): DocumentAnnotation {
     id: row.id,
     documentId: row.document_id,
     userId: row.user_id,
+    organizationId: row.organization_id ?? undefined,
     nodeId: row.node_id ?? undefined,
     anchor: {
       exactText: row.anchor_exact_text,
@@ -299,6 +301,7 @@ export function useAnnotations({
           const insertRow = {
             document_id: draft.documentId,
             user_id: user.id,
+            organization_id: draft.organizationId ?? null,
             node_id: draft.nodeId ?? null,
             ...anchorToRow(draft.anchor),
             annotation_type: draft.type,

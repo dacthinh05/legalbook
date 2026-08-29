@@ -38,6 +38,9 @@ export interface IndexedSection {
   toneFreeLabel: string;
   lowerTitle: string;
   toneFreeTitle: string;
+  bodyText?: string;
+  lowerBodyText?: string;
+  toneFreeBodyText?: string;
 }
 
 /**
@@ -209,34 +212,64 @@ export function getOrCreateDocumentIndex(doc: Partial<LegalDocument>): IndexedLe
   const lowerPlainText = plainText.toLowerCase();
   const toneFreePlainText = removeVietnameseTones(lowerPlainText);
 
-  // Extract structural sections (Điều / Khoản / Chương / Phụ lục)
+  // Extract structural sections (Điều / Khoản / Chương / Phụ lục) with their clause text bodies
   const sections: IndexedSection[] = [];
   if (doc.html_content) {
-    const headingRegex = /(?:<h[1-6][^>]*>|<p>\s*<strong>|<strong>|<p>)\s*((?:Điều|Chương|Phần|Mục|Phụ lục)\s+[\dIVXLCDM\w\.\-]+[^<\n]{0,100})/gi;
+    const headingRegex = /(?:<h[1-6][^>]*>|<p[^>]*>\s*<strong>|<strong>|<p[^>]*>)\s*((?:Điều|Chương|Phần|Mục|Phụ lục)\s+[\dIVXLCDM\w\.\-]+[^<\n]{0,120})/gi;
     let match;
-    let idx = 0;
+    const matches: Array<{ index: number; fullHeading: string; label: string }> = [];
     while ((match = headingRegex.exec(doc.html_content)) !== null) {
       const rawHeading = match[1] || '';
       const fullHeading = rawHeading.replace(/<[^>]*>/g, '').trim();
       const label = fullHeading.replace(/[\.:].*$/, '').trim();
       if (label && label.length > 2) {
-        const lowerLabel = label.toLowerCase();
-        const toneFreeLabel = removeVietnameseTones(lowerLabel);
-        const lowerTitle = fullHeading.toLowerCase();
-        const toneFreeTitle = removeVietnameseTones(lowerTitle);
-        sections.push({
-          id: `sec-${idx++}`,
+        matches.push({
+          index: match.index,
+          fullHeading,
           label,
-          title: fullHeading,
-          lowerLabel,
-          toneFreeLabel,
-          lowerTitle,
-          toneFreeTitle,
         });
       }
     }
-  }
 
+    for (let i = 0; i < matches.length; i++) {
+      const m = matches[i];
+      const nextIndex = i + 1 < matches.length ? matches[i + 1].index : doc.html_content.length;
+      const sectionHtml = doc.html_content.slice(m.index, nextIndex);
+      const sectionBody = stripHtml(sectionHtml);
+      const lowerBody = sectionBody.toLowerCase();
+      const toneFreeBody = removeVietnameseTones(lowerBody);
+
+      const lowerLabel = m.label.toLowerCase();
+      const toneFreeLabel = removeVietnameseTones(lowerLabel);
+      const lowerTitle = m.fullHeading.toLowerCase();
+      const toneFreeTitle = removeVietnameseTones(lowerTitle);
+
+      // Generate exact semantic ID (e.g. dieu-15, chuong-2, sec-0)
+      let semanticId = `sec-${i}`;
+      const dieuMatch = m.label.match(/điều\s+(\d+[a-z]?)/i);
+      if (dieuMatch) {
+        semanticId = `dieu-${dieuMatch[1].toLowerCase()}`;
+      } else {
+        const chuongMatch = m.label.match(/chương\s+([ivxlcdm\d]+)/i);
+        if (chuongMatch) {
+          semanticId = `chuong-${chuongMatch[1].toLowerCase()}`;
+        }
+      }
+
+      sections.push({
+        id: semanticId,
+        label: m.label,
+        title: m.fullHeading,
+        lowerLabel,
+        toneFreeLabel,
+        lowerTitle,
+        toneFreeTitle,
+        bodyText: sectionBody,
+        lowerBodyText: lowerBody,
+        toneFreeBodyText: toneFreeBody,
+      });
+    }
+  }
   const indexed: IndexedLegalDocument = {
     rawDoc: doc,
     id,
@@ -373,7 +406,7 @@ export function detectMatchLocationIndexed(
     };
   }
 
-  // 3. Check Sections (Điều / Khoản / Chương / Phụ lục)
+  // 3. Check Section Headings (Điều / Khoản / Chương / Phụ lục)
   for (const sec of indexed.sections) {
     if (
       sec.lowerLabel.includes(lowerQuery) ||
@@ -389,10 +422,33 @@ export function detectMatchLocationIndexed(
 
       return {
         matchType,
-        locationLabel: sec.label.slice(0, 48),
+        locationLabel: sec.title.slice(0, 56),
         targetNodeId: sec.id,
         targetAnchor: sec.id,
       };
+    }
+  }
+
+  // 4. Check Section Bodies (Clause-level deep text matching) - only if document plain text contains query
+  if (indexed.lowerPlainText.includes(lowerQuery) || indexed.toneFreePlainText.includes(toneFreeQuery)) {
+    for (const sec of indexed.sections) {
+      if (
+        (sec.lowerBodyText && sec.lowerBodyText.includes(lowerQuery)) ||
+        (sec.toneFreeBodyText && sec.toneFreeBodyText.includes(toneFreeQuery))
+      ) {
+        const matchType: MatchLocationType = sec.label.toLowerCase().includes('chương')
+          ? 'chapter'
+          : sec.label.toLowerCase().includes('phụ lục')
+          ? 'appendix'
+          : 'article';
+
+        return {
+          matchType,
+          locationLabel: sec.title.slice(0, 56),
+          targetNodeId: sec.id,
+          targetAnchor: sec.id,
+        };
+      }
     }
   }
 
@@ -540,7 +596,11 @@ export function scoreIndexedDocument(
   // 3. Section headings match (Điều 19, Khoản 2, Chương III)
   for (const sec of indexed.sections) {
     if (sec.lowerLabel.includes(lowerQuery) || sec.toneFreeLabel.includes(toneFreeQuery)) {
-      score += 500;
+      score += 550;
+      break;
+    }
+    if (sec.lowerTitle.includes(lowerQuery) || sec.toneFreeTitle.includes(toneFreeQuery)) {
+      score += 450;
       break;
     }
   }
@@ -552,11 +612,11 @@ export function scoreIndexedDocument(
     score += 250;
   }
 
-  // 5. Plain text content match
+  // 5. Plain text content & Clause body match
   if (indexed.lowerPlainText.includes(lowerQuery)) {
-    score += 150;
+    score += 180;
   } else if (indexed.toneFreePlainText.includes(toneFreeQuery)) {
-    score += 100;
+    score += 120;
   }
 
   // 6. Active status tie-breaker (only if document actually matched a keyword)

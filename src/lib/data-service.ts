@@ -18,7 +18,7 @@ import {
   getDocumentsForCategoryTree as getEmbeddedDocsForCategory 
 } from '@/lib/demo-data';
 import { getCategoryDocumentType } from '@/lib/tree-utils';
-import type { LegalDocument, Category, DocumentRelation } from '@/types';
+import type { LegalDocument, Category, DocumentRelation, DocumentType, EffectiveStatusType } from '@/types';
 
 export type DataSourceType = 'supabase_live' | 'embedded_repository' | 'unavailable';
 
@@ -371,6 +371,113 @@ export async function getDocumentRelations(docId: string): Promise<DataResult<{
     data: {
       as_source: rels.as_source,
       as_target: rels.as_target,
+    },
+    source: 'embedded_repository',
+  };
+}
+
+export interface HybridSearchParams {
+  query: string;
+  docType?: string | null;
+  status?: string | null;
+  categoryId?: string | null;
+  limit?: number;
+  offset?: number;
+}
+
+export interface HybridSearchResult {
+  documents: LegalDocument[];
+  totalCount: number;
+}
+
+/**
+ * Hybrid Search function combining Supabase PostgreSQL tsvector + pg_trgm
+ * with fallback to high-speed client/embedded search.
+ */
+export async function searchDocumentsHybrid(
+  params: HybridSearchParams
+): Promise<DataResult<HybridSearchResult>> {
+  const isConfigured = isSupabaseConfigured();
+  const isStrictProd = isStrictProductionMode();
+
+  if (isConfigured) {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc('search_legal_documents_hybrid', {
+        query_text: params.query || '',
+        filter_doc_type: params.docType || null,
+        filter_status: params.status || null,
+        filter_category_id: params.categoryId || null,
+        limit_val: params.limit || 20,
+        offset_val: params.offset || 0,
+      });
+
+      if (error) {
+        if (isStrictProd) {
+          return {
+            data: { documents: [], totalCount: 0 },
+            source: 'unavailable',
+            error: `Lỗi tìm kiếm: ${error.message}`,
+          };
+        }
+      } else if (data && Array.isArray(data)) {
+        let total = data.length;
+        if (data.length > 0 && data[0] && typeof data[0] === 'object' && 'total_count' in data[0]) {
+          const rawTotal = (data[0] as Record<string, unknown>).total_count;
+          if (typeof rawTotal === 'number' || typeof rawTotal === 'string') {
+            total = Number(rawTotal);
+          }
+        }
+        return {
+          data: {
+            documents: data as unknown as LegalDocument[],
+            totalCount: total,
+          },
+          source: 'supabase_live',
+        };
+      }
+    } catch (err: unknown) {
+      if (isStrictProd) {
+        return {
+          data: { documents: [], totalCount: 0 },
+          source: 'unavailable',
+          error: `Không thể thực hiện tìm kiếm: ${err instanceof Error ? err.message : String(err)}`,
+        };
+      }
+    }
+  }
+
+  if (isStrictProd) {
+    return {
+      data: { documents: [], totalCount: 0 },
+      source: 'unavailable',
+      error: 'CSDL tra cứu văn bản chính thức chưa được cấu hình.',
+    };
+  }
+
+  // High-speed embedded fallback
+  const allEmbeddedDocs = DEMO_DOCUMENTS as unknown as LegalDocument[];
+  const { executeSearch } = await import('@/lib/search');
+  const embeddedMatches = executeSearch(allEmbeddedDocs, params.query || '', {
+    typeFilter: params.docType ? (params.docType as unknown as DocumentType) : 'all',
+    statusFilter: 'all',
+  });
+
+  const docMap = new Map(allEmbeddedDocs.map((d) => [d.id, d]));
+  const matchedDocs: LegalDocument[] = [];
+  for (const m of embeddedMatches) {
+    const found = docMap.get(m.id);
+    if (found) matchedDocs.push(found);
+  }
+
+  const offset = params.offset || 0;
+  const limit = params.limit || 20;
+  const paged = matchedDocs.slice(offset, offset + limit);
+
+  return {
+    data: {
+      documents: paged,
+      totalCount: matchedDocs.length,
     },
     source: 'embedded_repository',
   };

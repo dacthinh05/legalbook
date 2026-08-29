@@ -171,17 +171,81 @@ export function flattenVisibleTree(
 }
 
 /**
- * Calculates standard indentation based on node depth (level).
- * Base: 12px, Step: 24px
- * Level 0: 12px
- * Level 1: 36px
- * Level 2: 60px
- * Level 3: 84px
+ * Calculates standard compact indentation based on node depth (level).
+ * Level 1 (Root, depth 0): 12px
+ * Level 2 (depth 1): 28px
+ * Level 3 (depth 2): 44px
+ * Level 4+ (depth 3+): 52-56px max
  */
 export function getTreeIndentation(depth: number): number {
-  return 12 + depth * 24;
+  if (depth <= 0) return 12;
+  if (depth === 1) return 28;
+  if (depth === 2) return 44;
+  return Math.min(56, 44 + (depth - 2) * 6);
 }
 
+/**
+ * Formats a clean, non-redundant presentation label for child category nodes.
+ * e.g. Under "Thuế TNCN", "Luật thuế TNCN" -> "Luật / Bộ luật", "Nghị định thuế TNCN" -> "Nghị định".
+ * Does NOT mutate original database names.
+ */
+export function formatCategoryDisplayLabel(
+  name: string,
+  parentName?: string | null,
+  depth = 0
+): string {
+  if (!name) return '';
+  if (depth === 0 || !parentName) return name;
+
+  const clean = name.trim();
+  const lowerName = clean.toLowerCase();
+  const lowerParent = parentName.toLowerCase().trim();
+
+  // If child is a typed subcategory containing the parent theme
+  if (
+    (lowerName.startsWith('luật ') || lowerName.startsWith('bộ luật ')) &&
+    (lowerName.includes(lowerParent) || lowerParent.includes(lowerName.replace(/^(luật|bộ luật)\s+/i, '')) || lowerParent.includes('thuế') || lowerParent.includes('kế toán') || lowerParent.includes('kiểm toán'))
+  ) {
+    return 'Luật / Bộ luật';
+  }
+
+  if (
+    lowerName.startsWith('nghị định ') &&
+    (lowerName.includes(lowerParent) || lowerParent.includes(lowerName.replace(/^nghị định\s+/i, '')) || lowerParent.includes('thuế') || lowerParent.includes('kế toán') || lowerParent.includes('kiểm toán'))
+  ) {
+    return 'Nghị định';
+  }
+
+  if (
+    lowerName.startsWith('thông tư ') &&
+    (lowerName.includes(lowerParent) || lowerParent.includes(lowerName.replace(/^thông tư\s+/i, '')) || lowerParent.includes('thuế') || lowerParent.includes('kế toán') || lowerParent.includes('kiểm toán'))
+  ) {
+    return 'Thông tư';
+  }
+
+  if (
+    lowerName.startsWith('công văn ') &&
+    (lowerName.includes(lowerParent) || lowerParent.includes(lowerName.replace(/^công văn(\s+hướng\s+dẫn)?\s+/i, '')) || lowerParent.includes('thuế') || lowerParent.includes('kế toán') || lowerParent.includes('kiểm toán'))
+  ) {
+    return 'Công văn hướng dẫn';
+  }
+
+  if (
+    lowerName.startsWith('quyết định ') &&
+    (lowerName.includes(lowerParent) || lowerParent.includes(lowerName.replace(/^quyết định\s+/i, '')) || lowerParent.includes('thuế') || lowerParent.includes('kế toán') || lowerParent.includes('kiểm toán'))
+  ) {
+    return 'Quyết định';
+  }
+
+  if (
+    lowerName.startsWith('chuẩn mực ') &&
+    (lowerName.includes(lowerParent) || lowerParent.includes(lowerName.replace(/^chuẩn mực\s+/i, '')) || lowerParent.includes('kế toán') || lowerParent.includes('kiểm toán'))
+  ) {
+    return 'Chuẩn mực';
+  }
+
+  return clean;
+}
 /**
  * Returns all descendant category IDs under a given parent category (including self).
  */
