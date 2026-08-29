@@ -71,6 +71,8 @@ import { LegalEffectPanel } from './LegalEffectPanel';
 import { PointInTimeSelector } from './PointInTimeSelector';
 import { ProvisionDiffModal } from './ProvisionDiffModal';
 import { LegalEffectOverlay } from './LegalEffectOverlay';
+import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
+import { DocumentSummaryView } from './DocumentSummaryView';
 import { getDocumentLegalEffects } from '@/lib/legal-effects/demo-effects';
 import { calculatePointInTimeStats } from '@/lib/legal-effects/timeline-engine';
 interface DocumentReaderProps {
@@ -1991,7 +1993,7 @@ export function DocumentReader({
           {/* ── TAB: QUAN HỆ ── */}
           {activeTab === 'quanhe' && (
             <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 select-text">
-              <LegalHierarchyTree document={doc} onSelectDocument={onSelectRelatedDocument} />
+              <LegalHierarchyTree document={doc} onSelectDocument={onSelectRelatedDocument || (() => {})} />
             </div>
           )}
 
@@ -2000,7 +2002,7 @@ export function DocumentReader({
             <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 select-text">
               <DocumentSummaryView
                 document={doc}
-                onNavigateToArticle={(artNum) => {
+                onNavigateToArticle={(artNum?: string) => {
                   setActiveTab('noidung');
                   if (artNum) {
                     const digits = artNum.replace(/[^\d]/g, '');
@@ -2023,7 +2025,7 @@ export function DocumentReader({
                   setActiveTab('noidung');
                   togglePanel('toc');
                 }}
-                onOpenAiChat={(query) => {
+                onOpenAiChat={(query?: string) => {
                   setPanelMode('ai');
                 }}
               />
@@ -2200,7 +2202,7 @@ export function DocumentReader({
         onClose={() => setShowCrossDocAnalysisModal(false)}
         onSelectDocument={(id, targetNodeId) => {
           setShowCrossDocAnalysisModal(false);
-          onSelectRelatedDocument(id);
+          onSelectRelatedDocument?.(id);
           if (targetNodeId) {
             setTimeout(() => {
               const target = document.getElementById(targetNodeId);

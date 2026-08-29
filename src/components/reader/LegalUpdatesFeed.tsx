@@ -388,16 +388,17 @@ export function LegalUpdatesFeed({
           </button>
         </div>
         {/* ── 3. Document Feed List ── */}
-        {filteredDocuments.length > 0 ? (
+        {displayDocuments.length > 0 ? (
           <div className="space-y-3">
-            {filteredDocuments.map((doc) => {
+            {displayDocuments.map((doc) => {
+              const catName = activeCategory ? activeCategory.name : null;
               return (
                 <CompactFeedRow
                   key={doc.id}
                   doc={doc}
                   allDocs={allDocuments}
                   categories={categories}
-                  activeCategoryName={activeCategory?.name || null}
+                  activeCategoryName={catName}
                   onSelect={() => onSelectDocument(doc.id)}
                 />
               );
