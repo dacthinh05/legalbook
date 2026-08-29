@@ -25,6 +25,8 @@ const COLOR_CLASSES: Record<AnnotationColor, string> = {
   yellow: 'annotation-yellow',
   green: 'annotation-green',
   pink: 'annotation-pink',
+  blue: 'annotation-blue',
+  purple: 'annotation-purple',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -195,11 +197,7 @@ export function applyAnnotations(
 }
 
 function wrapRange(range: Range, ann: DocumentAnnotation) {
-  // Split the range into text segments that don't cross element boundaries
-  const fragment = range.extractContents();
-  const mark = document.createElement('mark');
-  mark.setAttribute(ANNOTATION_MARK_ATTR, ann.id);
-  mark.className = [
+  const className = [
     ANNOTATION_MARK_CLASS,
     COLOR_CLASSES[ann.color ?? 'yellow'],
     ann.type === 'note' ? 'has-note' : '',
@@ -207,13 +205,61 @@ function wrapRange(range: Range, ann: DocumentAnnotation) {
     .filter(Boolean)
     .join(' ');
 
-  if (ann.noteContent) {
-    mark.setAttribute('data-note', ann.noteContent.slice(0, 200));
-    mark.setAttribute('title', ann.noteContent.slice(0, 120));
+  const createMark = () => {
+    const mark = document.createElement('mark');
+    mark.setAttribute(ANNOTATION_MARK_ATTR, ann.id);
+    mark.className = className;
+    if (ann.noteContent) {
+      mark.setAttribute('data-note', ann.noteContent.slice(0, 200));
+      mark.setAttribute('title', ann.noteContent.slice(0, 120));
+    }
+    return mark;
+  };
+
+  if (range.startContainer === range.endContainer && range.startContainer.nodeType === Node.TEXT_NODE) {
+    const mark = createMark();
+    const fragment = range.extractContents();
+    mark.appendChild(fragment);
+    range.insertNode(mark);
+    return;
   }
 
-  mark.appendChild(fragment);
-  range.insertNode(mark);
+  // Multi-node range wrapper: collect text nodes in range safely
+  const textNodes: Text[] = [];
+  const walker = document.createTreeWalker(
+    range.commonAncestorContainer,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: (node) => {
+        if (range.intersectsNode(node)) {
+          return NodeFilter.FILTER_ACCEPT;
+        }
+        return NodeFilter.FILTER_REJECT;
+      },
+    }
+  );
+
+  let node: Node | null;
+  while ((node = walker.nextNode())) {
+    textNodes.push(node as Text);
+  }
+
+  for (const textNode of textNodes) {
+    const nodeRange = document.createRange();
+    const isStart = textNode === range.startContainer;
+    const isEnd = textNode === range.endContainer;
+    const startOffset = isStart ? range.startOffset : 0;
+    const endOffset = isEnd ? range.endOffset : (textNode.nodeValue?.length ?? 0);
+
+    if (startOffset < endOffset) {
+      nodeRange.setStart(textNode, startOffset);
+      nodeRange.setEnd(textNode, endOffset);
+      const mark = createMark();
+      const fragment = nodeRange.extractContents();
+      mark.appendChild(fragment);
+      nodeRange.insertNode(mark);
+    }
+  }
 }
 
 /**

@@ -207,7 +207,8 @@ export function sanitizeHtml(rawHtml: string | null | undefined): string {
   if (!rawHtml) return '';
 
   if (typeof window !== 'undefined' && typeof window.document !== 'undefined') {
-    return DOMPurify.sanitize(rawHtml, {
+    const purify = typeof DOMPurify === 'function' ? (DOMPurify as unknown as (w: Window) => typeof DOMPurify)(window) : DOMPurify;
+    return purify.sanitize(rawHtml, {
       ALLOWED_TAGS,
       ALLOWED_ATTR,
       ALLOWED_URI_REGEXP,

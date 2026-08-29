@@ -37,106 +37,257 @@ export function normalizeDisplayTitle(
 
 /**
  * Formats Vietnamese administrative letterheads (Quốc hiệu, Tiêu ngữ, Cơ quan ban hành, Số hiệu, Địa danh ngày tháng)
- * into a semantic 2-column CSS Grid block compliant with Nghị định 30/2020/NĐ-CP.
- * 
- * Column 1 (Left 38-42%): Issuing agency + decorative rule + Document number (Số: ...)
- * Column 2 (Right 58-62%): National motto ("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" / "Độc lập - Tự do - Hạnh phúc") + rule + Place & Date
+ * and document structure (Tiêu đề, Căn cứ, Chương, Điều, Khoản, Điểm, Bảng, Chữ ký)
+ * into a semantic, responsive HTML structure conforming to Decree No. 30/2020/NĐ-CP.
  */
 export function formatLegalHtmlContent(htmlContent: string | null | undefined, doc?: Partial<LegalDocument>): string {
   if (!htmlContent) return '';
 
-  let html = htmlContent;
+  let html = htmlContent.trim();
 
-  // 1. Convert raw underscore strings (e.g. "______", "_______________") into semantic divider rules
+  // 1. Remove raw underscore / dash decorative lines that mimic physical underlines
   html = html.replace(/_{3,}/g, '');
+  html = html.replace(/(?:^|<p[^>]*>|\s)(?:-{4,}|—{3,})(?:<\/p>|\s|$)/g, '');
 
-  // 2. Check if the HTML contains standard administrative letterhead elements
-  // (CƠ QUAN BAN HÀNH / CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM / Số: ...)
-  const hasNationalMotto = /CỘNG\s+HÒA\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM/i.test(html);
-  const hasSlogan = /Độc\s+lập\s*-\s*Tự\s+do\s*-\s*Hạnh\s+phúc/i.test(html);
+  // 2. Format 2-Column Administrative Letterhead (Nghị định 30/2020/NĐ-CP)
+  html = formatAdministrativeMasthead(html, doc);
 
-  // If already structured with .document-letterhead, return with table wrapping
-  if (html.includes('class="document-letterhead"') || html.includes("class='document-letterhead'")) {
-    return wrapTablesAndSignatures(html);
+  // 3. Clean up empty paragraphs, repeated <br> tags and unnecessary whitespace blocks
+  html = cleanEmptyParagraphsAndSpacers(html);
+
+  // 4. Format Document Title Block (Loại văn bản + Trích yếu / Tên văn bản)
+  html = formatDocumentTitleBlock(html, doc);
+
+  // 5. Format Legal Basis Block (Căn cứ pháp lý)
+  html = formatLegalBasisBlock(html);
+
+  // 6. Format Chapter Headings (Chương I - QUY ĐỊNH CHUNG)
+  html = formatChapterHeadings(html);
+
+  // 7. Format Articles, Clauses, and Points (Điều, Khoản 1., Điểm a))
+  html = formatArticlesAndClauses(html);
+
+  // 8. Wrap tables for smooth horizontal scrolling and enhance signature blocks
+  html = wrapTablesAndSignatures(html);
+
+  return html;
+}
+
+/**
+ * Formats the administrative letterhead into a semantic 2-column grid.
+ */
+function formatAdministrativeMasthead(html: string, doc?: Partial<LegalDocument>): string {
+  // If already structured with .document-letterhead, return as-is
+  if (html.includes('document-letterhead') || html.includes('legal-masthead')) {
+    return html;
   }
 
-  if (hasNationalMotto && hasSlogan) {
-    // Attempt to extract letterhead parts and construct the 2-column semantic letterhead
-    try {
-      // Find the agency text before or after motto
-      const agencyName = doc?.issuing_body || extractAgencyFromHtml(html) || 'BỘ TÀI CHÍNH';
-      const docNumber = doc?.document_number || extractDocNumberFromHtml(html) || '';
-      const issuedDateFormatted = extractDateFromHtml(html) || (doc?.issued_date ? formatLegalDate(doc.issued_date) : '');
+  const hasNationalMotto = /CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM/i.test(html);
+  const hasSlogan = /Độc\s+lập\s*[-–—]\s*Tự\s+do\s*[-–—]\s*Hạnh\s+phúc/i.test(html);
 
-      // Check if we can safely replace the top letterhead lines
-      // Typical raw pattern:
-      // <p style="text-align:center;"><strong>BỘ TÀI CHÍNH</strong><br>______</p>
-      // <p style="text-align:center;"><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br><strong>Độc lập - Tự do - Hạnh phúc</strong><br>___________________</p>
-      // <p style="text-align:right;"><em>Số: 1293/QĐ-BTC</em></p>
-      
-      const letterheadRegex = /<div class="document-full-body">[\s\S]*?(?:<p[^>]*>.*?CỘNG\s+HÒA\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM[\s\S]*?<\/p>[\s\S]*?(?:<p[^>]*>.*?Số:[\s\S]*?<\/p>|<p[^>]*>.*?(?:ngày|tháng|năm)[\s\S]*?<\/p>))/i;
-      
-      const match = html.match(letterheadRegex);
-      if (match) {
-        const letterheadHtml = `
+  if (!hasNationalMotto && !hasSlogan && !doc?.issuing_body) {
+    return html;
+  }
+
+  // Extract parts from HTML or doc metadata
+  const extractedAgency = extractAgencyFromHtml(html);
+  const agencyName = (extractedAgency || doc?.issuing_body || 'CƠ QUAN BAN HÀNH').trim();
+
+  const extractedDocNumber = extractDocNumberFromHtml(html);
+  const docNumber = (extractedDocNumber || doc?.document_number || '').trim();
+
+  const extractedDate = extractDateFromHtml(html);
+  const placeAndDate = extractedDate || (doc?.issued_date ? formatLegalDate(doc.issued_date) : '');
+  const letterheadHtml = `
 <div class="document-letterhead" role="region" aria-label="Đầu văn bản hành chính">
-  <div class="letterhead-left">
+  <section class="letterhead-left">
     <p class="letterhead-agency">${agencyName.toUpperCase()}</p>
     <div class="letterhead-rule letterhead-rule-agency" aria-hidden="true"></div>
-    ${docNumber ? `<p class="letterhead-number">Số: ${docNumber.replace(/^Số:\s*/i, '')}</p>` : ''}
-  </div>
-  <div class="letterhead-right">
+    ${docNumber ? `<p class="letterhead-number">${docNumber.startsWith('Số:') ? docNumber : 'Số: ' + docNumber}</p>` : ''}
+  </section>
+  <section class="letterhead-right">
     <p class="letterhead-motto-country">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
     <p class="letterhead-motto-slogan">Độc lập - Tự do - Hạnh phúc</p>
     <div class="letterhead-rule letterhead-rule-motto" aria-hidden="true"></div>
-    ${issuedDateFormatted ? `<p class="letterhead-date">${issuedDateFormatted}</p>` : ''}
-  </div>
+    ${placeAndDate ? `<p class="letterhead-date">${placeAndDate}</p>` : ''}
+  </section>
 </div>`;
-
-        // Replace the matched top header block with our semantic letterhead
-        html = html.replace(match[0], `<div class="document-full-body">\n${letterheadHtml}`);
-      }
-    } catch {
-      // Graceful fallback: return original html with safety enhancements
-    }
+  // Case A: Table-based letterhead (common in Word imports & TVPL tables)
+  const tableLetterheadRegex = /<table[^>]*>[\s\S]*?(?:CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM|Độc\s+lập\s*[-–—]\s*Tự\s+do\s*[-–—]\s*Hạnh\s+phúc)[\s\S]*?<\/table>/i;
+  if (tableLetterheadRegex.test(html)) {
+    return html.replace(tableLetterheadRegex, letterheadHtml);
   }
 
-  return wrapTablesAndSignatures(html);
+  // Case B: Paragraph-based vertical letterhead
+  const paraLetterheadRegex = /(?:<div class="document-full-body">)?\s*(?:<p[^>]*>[\s\S]*?(?:BỘ|CHÍNH PHỦ|ỦY BAN|TỔNG CỤC|CỤC|SỞ|QUỐC HỘI|TÒA ÁN|VIỆN KIỂM SÁT)[\s\S]*?<\/p>\s*)?<p[^>]*>[\s\S]*?CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM[\s\S]*?<\/p>(?:\s*<p[^>]*>[\s\S]*?Độc\s+lập[\s\S]*?<\/p>)?(?:\s*<p[^>]*>[\s\S]*?Số:[\s\S]*?<\/p>)?(?:\s*<p[^>]*>[\s\S]*?(?:ngày|tháng|năm)[\s\S]*?<\/p>)?/i;
+
+  const match = html.match(paraLetterheadRegex);
+  if (match) {
+    const hasBodyWrapper = html.startsWith('<div class="document-full-body">');
+    const replaced = html.replace(match[0], hasBodyWrapper ? `<div class="document-full-body">\n${letterheadHtml}` : letterheadHtml);
+    return replaced;
+  }
+
+  return html;
+}
+
+/**
+ * Cleans empty paragraphs, repeated linebreaks, and placeholder gaps.
+ */
+function cleanEmptyParagraphsAndSpacers(html: string): string {
+  let res = html;
+  // Remove paragraphs that contain only whitespace, &nbsp;, <br>
+  res = res.replace(/<p[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '');
+  // Collapse multiple <br> inside paragraphs to at most one <br>
+  res = res.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br/>');
+  // Clean redundant style margins on paragraphs
+  res = res.replace(/style=["']margin-(?:top|bottom):\s*\d+px;?["']/gi, '');
+  return res;
+}
+
+/**
+ * Formats the document title into a semantic title block.
+ */
+function formatDocumentTitleBlock(html: string, doc?: Partial<LegalDocument>): string {
+  // If title block already structured, return
+  if (html.includes('legal-doc-title-block')) {
+    return html;
+  }
+
+  // Pattern for separate Document Type (THÔNG TƯ / NGHỊ ĐỊNH / LUẬT / ...) and Title
+  const separateTitleRegex = /<p[^>]*>\s*(?:<strong>|<b>)?\s*(THÔNG TƯ|NGHỊ ĐỊNH|QUYẾT ĐỊNH|LUẬT|BỘ LUẬT|CÔNG VĂN|NGHỊ QUYẾT|CHỈ THỊ)\s*(?:<\/strong>|<\/b>)?\s*<\/p>\s*<p[^>]*>\s*(?:<strong>|<b>)?\s*([^<]+?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>/i;
+
+  const separateMatch = html.match(separateTitleRegex);
+  if (separateMatch) {
+    const docType = separateMatch[1].trim();
+    const docTitle = separateMatch[2].trim();
+    const formattedTitle = `
+<div class="legal-doc-title-block">
+  <h1 class="legal-doc-type">${docType}</h1>
+  <p class="legal-doc-title">${docTitle}</p>
+</div>`;
+    return html.replace(separateMatch[0], formattedTitle);
+  }
+
+  // Pattern for combined Document Type & Title in one heading/paragraph
+  const combinedTitleRegex = /<p[^>]*>\s*(?:<strong>|<b>)?\s*((?:THÔNG TƯ|NGHỊ ĐỊNH|QUYẾT ĐỊNH|LUẬT|BỘ LUẬT|CÔNG VĂN|NGHỊ QUYẾT|CHỈ THỊ)\s+(?:SỐ\s+)?[\w\d\/\.\-]+\s+[^\n<]+)\s*(?:<\/strong>|<\/b>)?\s*<\/p>/i;
+  const combinedMatch = html.match(combinedTitleRegex);
+  if (combinedMatch && !combinedMatch[1].includes('Căn cứ')) {
+    const fullTitle = combinedMatch[1].trim();
+    const formattedTitle = `
+<div class="legal-doc-title-block">
+  <h1 class="legal-doc-title">${fullTitle}</h1>
+</div>`;
+    return html.replace(combinedMatch[0], formattedTitle);
+  }
+
+  return html;
+}
+
+/**
+ * Formats legal basis paragraphs (Căn cứ...) with semantic classes.
+ */
+function formatLegalBasisBlock(html: string): string {
+  // Match paragraphs starting with "Căn cứ", "Theo đề nghị", or concluding issuing statements
+  return html.replace(
+    /<p([^>]*)>\s*(?:<em>|<i>)?\s*(Căn cứ\s+[^\n<]+|Theo đề nghị của\s+[^\n<]+|Bộ trưởng[^\n<]+ban hành[^\n<]+)\s*(?:<\/em>|<\/i>)?\s*<\/p>/gi,
+    (_match, _attr, content) => `<p class="legal-basis"><em>${content.trim()}</em></p>`
+  );
+}
+
+/**
+ * Formats Chapter headings (Chương I - QUY ĐỊNH CHUNG) cleanly.
+ */
+function formatChapterHeadings(html: string): string {
+  // Pattern: <p><strong>Chương I<br>QUY ĐỊNH CHUNG</strong></p> or two separate lines
+  const chapterPattern = /<p[^>]*>\s*(?:<strong>|<b>)?\s*(Chương\s+[IVXLCDM\d]+|Phần\s+[IVXLCDM\d]+|Mục\s+\d+|Phụ\s+lục\s*[\dIVX]*)(?:<br\s*\/?>|\s*<\/strong><\/p>\s*<p[^>]*><strong>|\s*[-–—:]\s*|\s*\n\s*)([^<]+?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>/gi;
+
+  return html.replace(chapterPattern, (_match, chapNum, chapTitle) => {
+    const cleanNum = chapNum.trim();
+    const cleanTitle = chapTitle.trim();
+    return `
+<div class="legal-chapter-block">
+  <p class="legal-chapter-num">${cleanNum}</p>
+  <h2 class="legal-chapter-title">${cleanTitle}</h2>
+</div>`;
+  });
+}
+
+/**
+ * Formats Articles (Điều X), Clauses (1., 2.), and Points (a), b)) with semantic classes.
+ */
+function formatArticlesAndClauses(html: string): string {
+  let res = html;
+
+  // 1. Articles: <h2/h3> or <p><strong>Điều X. ...</strong></p>
+  res = res.replace(
+    /<(?:h[2-4]|p)[^>]*>\s*(?:<strong>|<b>)?\s*(Điều\s+\d+[a-z]?[\.:\s][^<]+)\s*(?:<\/strong>|<\/b>)?\s*<\/(?:h[2-4]|p)>/gi,
+    (_match, articleText) => {
+      const trimmed = articleText.trim();
+      const numMatch = trimmed.match(/^Điều\s+(\d+[a-z]?)/i);
+      const articleId = numMatch ? `dieu-${numMatch[1]}` : undefined;
+      const idAttr = articleId ? ` id="${articleId}"` : '';
+      return `<h2 class="legal-article-title"${idAttr}>${trimmed}</h2>`;
+    }
+  );
+
+  // 2. Clauses: <p>1. Nội dung khoản...</p>
+  res = res.replace(
+    /<p([^>]*)>\s*(\d+)\.\s+([^<]+(?:<(?!\/p>)[^>]+>[^<]*)*)<\/p>/gi,
+    (_match, _attr, num, content) => {
+      return `<div class="legal-clause"><span class="clause-num">${num}.</span><div class="clause-text">${content.trim()}</div></div>`;
+    }
+  );
+
+  // 3. Points: <p>a) Nội dung điểm...</p>
+  res = res.replace(
+    /<p([^>]*)>\s*([a-zđ])\)\s+([^<]+(?:<(?!\/p>)[^>]+>[^<]*)*)<\/p>/gi,
+    (_match, _attr, letter, content) => {
+      return `<div class="legal-point"><span class="point-num">${letter})</span><div class="point-text">${content.trim()}</div></div>`;
+    }
+  );
+
+  return res;
 }
 
 /**
  * Wraps tables for smooth horizontal scrolling and enhances signature blocks.
  */
 function wrapTablesAndSignatures(html: string): string {
-  // Wrap <table> with responsive container if not already wrapped
   let result = html;
   
-  // Replace un-wrapped tables
-  result = result.replace(/<table(?![^>]*class=["'][^"']*legal-table)([^>]*)>/gi, '<div class="legal-table-wrapper"><table class="legal-table"$1>');
+  // Replace un-wrapped tables (exclude already wrapped or letterhead tables)
+  result = result.replace(/<table(?![^>]*class=["'][^"']*(?:legal-table|document-letterhead))([^>]*)>/gi, '<div class="legal-table-wrapper"><table class="legal-table"$1>');
   result = result.replace(/<\/table>(?!\s*<\/div>)/gi, '</table></div>');
 
-  // Format signature blocks (TM. BỘ ..., NGƯỜI KÝ, NƠI NHẬN)
+  // Format signature blocks (TM. BỘ ..., KT. ..., NGƯỜI KÝ, NƠI NHẬN)
   result = result.replace(
     /<p[^>]*style=["'][^"']*text-align:\s*right[^"']*["']>([\s\S]*?(?:TM\.|KT\.|BỘ TRƯỞNG|CỤC TRƯỞNG|TỔNG CỤC TRƯỞNG|CHỦ TỊCH|GIÁM ĐỐC|THỦ TƯỚNG)[\s\S]*?)<\/p>/gi,
-    '<div class="document-signature-block"><div class="signature-signer">$1</div></div>'
+    '<div class="document-signature-block legal-signature-block"><div class="signature-signer">$1</div></div>'
   );
 
   return result;
 }
 
 function extractAgencyFromHtml(html: string): string | null {
-  const match = html.match(/<strong>\s*(BỘ\s+[A-ZÀ-Ỹ\s]+|TỔNG\s+CỤC\s+[A-ZÀ-Ỹ\s]+|CỤC\s+[A-ZÀ-Ỹ\s]+|ỦY\s+BAN\s+NHÂN\s+DÂN\s+[A-ZÀ-Ỹ\s]+|CHÍNH\s+PHỦ|QUỐC\s+HỘI)\s*<\/strong>/i);
+  const match = html.match(/(?:<strong>|<b>|<p[^>]*>)\s*(BỘ\s+[A-ZÀ-Ỹ\s]+|TỔNG\s+CỤC\s+[A-ZÀ-Ỹ\s]+|CỤC\s+[A-ZÀ-Ỹ\s]+|ỦY\s+BAN\s+NHÂN\s+DÂN\s+[A-ZÀ-Ỹ\s]+|CHÍNH\s+PHỦ|QUỐC\s+HỘI|TÒA\s+ÁN\s+[A-ZÀ-Ỹ\s]+|VIỆN\s+KIỂM\s+SÁT\s+[A-ZÀ-Ỹ\s]+)\s*(?:<\/strong>|<\/b>|<\/p>)/i);
   return match ? match[1].trim() : null;
 }
-
 function extractDocNumberFromHtml(html: string): string | null {
-  const match = html.match(/Số:\s*([A-Za-z0-9\/\-\.]+)/i);
+  const match = html.match(/Số:\s*([A-Za-z0-9\/\-\.À-Ỹà-ỹ_]+)/i);
   return match ? match[1].trim() : null;
 }
 
 function extractDateFromHtml(html: string): string | null {
-  const match = html.match(/((?:Hà\s+Nội|TP\.\s*Hồ\s+Chí\s+Minh|[A-ZÀ-Ỹa-zà-ỹ\s]+),\s*ngày\s+\d{1,2}\s+tháng\s+\d{1,2}\s+năm\s+\d{4})/i);
-  return match ? match[1].trim() : null;
+  // Match full location and date e.g. "Hà Nội, ngày 18 tháng 8 năm 2026" or "TP. Hồ Chí Minh, ngày 25 tháng 05 năm 2026"
+  const matchWithPlace = html.match(/((?:Hà\s+Nội|TP\.\s*Hồ\s+Chí\s+Minh|Thành\s+phố\s+[A-ZÀ-Ỹa-zà-ỹ\s]+|[A-ZÀ-Ỹa-zà-ỹ\s]+),\s*ngày\s+\d{1,2}\s+tháng\s+\d{1,2}\s+năm\s+\d{4})/i);
+  if (matchWithPlace) {
+    return matchWithPlace[1].trim();
+  }
+
+  // Match date only without location
+  const matchDateOnly = html.match(/(ngày\s+\d{1,2}\s+tháng\s+\d{1,2}\s+năm\s+\d{4})/i);
+  return matchDateOnly ? matchDateOnly[1].trim() : null;
 }
 
 function formatLegalDate(isoDate: string): string {

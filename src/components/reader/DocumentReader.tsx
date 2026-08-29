@@ -142,6 +142,7 @@ export function DocumentReader({
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [pdfZoomMode, setPdfZoomMode] = useState<'FitH' | 'Fit' | '125' | '150'>('FitH');
   const [selectedPdfFileIndex, setSelectedPdfFileIndex] = useState<number>(0);
+  const [showQuickViewPdf, setShowQuickViewPdf] = useState(false);
 
   // ── Refs ───────────────────────────────────────────────────────────────
 
@@ -1564,6 +1565,43 @@ export function DocumentReader({
                       <p className="text-slate-400 text-center py-8">Tệp PDF không khả dụng</p>
                     )}
                   </div>
+                ) : showQuickViewPdf && tvplUrl ? (
+                  /* ── Quick-view inline: embed TVPL via Google Docs Viewer ── */
+                  <div className="flex-1 w-full h-full min-h-[550px] relative overflow-hidden bg-slate-200">
+                    <div className="absolute top-0 left-0 right-0 z-10 bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 text-amber-800">
+                        <FileWarning className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span className="font-medium">Đang xem qua liên kết Thư Viện Pháp Luật — chưa lưu trữ nội bộ</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={tvplUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1 bg-white border border-amber-300 text-amber-800 rounded text-[11px] font-medium flex items-center gap-1 hover:bg-amber-50 transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Mở tab riêng
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setShowQuickViewPdf(false)}
+                          className="px-2.5 py-1 bg-white border border-slate-200 text-slate-600 rounded text-[11px] font-medium hover:bg-slate-50 transition-colors"
+                        >
+                          Đóng
+                        </button>
+                      </div>
+                    </div>
+                    <iframe
+                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(tvplUrl)}&embedded=true`}
+                      className="w-full h-full border-0 absolute inset-0 pt-10"
+                      title="Bản gốc văn bản pháp luật"
+                      allow="fullscreen"
+                      onError={() => {
+                        /* fallback handled below */
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="flex-1 p-6 overflow-y-auto">
                     <div className="max-w-3xl mx-auto border border-slate-200 rounded-xl p-8 bg-white shadow-xs text-center space-y-4">
@@ -1571,15 +1609,25 @@ export function DocumentReader({
                       <div>
                         <h3 className="text-base font-bold text-slate-900">Chưa có tệp PDF gốc lưu trữ cho văn bản này</h3>
                         <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                          Vui lòng tra cứu văn bản gốc trực tiếp qua đường dẫn Thư Viện Pháp Luật hoặc tải bản scan/PDF lên hệ thống.
+                          Bạn có thể xem nhanh bản gốc ngay trong ứng dụng, hoặc mở trực tiếp trên Thư Viện Pháp Luật.
                         </p>
                       </div>
-                      <div className="flex items-center justify-center gap-3 pt-2">
+                      <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
+                        {tvplUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setShowQuickViewPdf(true)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Tải nhanh &amp; Xem bản gốc</span>
+                          </button>
+                        )}
                         <a
                           href={tvplUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           <span>Mở trên Thư Viện Pháp Luật</span>

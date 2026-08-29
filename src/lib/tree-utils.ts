@@ -64,35 +64,52 @@ export function flattenVisibleTree(
 
 /**
  * Calculates standard indentation based on node depth (level).
- * Base: 12px, Step: 20px
+ * Base: 12px, Step: 24px
  * Level 0: 12px
- * Level 1: 32px
- * Level 2: 52px
- * Level 3: 72px
+ * Level 1: 36px
+ * Level 2: 60px
+ * Level 3: 84px
  */
 export function getTreeIndentation(depth: number): number {
-  return 12 + depth * 20;
+  return 12 + depth * 24;
 }
 
 /**
  * Returns all descendant category IDs under a given parent category (including self).
  */
 export function getDescendantCategoryIds(categoryId: string, categories: Category[]): string[] {
-  const ids: string[] = [categoryId];
-  function collect(cats: Category[]) {
+  const childMap = new Map<string, string[]>();
+
+  function register(cats: Category[]) {
     for (const c of cats) {
-      if (c.parent_id && ids.includes(c.parent_id)) {
-        if (!ids.includes(c.id)) ids.push(c.id);
+      if (c.parent_id) {
+        const list = childMap.get(c.parent_id) || [];
+        list.push(c.id);
+        childMap.set(c.parent_id, list);
       }
       if (c.children && c.children.length > 0) {
-        collect(c.children);
+        register(c.children);
       }
     }
   }
-  collect(categories);
-  return ids;
-}
+  register(categories);
 
+  const result: string[] = [categoryId];
+  const queue: string[] = [categoryId];
+  while (queue.length > 0) {
+    const curr = queue.shift()!;
+    const children = childMap.get(curr);
+    if (children) {
+      for (const childId of children) {
+        if (!result.includes(childId)) {
+          result.push(childId);
+          queue.push(childId);
+        }
+      }
+    }
+  }
+  return result;
+}
 /**
  * Maps specific child category names or slugs to document types.
  * Allows type-specific child categories (e.g. Luật thuế GTGT) to resolve documents of that type.

@@ -24,10 +24,10 @@ import { DEMO_CATEGORY_LINKS } from '@/lib/demo-data';
 import { getDescendantCategoryIds } from '@/lib/tree-utils';
 import { X, ChevronLeft, ChevronRight, FolderTree, ListFilter, Search, BookmarkCheck } from 'lucide-react';
 
-const MIN_SIDEBAR = 260;
-const MAX_SIDEBAR = 320;
-const MIN_LIST = 340;
-const MAX_LIST = 440;
+const MIN_SIDEBAR = 240;
+const MAX_SIDEBAR = 340;
+const MIN_LIST = 320;
+const MAX_LIST = 460;
 
 const STORAGE_KEY_SIDEBAR = 'lb_sidebar_width';
 const STORAGE_KEY_LIST = 'lb_list_width';
@@ -416,37 +416,27 @@ export default function MainPage() {
           )}
         </div>
 
-        {/* Sidebar resize handle (desktop) */}
-        {sidebarOpen && (
-          <div
-            className="resize-handle-container hidden md:flex"
-            onMouseDown={handleSidebarResizeStart}
-            title="Kéo để thay đổi độ rộng cột danh mục"
-          >
-            <div className="resize-handle-line" />
-          </div>
-        )}
-
-        {/* Toggle button for Category sidebar */}
-        <button
-          className="hidden md:flex absolute z-30 items-center justify-center bg-white border border-slate-200 rounded-r shadow-xs hover:bg-slate-50 transition-all text-slate-500 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer"
-          style={{
-            top: '50%',
-            transform: 'translateY(-50%)',
-            left: sidebarOpen ? sidebarWidth : 0,
-            width: '18px',
-            height: '38px',
-            minWidth: '18px',
-          }}
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          title={sidebarOpen ? 'Thu gọn danh mục' : 'Mở rộng danh mục'}
-          aria-label={sidebarOpen ? 'Thu gọn danh mục' : 'Mở rộng danh mục'}
-          aria-expanded={sidebarOpen}
+        {/* Splitter 1: Between Category Sidebar & Document List */}
+        <div
+          className="hidden md:flex relative items-center justify-center shrink-0 w-1 hover:w-1.5 bg-slate-200 hover:bg-blue-400 transition-all cursor-col-resize group z-20 select-none"
+          onMouseDown={handleSidebarResizeStart}
+          title="Kéo để thay đổi độ rộng danh mục"
         >
-          {sidebarOpen ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-        </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSidebarOpen(!sidebarOpen);
+            }}
+            className="absolute top-2.5 z-30 w-5 h-6 -left-2 bg-white border border-slate-300 rounded shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus:opacity-100"
+            title={sidebarOpen ? 'Thu gọn danh mục' : 'Mở rộng danh mục'}
+            aria-label={sidebarOpen ? 'Thu gọn danh mục' : 'Mở rộng danh mục'}
+          >
+            {sidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          </button>
+        </div>
 
-        {/* COLUMN 2: Document List Sidebar (340 - 440px) */}
+        {/* COLUMN 2: Document List Sidebar (320 - 460px) */}
         <div
           className={`responsive-doc-list bg-white border-r border-slate-200 flex flex-col overflow-hidden transition-[width] duration-150 ease-out shrink-0 md:shrink-0 ${
             selectedDocumentId ? 'hidden md:flex' : 'flex'
@@ -466,38 +456,25 @@ export default function MainPage() {
           )}
         </div>
 
-        {/* List resize handle (desktop) */}
-        {listOpen && (
-          <div
-            className="resize-handle-container hidden md:flex"
-            onMouseDown={handleListResizeStart}
-            title="Kéo để thay đổi độ rộng cột danh sách"
-          >
-            <div className="resize-handle-line" />
-          </div>
-        )}
-
-        {/* Toggle button for Document List */}
-        <button
-          className="hidden md:flex absolute z-30 items-center justify-center bg-white border border-slate-200 rounded-r shadow-xs hover:bg-slate-50 transition-all text-slate-500 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer"
-          style={{
-            top: '50%',
-            transform: 'translateY(-50%)',
-            left:
-              (sidebarOpen ? sidebarWidth : 18) +
-              (listOpen ? listWidth : 0),
-            width: '18px',
-            height: '38px',
-            minWidth: '18px',
-          }}
-          onClick={() => setListOpen(!listOpen)}
-          title={listOpen ? 'Thu gọn danh sách văn bản' : 'Mở rộng danh sách văn bản'}
-          aria-label={listOpen ? 'Thu gọn danh sách văn bản' : 'Mở rộng danh sách văn bản'}
-          aria-expanded={listOpen}
+        {/* Splitter 2: Between Document List & Reader */}
+        <div
+          className="hidden md:flex relative items-center justify-center shrink-0 w-1 hover:w-1.5 bg-slate-200 hover:bg-blue-400 transition-all cursor-col-resize group z-20 select-none"
+          onMouseDown={handleListResizeStart}
+          title="Kéo để thay đổi độ rộng danh sách"
         >
-          {listOpen ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-        </button>
-
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setListOpen(!listOpen);
+            }}
+            className="absolute top-2.5 z-30 w-5 h-6 -left-2 bg-white border border-slate-300 rounded shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus:opacity-100"
+            title={listOpen ? 'Thu gọn danh sách văn bản' : 'Mở rộng danh sách văn bản'}
+            aria-label={listOpen ? 'Thu gọn danh sách văn bản' : 'Mở rộng danh sách văn bản'}
+          >
+            {listOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          </button>
+        </div>
         {/* COLUMN 3: Main Workspace (Cập nhật pháp luật or Document Reader >= 680px) */}
         <main className={`flex-1 overflow-hidden flex flex-col min-w-0 bg-white ${
           selectedDocumentId ? 'flex' : 'hidden md:flex'

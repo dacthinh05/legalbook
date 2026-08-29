@@ -2,26 +2,22 @@
 
 /**
  * useAnnotations.ts
- * React hook for managing document annotations backed by Supabase.
+ * React hook for managing document annotations backed by Supabase with local-storage fallback.
  *
  * Responsibilities:
  * - Fetch annotations for a document (own + team/org) from Supabase
+ * - Seamless local storage fallback for guest/offline readers
  * - Optimistic local state for fast UI feedback
  * - Add / update / delete (soft-delete) annotations
  * - Re-anchor orphaned annotations after content version changes
  * - Realtime subscription for collaborative note visibility (team/org)
- *
- * Security:
- * - RLS on DB enforces access. This hook never bypasses it.
- * - All user_id values come from the authenticated session, never from props.
- * - note_content is sanitized by annotation-engine before calling addAnnotation.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { DocumentAnnotation, AnnotationAnchor, AnnotationAnchorStatus, AnnotationColor } from '@/types';
 
-// ─── DB row type (matches migration columns) ──────────────────────────────────
+// ─── DB row type ──────────────────────────────────────────────────────────────
 
 interface AnnotationRow {
   id: string;
@@ -83,11 +79,37 @@ function anchorToRow(anchor: AnnotationAnchor) {
   };
 }
 
+// ─── LocalStorage Helpers ─────────────────────────────────────────────────────
+
+function getStorageKey(docId: string) {
+  return `lb_annotations_${docId}`;
+}
+
+function loadLocalAnnotations(docId: string): DocumentAnnotation[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(getStorageKey(docId));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((a: DocumentAnnotation) => a.anchorStatus !== 'deleted');
+      }
+    }
+  } catch {}
+  return [];
+}
+
+function saveLocalAnnotations(docId: string, list: DocumentAnnotation[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(getStorageKey(docId), JSON.stringify(list));
+  } catch {}
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export interface UseAnnotationsOptions {
   documentId: string;
-  /** Current content version (e.g. doc.updated_at or a hash). Used to detect content changes. */
   contentVersion: string;
 }
 
@@ -96,27 +118,22 @@ export interface UseAnnotationsReturn {
   isLoading: boolean;
   error: string | null;
 
-  /** Add a new highlight or note annotation. Returns the created annotation or null on error. */
   addAnnotation: (
     draft: Omit<DocumentAnnotation, 'id' | 'createdAt' | 'updatedAt'>
   ) => Promise<DocumentAnnotation | null>;
 
-  /** Update note_content, color, or visibility of an owned annotation. */
   updateAnnotation: (
     id: string,
     patch: Partial<Pick<DocumentAnnotation, 'noteContent' | 'color' | 'visibility'>>
   ) => Promise<void>;
 
-  /** Soft-delete: set anchor_status = 'deleted' (can be hard-deleted by user explicitly). */
   deleteAnnotation: (id: string) => Promise<void>;
 
-  /** Mark orphaned annotations as re-anchored after content version change. */
   reanchorAnnotation: (
     id: string,
     updatedAnchor: AnnotationAnchor
   ) => Promise<void>;
 
-  /** Re-fetch from server. */
   refresh: () => Promise<void>;
 }
 
@@ -125,7 +142,9 @@ export function useAnnotations({
   contentVersion,
 }: UseAnnotationsOptions): UseAnnotationsReturn {
   const supabase = createClient();
-  const [annotations, setAnnotations] = useState<DocumentAnnotation[]>([]);
+  const [annotations, setAnnotations] = useState<DocumentAnnotation[]>(() => {
+    return loadLocalAnnotations(documentId);
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const contentVersionRef = useRef(contentVersion);
@@ -134,11 +153,22 @@ export function useAnnotations({
     contentVersionRef.current = contentVersion;
   }, [contentVersion]);
 
-  // ── Fetch ────────────────────────────────────────────────────────────────
+  // Sync to local storage whenever annotations change
+  const persistLocally = useCallback(
+    (nextList: DocumentAnnotation[]) => {
+      setAnnotations(nextList);
+      saveLocalAnnotations(documentId, nextList);
+    },
+    [documentId]
+  );
+
+  // ── Fetch from Supabase with Local Merge ───────────────────────────────────
 
   const fetchAnnotations = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
+    const localList = loadLocalAnnotations(documentId);
 
     try {
       const { data, error: fetchError } = await supabase
@@ -148,48 +178,36 @@ export function useAnnotations({
         .neq('anchor_status', 'deleted')
         .order('created_at', { ascending: true });
 
-      if (fetchError) throw fetchError;
-
-      setAnnotations((data as AnnotationRow[]).map(rowToAnnotation));
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Không thể tải ghi chú';
-      setError(message);
+      if (fetchError) {
+        // Fallback to local
+        setAnnotations(localList);
+      } else if (data && Array.isArray(data)) {
+        const remoteList = (data as AnnotationRow[]).map(rowToAnnotation);
+        // Merge remote + local (avoid duplicate IDs)
+        const remoteIds = new Set(remoteList.map((r) => r.id));
+        const nonDuplicateLocals = localList.filter((l) => !remoteIds.has(l.id));
+        const combined = [...remoteList, ...nonDuplicateLocals];
+        persistLocally(combined);
+      }
+    } catch {
+      setAnnotations(localList);
     } finally {
       setIsLoading(false);
     }
-  }, [documentId, supabase]);
+  }, [documentId, supabase, persistLocally]);
 
   useEffect(() => {
     let active = true;
-    const load = async () => {
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('document_annotations')
-          .select('*')
-          .eq('document_id', documentId)
-          .neq('anchor_status', 'deleted')
-          .order('created_at', { ascending: true });
-
-        if (fetchError) throw fetchError;
-
-        if (active) {
-          setAnnotations((data as AnnotationRow[]).map(rowToAnnotation));
-        }
-      } catch (err: unknown) {
-        if (active) {
-          const message = err instanceof Error ? err.message : 'Không thể tải ghi chú';
-          setError(message);
-        }
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
+    const run = async () => {
+      if (active) {
+        await fetchAnnotations();
       }
     };
-    load();
-    return () => { active = false; };
-  }, [documentId, supabase]);
-
+    run();
+    return () => {
+      active = false;
+    };
+  }, [fetchAnnotations]);
   // ── Realtime subscription (team/org notes) ───────────────────────────────
 
   useEffect(() => {
@@ -206,18 +224,31 @@ export function useAnnotations({
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newAnn = rowToAnnotation(payload.new as AnnotationRow);
-            setAnnotations((prev) =>
-              prev.some((a) => a.id === newAnn.id) ? prev : [...prev, newAnn]
-            );
+            setAnnotations((prev) => {
+              const next = prev.some((a) => a.id === newAnn.id) ? prev : [...prev, newAnn];
+              saveLocalAnnotations(documentId, next);
+              return next;
+            });
           } else if (payload.eventType === 'UPDATE') {
             const updated = rowToAnnotation(payload.new as AnnotationRow);
-            setAnnotations((prev) =>
-              updated.anchorStatus === 'deleted'
-                ? prev.filter((a) => a.id !== updated.id)
-                : prev.map((a) => (a.id === updated.id ? updated : a))
-            );
+            setAnnotations((prev) => {
+              const next =
+                updated.anchorStatus === 'deleted'
+                  ? prev.filter((a) => a.id !== updated.id)
+                  : prev.map((a) => (a.id === updated.id ? updated : a));
+              saveLocalAnnotations(documentId, next);
+              return next;
+            });
           } else if (payload.eventType === 'DELETE') {
-            setAnnotations((prev) => prev.filter((a) => a.id !== (payload.old as { id: string }).id));
+            const oldRecord = payload.old;
+            const deletedId = oldRecord && typeof oldRecord === 'object' && 'id' in oldRecord ? String(oldRecord.id) : null;
+            if (deletedId) {
+              setAnnotations((prev) => {
+                const next = prev.filter((a) => a.id !== deletedId);
+                saveLocalAnnotations(documentId, next);
+                return next;
+              });
+            }
           }
         }
       )
@@ -228,157 +259,167 @@ export function useAnnotations({
     };
   }, [documentId, supabase]);
 
-  // ── Add ─────────────────────────────────────────────────────────────────
+  // ── Add Annotation (Works seamlessly for Auth & Guest) ───────────────────
 
   const addAnnotation = useCallback(
     async (
       draft: Omit<DocumentAnnotation, 'id' | 'createdAt' | 'updatedAt'>
     ): Promise<DocumentAnnotation | null> => {
-      // Get authenticated user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setError('Bạn cần đăng nhập để tạo ghi chú');
-        return null;
+      const tempId = `ann-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const nowStr = new Date().toISOString();
+
+      let effectiveUserId = draft.userId;
+      if (!effectiveUserId || effectiveUserId === 'guest_user') {
+        effectiveUserId = `guest_${documentId.slice(0, 8)}`;
       }
 
-      const insertRow = {
-        document_id: draft.documentId,
-        user_id: user.id, // Always from session, never from prop
-        node_id: draft.nodeId ?? null,
-        ...anchorToRow(draft.anchor),
-        annotation_type: draft.type,
-        color: draft.color ?? 'yellow',
-        note_content: draft.noteContent ?? null,
-        visibility: draft.visibility,
-        anchor_status: 'active',
-      };
-
-      // Optimistic insert
-      const tempId = `optimistic-${Date.now()}`;
-      const optimistic: DocumentAnnotation = {
+      const newAnnotation: DocumentAnnotation = {
         ...draft,
         id: tempId,
-        userId: user.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        userId: effectiveUserId,
+        createdAt: nowStr,
+        updatedAt: nowStr,
         anchorStatus: 'active',
       };
-      setAnnotations((prev) => [...prev, optimistic]);
 
+      // Optimistic & local save immediately
+      setAnnotations((prev) => {
+        const next = [...prev, newAnnotation];
+        saveLocalAnnotations(documentId, next);
+        return next;
+      });
+
+      // Attempt Supabase sync if user is logged in
       try {
-        const { data, error: insertError } = await supabase
-          .from('document_annotations')
-          .insert(insertRow)
-          .select()
-          .single();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-        if (insertError) throw insertError;
+        if (user) {
+          const insertRow = {
+            document_id: draft.documentId,
+            user_id: user.id,
+            node_id: draft.nodeId ?? null,
+            ...anchorToRow(draft.anchor),
+            annotation_type: draft.type,
+            color: draft.color ?? 'yellow',
+            note_content: draft.noteContent ?? null,
+            visibility: draft.visibility,
+            anchor_status: 'active',
+          };
 
-        const created = rowToAnnotation(data as AnnotationRow);
-        // Replace optimistic entry
-        setAnnotations((prev) =>
-          prev.map((a) => (a.id === tempId ? created : a))
-        );
-        return created;
-      } catch (err: unknown) {
-        // Rollback optimistic
-        setAnnotations((prev) => prev.filter((a) => a.id !== tempId));
-        const message = err instanceof Error ? err.message : 'Không thể lưu ghi chú';
-        setError(message);
-        return null;
+          const { data, error: insertError } = await supabase
+            .from('document_annotations')
+            .insert(insertRow)
+            .select()
+            .single();
+
+          if (!insertError && data) {
+            const remoteCreated = rowToAnnotation(data as AnnotationRow);
+            setAnnotations((prev) => {
+              const next = prev.map((a) => (a.id === tempId ? remoteCreated : a));
+              saveLocalAnnotations(documentId, next);
+              return next;
+            });
+            return remoteCreated;
+          }
+        }
+      } catch {
+        // Safe fallback: local annotation persists
       }
+
+      return newAnnotation;
     },
-    [supabase]
+    [documentId, supabase]
   );
 
-  // ── Update ───────────────────────────────────────────────────────────────
+  // ── Update Annotation ─────────────────────────────────────────────────────
 
   const updateAnnotation = useCallback(
     async (
       id: string,
       patch: Partial<Pick<DocumentAnnotation, 'noteContent' | 'color' | 'visibility'>>
     ) => {
-      // Optimistic update
-      setAnnotations((prev) =>
-        prev.map((a) =>
+      const nowStr = new Date().toISOString();
+
+      setAnnotations((prev) => {
+        const next = prev.map((a) =>
           a.id === id
             ? {
                 ...a,
-                noteContent: patch.noteContent ?? a.noteContent,
-                color: patch.color ?? a.color,
-                visibility: patch.visibility ?? a.visibility,
-                updatedAt: new Date().toISOString(),
+                noteContent: patch.noteContent !== undefined ? patch.noteContent : a.noteContent,
+                color: patch.color !== undefined ? patch.color : a.color,
+                visibility: patch.visibility !== undefined ? patch.visibility : a.visibility,
+                updatedAt: nowStr,
               }
             : a
-        )
-      );
+        );
+        saveLocalAnnotations(documentId, next);
+        return next;
+      });
 
-      const dbPatch: Record<string, unknown> = {};
-      if (patch.noteContent !== undefined) dbPatch.note_content = patch.noteContent;
-      if (patch.color !== undefined) dbPatch.color = patch.color;
-      if (patch.visibility !== undefined) dbPatch.visibility = patch.visibility;
+      try {
+        const dbPatch: Record<string, unknown> = {};
+        if (patch.noteContent !== undefined) dbPatch.note_content = patch.noteContent;
+        if (patch.color !== undefined) dbPatch.color = patch.color;
+        if (patch.visibility !== undefined) dbPatch.visibility = patch.visibility;
 
-      const { error: updateError } = await supabase
-        .from('document_annotations')
-        .update(dbPatch)
-        .eq('id', id);
-
-      if (updateError) {
-        setError(updateError.message);
-        // Re-fetch to restore correct state
-        await fetchAnnotations();
-      }
+        await supabase.from('document_annotations').update(dbPatch).eq('id', id);
+      } catch {}
     },
-    [supabase, fetchAnnotations]
+    [documentId, supabase]
   );
 
-  // ── Delete (soft) ────────────────────────────────────────────────────────
+  // ── Delete Annotation ─────────────────────────────────────────────────────
 
   const deleteAnnotation = useCallback(
     async (id: string) => {
-      // Optimistic remove
-      setAnnotations((prev) => prev.filter((a) => a.id !== id));
+      setAnnotations((prev) => {
+        const next = prev.filter((a) => a.id !== id);
+        saveLocalAnnotations(documentId, next);
+        return next;
+      });
 
-      const { error: delError } = await supabase
-        .from('document_annotations')
-        .update({ anchor_status: 'deleted' })
-        .eq('id', id);
-
-      if (delError) {
-        setError(delError.message);
-        await fetchAnnotations();
-      }
+      try {
+        await supabase
+          .from('document_annotations')
+          .update({ anchor_status: 'deleted' })
+          .eq('id', id);
+      } catch {}
     },
-    [supabase, fetchAnnotations]
+    [documentId, supabase]
   );
 
-  // ── Re-anchor ────────────────────────────────────────────────────────────
+  // ── Re-anchor Annotation ──────────────────────────────────────────────────
 
   const reanchorAnnotation = useCallback(
     async (id: string, updatedAnchor: AnnotationAnchor) => {
-      setAnnotations((prev) =>
-        prev.map((a) =>
+      setAnnotations((prev) => {
+        const next = prev.map((a) =>
           a.id === id
-            ? { ...a, anchor: updatedAnchor, anchorStatus: 'reanchored' as AnnotationAnchorStatus }
+            ? {
+                ...a,
+                anchor: updatedAnchor,
+                anchorStatus: 'reanchored' as AnnotationAnchorStatus,
+                updatedAt: new Date().toISOString(),
+              }
             : a
-        )
-      );
+        );
+        saveLocalAnnotations(documentId, next);
+        return next;
+      });
 
-      const { error: updateError } = await supabase
-        .from('document_annotations')
-        .update({
-          ...anchorToRow(updatedAnchor),
-          anchor_status: 'reanchored',
-        })
-        .eq('id', id);
-
-      if (updateError) {
-        setError(updateError.message);
-      }
+      try {
+        await supabase
+          .from('document_annotations')
+          .update({
+            ...anchorToRow(updatedAnchor),
+            anchor_status: 'reanchored',
+          })
+          .eq('id', id);
+      } catch {}
     },
-    [supabase]
+    [documentId, supabase]
   );
 
   return {

@@ -367,7 +367,7 @@ export type ReaderPanelMode = 'closed' | 'toc' | 'notes';
 
 // ─── Reader: Annotations ─────────────────────────────────────────────────────
 
-export type AnnotationColor = 'yellow' | 'green' | 'pink';
+export type AnnotationColor = 'yellow' | 'green' | 'pink' | 'blue' | 'purple';
 export type AnnotationAnchorStatus = 'active' | 'reanchored' | 'orphaned' | 'deleted';
 
 export interface AnnotationAnchor {

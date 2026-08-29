@@ -112,11 +112,12 @@ async function handleCronCrawl(request: NextRequest) {
       stagingMode: 'Curation Required - Chờ người dùng chọn lọc và phê duyệt trước khi nạp vào CSDL',
       stagedDocs: stagedTaxAuditDocs
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : 'Lỗi khi chạy crawler tự động.';
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Lỗi khi chạy crawler tự động.'
+        error: errorMsg
       },
       { status: 500 }
     );

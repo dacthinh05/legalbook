@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Search, FileText, ChevronDown, ArrowUp, ArrowDown, X } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, FileText, ChevronDown, X } from 'lucide-react';
 import { DocumentCard } from './DocumentCard';
 import { matchesDocumentQuery } from '@/lib/search';
 import type { LegalDocument, DocumentType } from '@/types';
+
 interface DocumentListProps {
   documents: LegalDocument[];
   selectedDocumentId: string | null;
@@ -15,10 +16,7 @@ interface DocumentListProps {
   bookmarkedDocuments?: Set<string>;
 }
 
-type SortField = 'effective_date' | 'issued_date' | 'title';
-type SortDir = 'asc' | 'desc';
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
+const STATUS_OPTIONS = [
   { value: 'all', label: 'Tất cả trạng thái' },
   { value: 'hieu_luc', label: 'Đang có hiệu lực' },
   { value: 'chua_hieu_luc', label: 'Sắp có hiệu lực' },
@@ -26,7 +24,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'het_hieu_luc_toan_bo', label: 'Hết hiệu lực' },
 ];
 
-const TYPE_OPTIONS: { value: string; label: string }[] = [
+const TYPE_OPTIONS = [
   { value: 'all', label: 'Tất cả loại' },
   { value: 'luat', label: 'Luật / Bộ luật' },
   { value: 'nghi_dinh', label: 'Nghị định' },
@@ -36,10 +34,12 @@ const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: 'khac', label: 'Khác' },
 ];
 
-const SORT_OPTIONS: { value: SortField; label: string }[] = [
-  { value: 'effective_date', label: 'Ngày hiệu lực' },
-  { value: 'issued_date', label: 'Ngày ban hành' },
-  { value: 'title', label: 'Tên A–Z' },
+const UNIFIED_SORT_OPTIONS = [
+  { value: 'effective_date:desc', label: 'Hiệu lực: Mới → Cũ' },
+  { value: 'effective_date:asc', label: 'Hiệu lực: Cũ → Mới' },
+  { value: 'issued_date:desc', label: 'Ban hành: Mới → Cũ' },
+  { value: 'issued_date:asc', label: 'Ban hành: Cũ → Mới' },
+  { value: 'title:asc', label: 'Tên A → Z' },
 ];
 
 function FilterSelect({
@@ -71,10 +71,11 @@ function FilterSelect({
           w-full min-w-0 appearance-none pl-2 pr-5 py-1
           border rounded text-[11px] font-medium cursor-pointer
           focus:outline-none focus:ring-1 focus:ring-blue-500
-          transition-colors
-          ${isFiltered
-            ? 'bg-blue-50 border-blue-300 text-blue-800'
-            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+          transition-colors truncate
+          ${
+            isFiltered
+              ? 'bg-blue-50 border-blue-300 text-blue-800'
+              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
           }
         `}
       >
@@ -105,8 +106,7 @@ export function DocumentList({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [issuerFilter, setIssuerFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<SortField>('effective_date');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [sortKey, setSortKey] = useState<string>('effective_date:desc');
 
   // Check if all documents in the active scope share a single document type
   const isSingleType = useMemo(() => {
@@ -138,12 +138,13 @@ export function DocumentList({
         return true;
       })
       .sort((a, b) => {
-        const valA = String(a[sortBy] || '');
-        const valB = String(b[sortBy] || '');
-        if (sortDir === 'desc') return valA < valB ? 1 : valA > valB ? -1 : 0;
+        const [field, dir] = sortKey.split(':');
+        const valA = String(a[field as keyof LegalDocument] || '');
+        const valB = String(b[field as keyof LegalDocument] || '');
+        if (dir === 'desc') return valA < valB ? 1 : valA > valB ? -1 : 0;
         return valA > valB ? 1 : valA < valB ? -1 : 0;
       });
-  }, [documents, searchQuery, statusFilter, isSingleType, typeFilter, issuerFilter, sortBy, sortDir]);
+  }, [documents, searchQuery, statusFilter, isSingleType, typeFilter, issuerFilter, sortKey]);
 
   const totalCount = filteredDocuments.length;
   const hasActiveFilter =
@@ -159,8 +160,6 @@ export function DocumentList({
     setSearchQuery('');
   };
 
-  const toggleSortDir = () => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-
   // Clean title without redundant "Loại:" prefix
   const displayCategoryTitle = useMemo(() => {
     if (!categoryName) return 'Tất cả văn bản';
@@ -169,9 +168,9 @@ export function DocumentList({
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden text-xs">
-      {/* Header */}
+      {/* ── 3-Row Compact Filter Header ── */}
       <div className="shrink-0 border-b border-slate-200 bg-white p-2.5 space-y-2">
-        {/* Title & count */}
+        {/* Row 1: Title & count */}
         <div className="flex items-baseline justify-between gap-2">
           <h2
             className="font-bold text-xs text-slate-900 truncate leading-tight"
@@ -184,7 +183,7 @@ export function DocumentList({
           </span>
         </div>
 
-        {/* Search input */}
+        {/* Row 2: Search input */}
         <div className="relative">
           <Search
             className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -209,7 +208,7 @@ export function DocumentList({
           )}
         </div>
 
-        {/* Filter dropdowns */}
+        {/* Row 3: Filter & Sort dropdowns */}
         <div className="flex items-center gap-1.5">
           <FilterSelect
             id="dl-status-filter"
@@ -235,46 +234,27 @@ export function DocumentList({
               options={TYPE_OPTIONS}
             />
           )}
+          <FilterSelect
+            id="dl-sort-select"
+            label="Sắp xếp"
+            value={sortKey}
+            onChange={setSortKey}
+            options={UNIFIED_SORT_OPTIONS}
+          />
           {hasActiveFilter && (
             <button
+              type="button"
               onClick={clearAllFilters}
-              className="px-1.5 py-1 text-[11px] text-red-600 hover:bg-red-50 rounded cursor-pointer shrink-0"
+              className="p-1 text-[11px] text-rose-600 hover:bg-rose-50 rounded cursor-pointer shrink-0"
               title="Xóa bộ lọc"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
-
-        {/* Sort controls */}
-        <div className="flex items-center justify-between text-[11px] pt-0.5 text-slate-500">
-          <div className="flex items-center gap-1">
-            <span>Sắp xếp:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortField)}
-              className="bg-transparent text-slate-700 font-medium cursor-pointer focus:outline-none"
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={toggleSortDir}
-            className="flex items-center gap-0.5 text-slate-600 hover:text-slate-900 cursor-pointer"
-            title={sortDir === 'asc' ? 'Tăng dần' : 'Giảm dần'}
-          >
-            {sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-            <span>{sortDir === 'asc' ? 'Cũ → Mới' : 'Mới → Cũ'}</span>
-          </button>
-        </div>
       </div>
 
-      {/* Document List Items */}
+      {/* ── Document List Items ── */}
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
         {filteredDocuments.length === 0 ? (
           <div className="text-center py-12 text-slate-400 space-y-1">

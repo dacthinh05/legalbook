@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { sanitizeNoteContent } from '@/lib/annotation-engine';
-import type { TocItem, ReaderPanelMode, DocumentAnnotation } from '@/types';
+import type { TocItem, ReaderPanelMode, DocumentAnnotation, AnnotationColor } from '@/types';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -310,7 +310,7 @@ function NotesPanel({
                   <NoteCard
                     key={ann.id}
                     annotation={ann}
-                    isOwn={ann.userId === currentUserId}
+                    isOwn={!currentUserId || ann.userId === currentUserId || ann.userId.startsWith('guest_')}
                     onClick={() => onNoteClick(ann)}
                     onDelete={() => onDeleteAnnotation(ann.id)}
                   />
@@ -327,7 +327,7 @@ function NotesPanel({
                   <NoteCard
                     key={ann.id}
                     annotation={ann}
-                    isOwn={ann.userId === currentUserId}
+                    isOwn={!currentUserId || ann.userId === currentUserId || ann.userId.startsWith('guest_')}
                     onClick={() => onNoteClick(ann)}
                     onDelete={() => onDeleteAnnotation(ann.id)}
                   />
@@ -343,10 +343,12 @@ function NotesPanel({
 
 // ─── Note Card ────────────────────────────────────────────────────────────────
 
-const COLOR_LABEL: Record<string, string> = {
-  yellow: 'bg-amber-100 border-amber-300',
-  green: 'bg-green-100 border-green-300',
-  pink: 'bg-pink-100 border-pink-300',
+const COLOR_LABEL: Record<AnnotationColor, string> = {
+  yellow: 'bg-amber-50/90 border-amber-200 hover:border-amber-300 text-slate-900',
+  green: 'bg-emerald-50/90 border-emerald-200 hover:border-emerald-300 text-slate-900',
+  pink: 'bg-rose-50/90 border-rose-200 hover:border-rose-300 text-slate-900',
+  blue: 'bg-sky-50/90 border-sky-200 hover:border-sky-300 text-slate-900',
+  purple: 'bg-purple-50/90 border-purple-200 hover:border-purple-300 text-slate-900',
 };
 
 const ANCHOR_STATUS_LABEL: Record<string, { label: string; cls: string }> = {
@@ -371,9 +373,10 @@ function NoteCard({
 
   return (
     <div
+      id={`note-card-${ann.id}`}
       className={cn(
-        'group relative p-2.5 rounded-lg border text-xs cursor-pointer transition-colors hover:shadow-sm',
-        ann.color ? COLOR_LABEL[ann.color] : 'bg-slate-50 border-slate-200'
+        'group relative p-2.5 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+        ann.color && ann.color in COLOR_LABEL ? COLOR_LABEL[ann.color] : 'bg-slate-50 border-slate-200'
       )}
       role="button"
       tabIndex={0}

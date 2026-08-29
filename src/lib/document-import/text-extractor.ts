@@ -156,7 +156,7 @@ export async function extractFromDoc(buffer: Uint8Array): Promise<ExtractedDocum
 }
 
 /**
- * Extracts text from PDF using PDF.js or fallback parser.
+ * Extracts text from PDF using coordinate-aware layout analysis and fallback OCR.
  */
 export async function extractFromPdf(buffer: Uint8Array): Promise<ExtractedDocumentData> {
   const warnings: string[] = [];
@@ -179,23 +179,17 @@ export async function extractFromPdf(buffer: Uint8Array): Promise<ExtractedDocum
     for (let pageNum = 1; pageNum <= numPages; pageNum++) {
       const page = await pdfDoc.getPage(pageNum);
       const textContent = await page.getTextContent();
-      const pageStr = textContent.items
-        .map((item: unknown) => {
-          if (item && typeof item === 'object' && 'str' in item) {
-            return typeof (item as { str: unknown }).str === 'string' ? (item as { str: string }).str : '';
-          }
-          return '';
-        })
-        .join(' ');
 
-      const ocrCheck = shouldPerformOcr(pageStr, pageNum);
+      const { pageText, rawText: pageRaw } = parsePdfPageLayout(textContent.items, pageNum === 1);
+
+      const ocrCheck = shouldPerformOcr(pageText, pageNum);
       if (ocrCheck.needsOcr) {
         isScanned = true;
         warnings.push(ocrCheck.reason || `Trang ${pageNum} cần OCR.`);
-        const ocrRes = await performOcrOnScannedPage(buffer, pageNum, pageStr);
+        const ocrRes = await performOcrOnScannedPage(buffer, pageNum, pageText);
         pageTexts.push(ocrRes.text);
       } else {
-        pageTexts.push(pageStr);
+        pageTexts.push(pageText || pageRaw);
       }
     }
 
@@ -209,26 +203,171 @@ export async function extractFromPdf(buffer: Uint8Array): Promise<ExtractedDocum
   const { normalizedText } = normalizeVietnameseEncoding(fullText);
   const { cleanedText } = cleanDocumentLayout(normalizedText);
 
-  // Convert cleaned text into structured readable HTML
-  const paragraphs = cleanedText.split('\n\n').filter(Boolean);
-  const htmlContent = `<div class="document-full-body space-y-3">${paragraphs
-    .map((p) => {
-      const trimmed = p.trim();
-      if (/^(Điều\s+\d+|Chương\s+[IVXLCDM\d]+)/i.test(trimmed)) {
-        return `<h3 class="font-bold text-base text-gray-900 mt-4">${trimmed}</h3>`;
-      }
-      return `<p class="text-sm text-gray-800 leading-relaxed">${trimmed.replace(/\n/g, '<br/>')}</p>`;
-    })
-    .join('')}</div>`;
+  // Convert cleaned text into structured semantic HTML using formatLegalHtmlContent
+  const { formatLegalHtmlContent } = await import('@/lib/legal-formatter');
+
+  // Wrap cleaned text blocks into initial HTML paragraphs
+  const rawBlocks = cleanedText.split(/\n\s*\n/).filter(Boolean);
+  const initialHtml = `<div class="document-full-body">\n${rawBlocks
+    .map((b) => `<p>${b.replace(/\n/g, '<br/>')}</p>`)
+    .join('\n')}\n</div>`;
+
+  const htmlContent = formatLegalHtmlContent(initialHtml);
 
   return {
     rawText: fullText,
     cleanText: cleanedText,
     htmlContent,
     extractionMethod: isScanned ? 'ocr' : 'pdf-text',
-    extractionConfidence: isScanned ? 0.85 : 0.95,
+    extractionConfidence: isScanned ? 0.85 : 0.96,
     warnings,
   };
+}
+
+interface PdfItemCoord {
+  str: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Coordinate-aware text reconstruction from PDF.js items.
+ * Preserves 2-column administrative letterheads, place/date, and legal hierarchy.
+ */
+function parsePdfPageLayout(items: unknown[], isFirstPage: boolean): { pageText: string; rawText: string } {
+  const coords: PdfItemCoord[] = [];
+
+  for (const item of items) {
+    if (item && typeof item === 'object' && 'str' in item && 'transform' in item) {
+      const raw = item as { str: unknown; transform: unknown; width?: unknown; height?: unknown };
+      const str = typeof raw.str === 'string' ? raw.str : '';
+      const transform = Array.isArray(raw.transform) ? raw.transform : [];
+      if (str.trim().length > 0 && transform.length >= 6) {
+        coords.push({
+          str,
+          x: typeof transform[4] === 'number' ? transform[4] : 0,
+          y: typeof transform[5] === 'number' ? transform[5] : 0,
+          width: typeof raw.width === 'number' ? raw.width : 0,
+          height: typeof raw.height === 'number' ? raw.height : 0,
+        });
+      }
+    }
+  }
+
+  if (coords.length === 0) {
+    return { pageText: '', rawText: '' };
+  }
+
+  // Group items into lines by Y-coordinate (tolerance: 3.5px)
+  const lines: { y: number; items: PdfItemCoord[] }[] = [];
+  for (const item of coords) {
+    let matchedLine = lines.find((l) => Math.abs(l.y - item.y) <= 3.5);
+    if (!matchedLine) {
+      matchedLine = { y: item.y, items: [] };
+      lines.push(matchedLine);
+    }
+    matchedLine.items.push(item);
+  }
+
+  // Sort lines from top to bottom (Y descending)
+  lines.sort((a, b) => b.y - a.y);
+
+  // Sort items within each line from left to right (X ascending)
+  for (const line of lines) {
+    line.items.sort((a, b) => a.x - b.x);
+  }
+
+  const resultLines: string[] = [];
+
+  // On page 1, detect if the top region contains 2-column administrative letterhead
+  let bodyStartIndex = 0;
+  if (isFirstPage && lines.length > 0) {
+    const topLines = lines.slice(0, Math.min(12, lines.length));
+    const hasMotto = topLines.some((l) =>
+      l.items.some((it) => /CỘNG\s+H[ÒO]A/i.test(it.str) || /Độc\s+lập/i.test(it.str))
+    );
+    const hasAgency = topLines.some((l) =>
+      l.items.some((it) => /BỘ|CHÍNH\s+PHỦ|ỦY\s+BAN|TỔNG\s+CỤC|CỤC|SỞ|QUỐC\s+HỘI|Số:/i.test(it.str))
+    );
+
+    if (hasMotto || hasAgency) {
+      // Determine header line count (until document type heading, e.g. THÔNG TƯ / NGHỊ ĐỊNH / QUYẾT ĐỊNH / LUẬT)
+      let headerEndIndex = 0;
+      for (let i = 0; i < topLines.length; i++) {
+        const lineStr = topLines[i].items.map((it) => it.str).join(' ');
+        if (/^(THÔNG TƯ|NGHỊ ĐỊNH|QUYẾT ĐỊNH|LUẬT|BỘ LUẬT|CÔNG VĂN|NGHỊ QUYẾT|CHỈ THỊ)\b/i.test(lineStr.trim())) {
+          headerEndIndex = i;
+          break;
+        }
+        headerEndIndex = i + 1;
+      }
+
+      // Split header items into left (X < 240) and right (X >= 240) columns
+      const leftColLines: string[] = [];
+      const rightColLines: string[] = [];
+
+      for (let i = 0; i < headerEndIndex; i++) {
+        const leftItems = lines[i].items.filter((it) => it.x < 240);
+        const rightItems = lines[i].items.filter((it) => it.x >= 240);
+
+        if (leftItems.length > 0) {
+          const leftStr = mergeLineItems(leftItems);
+          if (leftStr && !/^[_-\s]+$/.test(leftStr)) {
+            leftColLines.push(leftStr);
+          }
+        }
+        if (rightItems.length > 0) {
+          const rightStr = mergeLineItems(rightItems);
+          if (rightStr && !/^[_-\s]+$/.test(rightStr)) {
+            rightColLines.push(rightStr);
+          }
+        }
+      }
+
+      if (leftColLines.length > 0) {
+        resultLines.push(leftColLines.join('\n'));
+      }
+      if (rightColLines.length > 0) {
+        resultLines.push(rightColLines.join('\n'));
+      }
+
+      bodyStartIndex = headerEndIndex;
+    }
+  }
+
+  // Process remaining body lines
+  for (let i = bodyStartIndex; i < lines.length; i++) {
+    const lineStr = mergeLineItems(lines[i].items);
+    if (lineStr) {
+      resultLines.push(lineStr);
+    }
+  }
+
+  const pageText = resultLines.join('\n\n');
+  const rawText = coords.map((it) => it.str).join(' ');
+  return { pageText, rawText };
+}
+
+function mergeLineItems(items: PdfItemCoord[]): string {
+  if (items.length === 0) return '';
+  let line = '';
+  for (let i = 0; i < items.length; i++) {
+    const curr = items[i];
+    if (i === 0) {
+      line += curr.str;
+    } else {
+      const prev = items[i - 1];
+      const gap = curr.x - (prev.x + prev.width);
+      if (gap > 2 && !line.endsWith(' ') && !curr.str.startsWith(' ')) {
+        line += ' ' + curr.str;
+      } else {
+        line += curr.str;
+      }
+    }
+  }
+  return line.trim();
 }
 
 /**

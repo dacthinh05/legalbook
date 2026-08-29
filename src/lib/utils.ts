@@ -62,11 +62,37 @@ export const DOCUMENT_STATUS_COLORS: Record<DocumentStatus, string> = {
 };
 
 /**
- * Returns document title cleanly without stripping Vietnamese characters.
+ * Presentation-layer display title helper.
+ * Safely removes redundant leading document type and document number prefixes
+ * when they are already displayed in the card/header identification line.
+ * Does NOT mutate original legal title in database or memory.
  */
-export function formatShortTitle(title: string, _docType?: DocumentType | string, _docNumber?: string | null): string {
+export function formatShortTitle(title: string, _docType?: DocumentType | string, docNumber?: string | null): string {
   if (!title) return '';
-  return title.trim();
+  let clean = title.trim();
+
+  // 1. If explicit docNumber is provided, strip prefix containing docNumber
+  if (docNumber) {
+    const escapedNum = docNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const startNumRegex = new RegExp(`^(?:Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)?\\s*(?:số\\s+)?${escapedNum}\\s*[-–—:]?\\s*`, 'iu');
+    clean = clean.replace(startNumRegex, '');
+
+    const endNumRegex = new RegExp(`\\s+(?:số\\s+)?${escapedNum}$`, 'iu');
+    clean = clean.replace(endNumRegex, '');
+  }
+
+  // 2. Strip standard leading type + actual number containing digits
+  clean = clean.replace(/^(?:Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\s+(?:số\s+)?(?:\d+[\w/.-]*)\s*[-–—:]?\s*/iu, '');
+
+  // 3. Strip leading generic "Luật " when followed by specific law subject (preserving full subject word e.g. "Thuế", "Đất đai")
+  clean = clean.replace(/^Luật\s+(Thuế\s+|Đất\s+|Đầu\s+|Doanh\s+|Kế\s+|Kiểm\s+|Bảo\s+|Quản\s+|Khám\s+|Đấu\s+)/iu, '$1');
+
+  clean = clean.trim();
+  if (clean.length > 0) {
+    clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+    return clean;
+  }
+  return title;
 }
 
 
@@ -350,7 +376,7 @@ export function getVerificationBreakdown(doc?: {
       source: { status: 'none', label: 'Nguồn: Chưa lưu', badgeColor: 'bg-slate-100 text-slate-700 border-slate-200' },
       relationship: { status: 'unverified', label: 'Quan hệ: Chưa kiểm duyệt', badgeColor: 'bg-slate-100 text-slate-700 border-slate-200' },
       isFullyMatchedFullText: false,
-      primaryBadge: { label: 'Chưa kiểm duyệt', badgeColor: 'bg-slate-100 text-slate-700 border-slate-200', tooltip: 'Văn bản chưa qua đối chiếu' },
+      primaryBadge: { label: 'Chưa kiểm duyệt', badgeColor: 'bg-slate-100 text-slate-700 border-slate-200', tooltip: 'Dữ liệu chưa được quản trị viên đối chiếu đầy đủ với nguồn chính thức.' },
     };
   }
 
@@ -418,7 +444,7 @@ export function getVerificationBreakdown(doc?: {
   let primaryBadge = {
     label: 'Chưa kiểm duyệt',
     badgeColor: 'bg-sky-50 text-sky-800 border-sky-200',
-    tooltip: 'Văn bản đã bóc tách tự động nhưng chưa qua kiểm duyệt thủ công',
+    tooltip: 'Dữ liệu chưa được quản trị viên đối chiếu đầy đủ với nguồn chính thức.',
   };
 
   if (isFullyMatchedFullText) {

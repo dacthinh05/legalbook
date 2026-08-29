@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import mammoth from 'mammoth';
 import { createClient } from '@supabase/supabase-js';
+import type { LegalDocument } from '../src/types';
 import { ContentQualityValidator } from '../src/lib/quality/content-validator';
 import { DEMO_CATEGORIES, DEMO_RELATIONS, DEMO_CATEGORY_LINKS } from '../src/lib/demo-data';
 
@@ -219,9 +220,9 @@ export function getDocumentsForCategoryTree(categoryId: string): LegalDocument[]
   console.log('Successfully wrote src/lib/demo-data.ts with all 58 authentic verified documents.');
 }
 
-function generateFullStandardLegalHtml(doc: any): string {
+function generateFullStandardLegalHtml(doc: Partial<LegalDocument>): string {
   const num = doc.document_number || 'Số: ...';
-  const title = doc.title;
+  const title = doc.title || 'VĂN BẢN PHÁP LUẬT';
   const issuing = doc.issuing_body || 'Cơ quan có thẩm quyền';
   const signer = doc.signer || 'Thủ trưởng cơ quan ban hành';
   const issuedDate = doc.issued_date || '2025-01-01';

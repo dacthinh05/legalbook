@@ -1,20 +1,19 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   ChevronRight,
-  ChevronDown,
   Search,
+  BookOpen,
+  Layers,
   ChevronsDown,
   ChevronsUp,
   Percent,
-  BookOpen,
   ClipboardCheck,
   ShieldCheck,
   Users,
   Building2,
   TrendingUp,
-  Layers,
   Scale,
   FileText,
   Gavel,
@@ -22,14 +21,18 @@ import {
   FileSpreadsheet,
   LucideIcon,
   X,
-  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Category, DocumentType, LegalDocument } from '@/types';
 import { DEMO_DOCUMENTS, DEMO_CATEGORY_LINKS } from '@/lib/demo-data';
-import { getAncestorCategoryIds, getDescendantCategoryIds } from '@/lib/tree-utils';
+import {
+  getAncestorCategoryIds,
+  getDescendantCategoryIds,
+  getTreeIndentation,
+  flattenVisibleTree,
+} from '@/lib/tree-utils';
 
-interface CategoryTreeProps {
+export interface CategoryTreeProps {
   categories: Category[];
   allDocuments?: LegalDocument[];
   selectedCategoryId: string | null;
@@ -42,16 +45,16 @@ interface CategoryTreeProps {
 
 const STORAGE_KEY_EXPANDED = 'lb_tree_expanded_ids';
 
-function getRootCategoryIcon(category: Category): LucideIcon {
+function renderRootCategoryIcon(category: Category, className: string) {
   const slug = (category.slug || '').toLowerCase();
-  if (slug.includes('thue')) return Percent;
-  if (slug.includes('ke-toan')) return BookOpen;
-  if (slug.includes('kiem-toan')) return ClipboardCheck;
-  if (slug.includes('bao-hiem') || slug.includes('bhxh')) return ShieldCheck;
-  if (slug.includes('lao-dong')) return Users;
-  if (slug.includes('doanh-nghiep')) return Building2;
-  if (slug.includes('dau-tu')) return TrendingUp;
-  return BookOpen;
+  if (slug.includes('thue')) return <Percent className={className} />;
+  if (slug.includes('ke-toan')) return <BookOpen className={className} />;
+  if (slug.includes('kiem-toan')) return <ClipboardCheck className={className} />;
+  if (slug.includes('bao-hiem') || slug.includes('bhxh')) return <ShieldCheck className={className} />;
+  if (slug.includes('lao-dong')) return <Users className={className} />;
+  if (slug.includes('doanh-nghiep')) return <Building2 className={className} />;
+  if (slug.includes('dau-tu')) return <TrendingUp className={className} />;
+  return <BookOpen className={className} />;
 }
 
 interface DocTypeMeta {
@@ -59,8 +62,6 @@ interface DocTypeMeta {
   label: string;
   sublabel: string;
   icon: LucideIcon;
-  colorClass: string;
-  badgeBg: string;
   iconBg: string;
 }
 
@@ -70,8 +71,6 @@ const DOC_TYPE_METAS: DocTypeMeta[] = [
     label: 'Luật / Bộ luật',
     sublabel: 'Do Quốc hội ban hành',
     icon: Scale,
-    colorClass: 'text-blue-700 border-blue-200',
-    badgeBg: 'bg-blue-100 text-blue-800',
     iconBg: 'bg-blue-50 text-blue-700',
   },
   {
@@ -79,8 +78,6 @@ const DOC_TYPE_METAS: DocTypeMeta[] = [
     label: 'Nghị định',
     sublabel: 'Do Chính phủ ban hành',
     icon: Building2,
-    colorClass: 'text-purple-700 border-purple-200',
-    badgeBg: 'bg-purple-100 text-purple-800',
     iconBg: 'bg-purple-50 text-purple-700',
   },
   {
@@ -88,8 +85,6 @@ const DOC_TYPE_METAS: DocTypeMeta[] = [
     label: 'Thông tư',
     sublabel: 'Do Bộ ngành ban hành',
     icon: FileText,
-    colorClass: 'text-teal-700 border-teal-200',
-    badgeBg: 'bg-teal-100 text-teal-800',
     iconBg: 'bg-teal-50 text-teal-700',
   },
   {
@@ -97,8 +92,6 @@ const DOC_TYPE_METAS: DocTypeMeta[] = [
     label: 'Quyết định',
     sublabel: 'Quy định áp dụng cá biệt',
     icon: Gavel,
-    colorClass: 'text-orange-700 border-orange-200',
-    badgeBg: 'bg-orange-100 text-orange-800',
     iconBg: 'bg-orange-50 text-orange-700',
   },
   {
@@ -106,8 +99,6 @@ const DOC_TYPE_METAS: DocTypeMeta[] = [
     label: 'Công văn hướng dẫn',
     sublabel: 'Giải đáp vướng mắc nghiệp vụ',
     icon: MailCheck,
-    colorClass: 'text-cyan-700 border-cyan-200',
-    badgeBg: 'bg-cyan-100 text-cyan-800',
     iconBg: 'bg-cyan-50 text-cyan-700',
   },
   {
@@ -115,8 +106,6 @@ const DOC_TYPE_METAS: DocTypeMeta[] = [
     label: 'Chuẩn mực (VAS / IFRS)',
     sublabel: 'Hệ thống chuẩn mực nghề nghiệp',
     icon: Layers,
-    colorClass: 'text-indigo-700 border-indigo-200',
-    badgeBg: 'bg-indigo-100 text-indigo-800',
     iconBg: 'bg-indigo-50 text-indigo-700',
   },
   {
@@ -124,11 +113,165 @@ const DOC_TYPE_METAS: DocTypeMeta[] = [
     label: 'Bản tin & Văn bản hợp nhất',
     sublabel: 'Tài liệu tra cứu đối chiếu',
     icon: FileSpreadsheet,
-    colorClass: 'text-slate-700 border-slate-200',
-    badgeBg: 'bg-slate-100 text-slate-800',
     iconBg: 'bg-slate-100 text-slate-700',
   },
 ];
+
+/**
+ * Text highlighter for search filtering inside category names.
+ */
+function HighlightedLabel({ text, query }: { text: string; query: string }) {
+  if (!query.trim()) return <span>{text}</span>;
+  const lowerText = text.toLowerCase();
+  const lowerQuery = query.toLowerCase().trim();
+  const index = lowerText.indexOf(lowerQuery);
+
+  if (index === -1) return <span>{text}</span>;
+
+  const before = text.slice(0, index);
+  const match = text.slice(index, index + query.length);
+  const after = text.slice(index + query.length);
+
+  return (
+    <span>
+      {before}
+      <mark className="bg-amber-200/80 text-amber-950 font-semibold px-0.5 rounded-[2px]">{match}</mark>
+      {after}
+    </span>
+  );
+}
+
+interface TreeNodeProps {
+  category: Category;
+  depth: number;
+  isSelected: boolean;
+  isExpanded: boolean;
+  expandedIds: Set<string>;
+  filterText: string;
+  categoryCounts: Map<string, number>;
+  selectedCategoryId: string | null;
+  onToggleExpand: (id: string, e?: React.MouseEvent) => void;
+  onSelectCategory: (id: string) => void;
+}
+
+function TopicTreeNode({
+  category,
+  depth,
+  isSelected,
+  isExpanded,
+  expandedIds,
+  filterText,
+  categoryCounts,
+  selectedCategoryId,
+  onToggleExpand,
+  onSelectCategory,
+}: TreeNodeProps) {
+  const hasChildren = Boolean(category.children && category.children.length > 0);
+  const count = categoryCounts.get(category.id);
+  const isRoot = depth === 0;
+  const isLevel1 = depth === 1;
+  const paddingLeft = getTreeIndentation(depth);
+
+  // Heights: Level 0: 42px, Level 1: 38px, Level 2+: 36px
+  const heightClass = isRoot ? 'h-[42px]' : isLevel1 ? 'h-[38px]' : 'h-[36px]';
+
+  return (
+    <div key={category.id} className="select-none">
+      <div
+        id={`category-node-${category.id}`}
+        tabIndex={0}
+        role="treeitem"
+        aria-level={depth + 1}
+        aria-expanded={hasChildren ? isExpanded : undefined}
+        aria-selected={isSelected}
+        onClick={() => onSelectCategory(category.id)}
+        style={{ paddingLeft: `${paddingLeft}px` }}
+        title={count !== undefined ? `${category.name} (${count} văn bản)` : category.name}
+        className={cn(
+          'group flex items-center pr-2.5 rounded-lg text-xs cursor-pointer transition-colors text-left justify-start relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
+          heightClass,
+          isSelected
+            ? 'bg-blue-50 text-blue-900 font-semibold shadow-[inset_3px_0_0_#2563eb]'
+            : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900',
+          isRoot && 'font-medium text-slate-800'
+        )}
+      >
+        {/* Chevron Button or Spacer */}
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={(e) => onToggleExpand(category.id, e)}
+            className="w-6 h-6 -ml-1.5 mr-1 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-200/60 transition-colors shrink-0 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+            aria-label={isExpanded ? `Thu gọn ${category.name}` : `Mở rộng ${category.name}`}
+          >
+            <ChevronRight
+              className={cn(
+                'w-3.5 h-3.5 transition-transform duration-150',
+                isExpanded && 'rotate-90'
+              )}
+            />
+          </button>
+        ) : (
+          <span className="w-6 h-6 -ml-1.5 mr-1 shrink-0" aria-hidden="true" />
+        )}
+
+        {/* Level 0 Category Icon */}
+        {isRoot &&
+          renderRootCategoryIcon(
+            category,
+            cn(
+              'w-4 h-4 mr-2 shrink-0 transition-colors',
+              isSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
+            )
+          )}
+
+        {/* Category Label */}
+        <span className="flex-1 min-w-0 text-left truncate leading-tight">
+          <HighlightedLabel text={category.name} query={filterText} />
+        </span>
+
+        {/* Document Count */}
+        {typeof count === 'number' && (
+          <span
+            className={cn(
+              'font-mono text-[11px] tabular-nums shrink-0 ml-2 text-right transition-colors',
+              isSelected
+                ? 'text-blue-700 font-semibold'
+                : 'text-slate-400 group-hover:text-slate-600'
+            )}
+          >
+            {count}
+          </span>
+        )}
+      </div>
+
+      {/* Children Subtree with subtle hierarchical guide */}
+      {hasChildren && isExpanded && category.children && (
+        <div className="space-y-[2px] relative">
+          {category.children.map((child) => {
+            const isChildExpanded = expandedIds.has(child.id) || filterText.length > 0;
+            const isChildSelected = selectedCategoryId === child.id;
+            return (
+              <TopicTreeNode
+                key={child.id}
+                category={child}
+                depth={depth + 1}
+                isSelected={isChildSelected}
+                isExpanded={isChildExpanded}
+                expandedIds={expandedIds}
+                filterText={filterText}
+                categoryCounts={categoryCounts}
+                selectedCategoryId={selectedCategoryId}
+                onToggleExpand={onToggleExpand}
+                onSelectCategory={onSelectCategory}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function CategoryTree({
   categories,
@@ -177,7 +320,6 @@ export function CategoryTree({
   });
 
   const [filterText, setFilterText] = useState('');
-  const [focusedId, setFocusedId] = useState<string | null>(null);
   const treeContainerRef = useRef<HTMLDivElement>(null);
 
   const saveExpandedState = useCallback((ids: Set<string>) => {
@@ -268,6 +410,42 @@ export function CategoryTree({
     saveExpandedState(emptySet);
   }, [saveExpandedState]);
 
+  // Expand ancestors automatically when searching
+  useEffect(() => {
+    if (!filterText.trim()) return;
+    const lower = filterText.toLowerCase();
+    const matchingAncestorIds = new Set<string>();
+
+    const checkMatch = (cat: Category): boolean => {
+      const isMatch = cat.name.toLowerCase().includes(lower);
+      let childMatch = false;
+      if (cat.children && cat.children.length > 0) {
+        for (const child of cat.children) {
+          if (checkMatch(child)) {
+            childMatch = true;
+          }
+        }
+      }
+      if (childMatch) {
+        matchingAncestorIds.add(cat.id);
+      }
+      return isMatch || childMatch;
+    };
+
+    categories.forEach(checkMatch);
+
+    if (matchingAncestorIds.size > 0) {
+      const timer = setTimeout(() => {
+        setExpandedIds((prev) => {
+          const next = new Set(prev);
+          matchingAncestorIds.forEach((id) => next.add(id));
+          return next;
+        });
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [filterText, categories]);
+
   const filteredCategories = useMemo(() => {
     if (!filterText.trim()) return categories;
     const lower = filterText.toLowerCase();
@@ -322,188 +500,291 @@ export function CategoryTree({
     });
   }, [docsList]);
 
-  const renderCategoryNode = (category: Category, depth = 0) => {
-    const isExpanded = expandedIds.has(category.id) || filterText.length > 0;
-    const isSelected = selectedCategoryId === category.id;
-    const isFocused = focusedId === category.id;
-    const hasChildren = category.children && category.children.length > 0;
-    const count = categoryCounts.get(category.id) ?? (category.document_count ?? 0);
-    const isRoot = depth === 0;
-    const IconComponent = isRoot ? getRootCategoryIcon(category) : null;
+  // Flattened visible nodes for keyboard navigation
+  const visibleTreeNodes = useMemo(() => {
+    return flattenVisibleTree(filteredCategories, expandedIds);
+  }, [filteredCategories, expandedIds]);
 
-    return (
-      <div key={category.id} className="select-none">
-        <div
-          id={`category-node-${category.id}`}
-          tabIndex={0}
-          role="treeitem"
-          aria-expanded={hasChildren ? isExpanded : undefined}
-          aria-selected={isSelected}
-          onFocus={() => setFocusedId(category.id)}
-          onClick={() => handleSelectCategoryAndExpandAncestors(category.id)}
-          className={cn(
-            'group flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-xs cursor-pointer transition-colors relative focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
-            isSelected
-              ? 'bg-blue-50 text-blue-900 font-semibold'
-              : isFocused
-              ? 'bg-slate-100/90 text-slate-900'
-              : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900',
-            isRoot && 'font-medium'
-          )}
-          style={{ paddingLeft: `${depth * 16 + 8}px` }}
-          title={category.name}
-        >
-          {hasChildren ? (
-            <button
-              onClick={(e) => toggleExpand(category.id, e)}
-              className="p-0.5 text-slate-400 hover:text-slate-700 rounded shrink-0 transition-colors cursor-pointer"
-              aria-label={isExpanded ? 'Thu gọn mục' : 'Mở rộng mục'}
-            >
-              {isExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
-              )}
-            </button>
-          ) : (
-            <span className="w-3.5 shrink-0" />
-          )}
+  // Total expanded state check for the toggle button
+  const areAllExpanded = useMemo(() => {
+    let totalExpandable = 0;
+    const countExpandable = (cats: Category[]) => {
+      cats.forEach((c) => {
+        if (c.children && c.children.length > 0) {
+          totalExpandable++;
+          countExpandable(c.children);
+        }
+      });
+    };
+    countExpandable(categories);
+    return totalExpandable > 0 && expandedIds.size >= totalExpandable;
+  }, [categories, expandedIds]);
 
-          {IconComponent && (
-            <IconComponent className="w-3.5 h-3.5 text-slate-500 shrink-0 group-hover:text-slate-800" />
-          )}
+  // Keyboard navigation handler for accessibility
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (viewMode !== 'topic') return;
 
-          <span className="flex-1 truncate leading-tight">
-            {category.name}
-          </span>
+      const items = ['all', ...visibleTreeNodes.map((n) => n.category.id)];
+      const activeEl = document.activeElement;
+      let currentIndex = -1;
 
-          {count > 0 && (
-            <span
-              className={cn(
-                'px-1.5 py-0.2 rounded text-[10.5px] font-mono shrink-0 transition-colors',
-                isSelected
-                  ? 'bg-blue-200/60 text-blue-950 font-semibold'
-                  : 'text-slate-400 group-hover:text-slate-600'
-              )}
-            >
-              {count}
-            </span>
-          )}
-        </div>
+      if (activeEl?.id === 'category-node-all') {
+        currentIndex = 0;
+      } else if (activeEl?.id?.startsWith('category-node-')) {
+        const activeId = activeEl.id.replace('category-node-', '');
+        currentIndex = items.indexOf(activeId);
+      }
 
-        {hasChildren && isExpanded && (
-          <div className="space-y-0.5 ml-1">
-            {category.children!.map((child) => renderCategoryNode(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
+      const focusItemByIndex = (index: number) => {
+        if (index < 0 || index >= items.length) return;
+        const targetId = items[index];
+        const elem = document.getElementById(
+          targetId === 'all' ? 'category-node-all' : `category-node-${targetId}`
+        );
+        elem?.focus();
+      };
+
+      switch (e.key) {
+        case 'ArrowDown': {
+          e.preventDefault();
+          if (currentIndex === -1) {
+            focusItemByIndex(0);
+          } else {
+            focusItemByIndex(Math.min(items.length - 1, currentIndex + 1));
+          }
+          break;
+        }
+        case 'ArrowUp': {
+          e.preventDefault();
+          if (currentIndex === -1) {
+            focusItemByIndex(items.length - 1);
+          } else {
+            focusItemByIndex(Math.max(0, currentIndex - 1));
+          }
+          break;
+        }
+        case 'ArrowRight': {
+          if (currentIndex > 0) {
+            const currentCatId = items[currentIndex];
+            const node = visibleTreeNodes.find((n) => n.category.id === currentCatId);
+            if (node && node.hasChildren) {
+              e.preventDefault();
+              if (!expandedIds.has(currentCatId)) {
+                toggleExpand(currentCatId);
+              } else {
+                focusItemByIndex(currentIndex + 1);
+              }
+            }
+          }
+          break;
+        }
+        case 'ArrowLeft': {
+          if (currentIndex > 0) {
+            const currentCatId = items[currentIndex];
+            const node = visibleTreeNodes.find((n) => n.category.id === currentCatId);
+            if (node) {
+              e.preventDefault();
+              if (expandedIds.has(currentCatId) && node.hasChildren) {
+                toggleExpand(currentCatId);
+              } else if (node.parentId) {
+                const parentIndex = items.indexOf(node.parentId);
+                if (parentIndex !== -1) {
+                  focusItemByIndex(parentIndex);
+                }
+              } else {
+                focusItemByIndex(0);
+              }
+            }
+          }
+          break;
+        }
+        case 'Enter':
+        case ' ': {
+          e.preventDefault();
+          if (currentIndex === 0) {
+            handleSelectCategoryAndExpandAncestors(null);
+          } else if (currentIndex > 0) {
+            const currentCatId = items[currentIndex];
+            handleSelectCategoryAndExpandAncestors(currentCatId);
+          }
+          break;
+        }
+        case 'Home': {
+          e.preventDefault();
+          focusItemByIndex(0);
+          break;
+        }
+        case 'End': {
+          e.preventDefault();
+          focusItemByIndex(items.length - 1);
+          break;
+        }
+      }
+    },
+    [viewMode, visibleTreeNodes, expandedIds, toggleExpand, handleSelectCategoryAndExpandAncestors]
+  );
+
+  const isAllSelected = selectedCategoryId === null && !selectedDocType;
 
   return (
     <div
       ref={treeContainerRef}
       className="flex flex-col h-full bg-white overflow-hidden text-xs"
+      onKeyDown={handleKeyDown}
     >
-      {/* 1. Header Switcher: Theo chủ đề vs Theo loại VB */}
-      <div className="p-2.5 border-b border-slate-200 bg-slate-50/70 shrink-0 space-y-2">
-        <div className="flex items-center p-0.5 bg-slate-200/70 rounded-lg">
+      {/* 1. Header Segmented Control & Search Bar */}
+      <div className="p-2 border-b border-slate-200 bg-slate-50/70 shrink-0 space-y-2">
+        {/* Segmented control tablist */}
+        <div
+          role="tablist"
+          aria-label="Chế độ xem danh mục"
+          className="h-10 p-[3px] bg-slate-200/70 rounded-[10px] flex items-center gap-1 border border-slate-200/50"
+        >
           <button
+            role="tab"
+            aria-selected={viewMode === 'topic'}
+            tabIndex={viewMode === 'topic' ? 0 : -1}
             onClick={() => setViewMode('topic')}
             className={cn(
-              'flex-1 py-1 text-center font-semibold rounded-md text-[11.5px] transition-all cursor-pointer flex items-center justify-center gap-1',
+              'flex-1 h-[34px] font-semibold rounded-[7px] text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
               viewMode === 'topic'
                 ? 'bg-white text-blue-900 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             )}
           >
-            <BookOpen className="w-3 h-3 text-blue-600" />
-            <span>Theo chủ đề</span>
+            <BookOpen className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <span className="truncate">Theo chủ đề</span>
           </button>
           <button
+            role="tab"
+            aria-selected={viewMode === 'type'}
+            tabIndex={viewMode === 'type' ? 0 : -1}
             onClick={() => setViewMode('type')}
             className={cn(
-              'flex-1 py-1 text-center font-semibold rounded-md text-[11.5px] transition-all cursor-pointer flex items-center justify-center gap-1',
+              'flex-1 h-[34px] font-semibold rounded-[7px] text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
               viewMode === 'type'
-                ? 'bg-white text-purple-900 shadow-xs'
+                ? 'bg-white text-blue-900 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             )}
           >
-            <Layers className="w-3 h-3 text-purple-600" />
-            <span>Theo loại VB</span>
+            <Layers className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+            <span className="truncate">Theo loại văn bản</span>
           </button>
         </div>
 
-        {/* Filter input */}
-        <div className="flex items-center gap-1">
+        {/* Filter input & Expand/Collapse All */}
+        <div className="flex items-center gap-1.5">
           <div className="relative flex-1">
-            <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
               placeholder={viewMode === 'topic' ? 'Lọc danh mục...' : 'Lọc loại văn bản...'}
               aria-label="Lọc danh mục văn bản"
-              className="w-full pl-6 pr-2 py-1 bg-white border border-slate-200 rounded text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full h-[38px] pl-8 pr-7 bg-white border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
+            {filterText && (
+              <button
+                type="button"
+                onClick={() => setFilterText('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer focus:outline-none"
+                aria-label="Xóa tìm kiếm"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {viewMode === 'topic' && (
-            <>
-              <button
-                onClick={expandAll}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100 cursor-pointer"
-                title="Mở rộng tất cả"
-                aria-label="Mở rộng tất cả"
-              >
-                <ChevronsDown className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={collapseAll}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100 cursor-pointer"
-                title="Thu gọn tất cả"
-                aria-label="Thu gọn tất cả"
-              >
-                <ChevronsUp className="w-3.5 h-3.5" />
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={areAllExpanded ? collapseAll : expandAll}
+              className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-800 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shrink-0 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              title={areAllExpanded ? 'Thu gọn tất cả' : 'Mở rộng tất cả'}
+              aria-label={areAllExpanded ? 'Thu gọn tất cả' : 'Mở rộng tất cả'}
+            >
+              {areAllExpanded ? (
+                <ChevronsUp className="w-4 h-4" />
+              ) : (
+                <ChevronsDown className="w-4 h-4" />
+              )}
+            </button>
           )}
         </div>
       </div>
 
-      {/* 2. Body: Hierarchical Tree vs Distinct Document Type Grid */}
+      {/* 2. Body: Hierarchical Tree vs Document Type Cards */}
       <div
         tabIndex={0}
         role="tree"
         aria-label="Cây phân cấp danh mục pháp luật"
-        className="flex-1 overflow-y-auto p-2 space-y-1 focus:outline-none"
+        className="flex-1 overflow-y-auto p-2 pr-1.5 space-y-[2px] focus:outline-none"
       >
-        {/* All documents root item */}
+        {/* All documents root item: Standardized 42px height, left-aligned, matching tree Level 0 */}
         <div
           id="category-node-all"
           tabIndex={0}
           role="treeitem"
-          aria-selected={selectedCategoryId === null && !selectedDocType}
+          aria-level={1}
+          aria-selected={isAllSelected}
           onClick={() => handleSelectCategoryAndExpandAncestors(null)}
+          title={`${totalDocsCount} văn bản thuộc tất cả chủ đề`}
+          style={{ paddingLeft: '12px' }}
           className={cn(
-            'flex items-center justify-between h-9 px-3 rounded-lg text-xs cursor-pointer font-medium transition-colors mb-1.5 border',
-            selectedCategoryId === null && !selectedDocType
-              ? 'bg-blue-50 text-blue-900 border-blue-200 font-bold shadow-2xs'
-              : 'text-slate-700 bg-slate-50/50 border-slate-200/60 hover:bg-slate-100 hover:text-slate-900'
+            'group flex items-center pr-2.5 h-[42px] rounded-lg text-xs cursor-pointer transition-colors text-left justify-start relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset mb-1.5',
+            isAllSelected
+              ? 'bg-blue-50 text-blue-900 font-semibold shadow-[inset_3px_0_0_#2563eb]'
+              : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-medium'
           )}
         >
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>{viewMode === 'topic' ? 'Tất cả chủ đề' : 'Tất cả văn bản'}</span>
-          </div>
-          <span className="text-[10.5px] font-mono font-bold text-slate-500 bg-white px-1.5 py-0.2 rounded border border-slate-200">
+          {/* Spacer to match chevron column */}
+          <span className="w-6 h-6 -ml-1.5 mr-1 shrink-0" aria-hidden="true" />
+
+          <BookOpen
+            className={cn(
+              'w-4 h-4 mr-2 shrink-0 transition-colors',
+              isAllSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
+            )}
+          />
+          <span className="flex-1 min-w-0 text-left truncate leading-tight">
+            {viewMode === 'topic' ? 'Tất cả chủ đề' : 'Tất cả văn bản'}
+          </span>
+          <span
+            className={cn(
+              'font-mono text-[11px] tabular-nums shrink-0 ml-2 text-right transition-colors',
+              isAllSelected ? 'text-blue-700 font-semibold' : 'text-slate-400 group-hover:text-slate-600'
+            )}
+          >
             {totalDocsCount}
           </span>
         </div>
 
         {viewMode === 'topic' ? (
           /* ── View 1: Hierarchical Category Tree ── */
-          filteredCategories.map((cat) => renderCategoryNode(cat, 0))
+          <div className="space-y-1.5">
+            {filteredCategories.map((cat) => {
+              const isExpanded = expandedIds.has(cat.id) || filterText.length > 0;
+              const isSelected = selectedCategoryId === cat.id;
+
+              return (
+                <TopicTreeNode
+                  key={cat.id}
+                  category={cat}
+                  depth={0}
+                  isSelected={isSelected}
+                  isExpanded={isExpanded}
+                  expandedIds={expandedIds}
+                  filterText={filterText}
+                  categoryCounts={categoryCounts}
+                  selectedCategoryId={selectedCategoryId}
+                  onToggleExpand={toggleExpand}
+                  onSelectCategory={handleSelectCategoryAndExpandAncestors}
+                />
+              );
+            })}
+          </div>
         ) : (
           /* ── View 2: Distinct Document Type Cards ── */
           <div className="space-y-1.5 pt-0.5">
@@ -519,23 +800,33 @@ export function CategoryTree({
                   onClick={() => handleSelectDocType(item.type)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSelectDocType(item.type)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelectDocType(item.type);
+                    }
+                  }}
                   className={cn(
                     'group flex items-center justify-between p-2 rounded-lg text-xs cursor-pointer transition-all border',
                     isSelected
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 ring-1 ring-blue-500 text-blue-950 shadow-xs'
-                      : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 text-slate-800'
+                      ? 'bg-blue-50 text-blue-900 font-semibold border-blue-200 shadow-[inset_3px_0_0_#2563eb]'
+                      : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-800'
                   )}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <div className={cn('p-1.5 rounded-md shrink-0', item.iconBg)}>
                       <IconComp className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
-                      <div className={cn('font-bold text-[12px] truncate leading-tight', isSelected ? 'text-blue-900' : 'text-slate-900')}>
+                      <div
+                        className={cn(
+                          'font-semibold text-xs truncate leading-tight',
+                          isSelected ? 'text-blue-900' : 'text-slate-900'
+                        )}
+                      >
                         {item.label}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate mt-0.2">
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">
                         {item.sublabel}
                       </div>
                     </div>
@@ -543,9 +834,9 @@ export function CategoryTree({
 
                   <span
                     className={cn(
-                      'text-[10.5px] font-mono font-bold px-1.5 py-0.5 rounded-md shrink-0 ml-1',
+                      'text-[11px] font-mono font-medium px-2 py-0.5 rounded-md shrink-0 ml-1',
                       isSelected
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-blue-600 text-white font-semibold'
                         : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                     )}
                   >

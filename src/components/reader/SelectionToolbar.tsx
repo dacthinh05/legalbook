@@ -35,8 +35,10 @@ interface SelectionToolbarProps {
 
 const COLORS: { color: AnnotationColor; label: string; bg: string }[] = [
   { color: 'yellow', label: 'Vàng nhạt', bg: 'bg-amber-300' },
-  { color: 'green', label: 'Xanh nhạt', bg: 'bg-green-300' },
-  { color: 'pink', label: 'Hồng nhạt', bg: 'bg-pink-300' },
+  { color: 'green', label: 'Xanh lá', bg: 'bg-emerald-400' },
+  { color: 'pink', label: 'Hồng nhạt', bg: 'bg-rose-300' },
+  { color: 'blue', label: 'Xanh dương', bg: 'bg-sky-300' },
+  { color: 'purple', label: 'Tím nhạt', bg: 'bg-purple-300' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -60,14 +62,13 @@ export function SelectionToolbar({
     setShowColors(false);
   }, []);
 
-  // Listen for selection changes
+  // Listen for selection changes and viewport/container scroll
   useEffect(() => {
     if (!hasFullText) return;
 
-    const handleSelectionChange = () => {
+    const updatePosition = () => {
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed || !sel.toString().trim()) {
-        // Give toolbar a moment before hiding (user may be clicking a button)
         setTimeout(() => {
           const sel2 = window.getSelection();
           if (!sel2 || sel2.isCollapsed) hide();
@@ -79,35 +80,44 @@ export function SelectionToolbar({
       if (!container) return;
 
       const range = sel.getRangeAt(0);
-      if (!container.contains(range.commonAncestorContainer)) {
+      if (!container.contains(range.startContainer) && !container.contains(range.endContainer)) {
         hide();
         return;
       }
 
       const rect = range.getBoundingClientRect();
-      const toolbar = toolbarRef.current;
-      const toolbarHeight = toolbar?.offsetHeight ?? 40;
-      const toolbarWidth = toolbar?.offsetWidth ?? 200;
-
-      // Position: center above selection
-      let top = rect.top + window.scrollY - toolbarHeight - 8;
-      let left = rect.left + window.scrollX + rect.width / 2 - toolbarWidth / 2;
-
-      // Flip below if too close to top
-      if (top < 60) {
-        top = rect.bottom + window.scrollY + 8;
+      if (rect.width === 0 && rect.height === 0) {
+        hide();
+        return;
       }
 
-      // Clamp horizontal
-      const margin = 8;
+      const toolbar = toolbarRef.current;
+      const toolbarHeight = toolbar?.offsetHeight || 38;
+      const toolbarWidth = toolbar?.offsetWidth || 280;
+
+      // Fixed positioning coordinates (relative to viewport)
+      let top = rect.top - toolbarHeight - 10;
+      let left = rect.left + rect.width / 2 - toolbarWidth / 2;
+
+      // Flip below if too close to top of viewport
+      if (top < 56) {
+        top = rect.bottom + 10;
+      }
+
+      // Clamp horizontal to stay safely inside screen margins
+      const margin = 12;
       left = Math.max(margin, Math.min(left, window.innerWidth - toolbarWidth - margin));
 
       setPosition({ top, left });
       setVisible(true);
     };
 
-    document.addEventListener('selectionchange', handleSelectionChange);
-    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+    document.addEventListener('selectionchange', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      document.removeEventListener('selectionchange', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
   }, [hasFullText, contentContainerRef, hide]);
 
   // Hide on click outside toolbar

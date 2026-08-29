@@ -3,6 +3,7 @@
 import { useMemo, useRef, useEffect } from 'react';
 import type { LegalDocument } from '@/types';
 import { highlightHtml } from '@/lib/sanitize';
+import { formatLegalHtmlContent } from '@/lib/legal-formatter';
 import { ChevronRight } from 'lucide-react';
 
 interface HTMLViewerProps {
@@ -83,16 +84,18 @@ export function HTMLViewer({
       return { html: '<p class="text-slate-400 italic">Chưa có nội dung văn bản.</p>', matchCount: 0 };
     }
     
+    const formatted = formatLegalHtmlContent(doc.html_content, doc);
+
     // Insert anchor tags to headings so outline can jump to them
     let idx = 0;
-    const htmlWithAnchors = doc.html_content.replace(/(<h[234]>|<p><strong>(?:Điều|Chương|Phần)[^<]*<\/strong>)/gi, (match) => {
+    const htmlWithAnchors = formatted.replace(/(<h[1234][^>]*>|<p[^>]*><strong>(?:Điều|Chương|Phần)[^<]*<\/strong>)/gi, (match) => {
       const anchor = `<span id="sec-${idx}" class="scroll-mt-4"></span>`;
       idx++;
       return anchor + match;
     });
 
     return highlightHtml(htmlWithAnchors, searchQuery);
-  }, [doc.html_content, searchQuery]);
+  }, [doc, searchQuery]);
 
   useEffect(() => {
     onMatchesCountChange?.(matchCount);
@@ -145,13 +148,15 @@ export function HTMLViewer({
       {/* Main Document Content Container */}
       <div
         ref={contentRef}
-        className="flex-1 overflow-y-auto px-6 py-8 md:px-12 lg:px-16"
+        className="flex-1 overflow-y-auto reader-viewport"
       >
-        <div
-          className="max-w-3xl mx-auto document-content text-gray-800 leading-relaxed"
-          style={{ fontSize: `${fontSize}px` }}
-          dangerouslySetInnerHTML={{ __html: processedHtml }}
-        />
+        <div className="document-page">
+          <div
+            className="document-content select-text"
+            style={{ fontSize: `${fontSize}px` }}
+            dangerouslySetInnerHTML={{ __html: processedHtml }}
+          />
+        </div>
       </div>
     </div>
   );

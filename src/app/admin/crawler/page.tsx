@@ -163,7 +163,7 @@ export default function CrawlerAdminPage() {
 
   // Cron test trigger
   const [isTestingCron, setIsTestingCron] = useState(false);
-  const [cronResult, setCronResult] = useState<any>(null);
+  const [cronResult, setCronResult] = useState<Record<string, unknown> | null>(null);
 
   const filteredDocs = discoveredDocs.filter((doc) => {
     if (filterDomain === 'all') return true;
@@ -224,31 +224,31 @@ export default function CrawlerAdminPage() {
       if (data.stagedDocs && Array.isArray(data.stagedDocs)) {
         setDiscoveredDocs((prev) => {
           const existingNums = new Set(prev.map((d) => d.document_number));
-          const newEntries: DiscoveredDoc[] = data.stagedDocs
-            .filter((d: any) => !existingNums.has(d.document_number))
-            .map((d: any) => ({
-              id: d.id,
-              source: d.source.includes('gdt') ? 'gdt_gov' : d.source.includes('vbpl') ? 'vbpl' : 'chinhphu',
-              sourceName: d.source,
-              sourceUrl: `https://${d.source}`,
+          const newEntries: DiscoveredDoc[] = (data.stagedDocs as Array<Record<string, string>>)
+            .filter((d) => !existingNums.has(d.document_number))
+            .map((d) => ({
+              id: d.id || `doc-${Date.now()}`,
+              source: d.source?.includes('gdt') ? ('gdt_gov' as const) : d.source?.includes('vbpl') ? ('vbpl' as const) : ('chinhphu' as const),
+              sourceName: d.source || 'Cổng pháp luật',
+              sourceUrl: d.source_url || d.url || 'https://chinhphu.vn',
               document_number: d.document_number,
               title: d.title,
               issuing_body: d.issuing_body,
               issued_date: d.issued_date,
               effective_date: d.effective_date,
-              status: 'hieu_luc',
-              domain: d.category_name.toLowerCase().includes('kiểm toán') ? 'audit' : d.category_name.toLowerCase().includes('kế toán') ? 'accounting' : 'tax',
-              category_name: d.category_name,
-              file_format: 'docx',
-              summary_main: d.summary_main,
+              status: 'hieu_luc' as const,
+              domain: (d.category_name?.toLowerCase().includes('kiểm toán') ? 'audit' : d.category_name?.toLowerCase().includes('kế toán') ? 'accounting' : 'tax') as 'tax' | 'accounting' | 'audit',
+              category_name: d.category_name || 'Thuế - Kế toán',
+              file_format: 'docx' as const,
+              summary_main: d.summary_main || '',
               crawled_at: 'Vừa quét xong',
               is_approved: false,
             }));
           return [...newEntries, ...prev];
         });
       }
-    } catch (err: any) {
-      setCronResult({ success: false, error: err.message });
+    } catch (err: unknown) {
+      setCronResult({ success: false, error: err instanceof Error ? err.message : String(err) });
     } finally {
       setIsTestingCron(false);
     }
