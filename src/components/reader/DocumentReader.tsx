@@ -475,7 +475,7 @@ export function DocumentReader({
   // ── Selection toolbar handlers ─────────────────────────────────────────
 
   const handleHighlight = useCallback(
-    async (color: AnnotationColor) => {
+    async (color: AnnotationColor = 'yellow') => {
       if (!contentRef.current) return;
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
@@ -576,6 +576,39 @@ export function DocumentReader({
     return () => container.removeEventListener('click', handleMarkClick);
   }, []);
 
+  // Keyboard Shortcut: Press H to immediately highlight selected text
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key === 'h' || e.key === 'H') {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+
+        const container = contentRef.current;
+        if (!container) return;
+
+        try {
+          const range = sel.getRangeAt(0);
+          if (container.contains(range.startContainer) || container.contains(range.endContainer)) {
+            e.preventDefault();
+            handleHighlight('yellow');
+          }
+        } catch {}
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleHighlight]);
   const handleOrphaned = useCallback((ids: string[]) => {
     console.warn('[Reader] Orphaned annotations:', ids);
   }, []);

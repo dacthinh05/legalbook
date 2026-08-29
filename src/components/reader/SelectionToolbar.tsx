@@ -25,12 +25,11 @@ interface SelectionToolbarProps {
   /** The element that contains the document text. */
   contentContainerRef: React.RefObject<HTMLElement | null>;
   hasFullText: boolean;
-  onHighlight: (color: AnnotationColor) => void;
+  onHighlight: (color?: AnnotationColor) => void;
   onAddNote: () => void;
   onCopy: () => void;
   onCopyLink: () => void;
 }
-
 // ─── Color picker ────────────────────────────────────────────────────────────
 
 const COLORS: { color: AnnotationColor; label: string; bg: string }[] = [
@@ -144,9 +143,8 @@ export function SelectionToolbar({
     hide();
   };
 
-  const handleHighlight = (color: AnnotationColor) => {
-    onHighlight(color);
-    setShowColors(false);
+  const handleHighlight = () => {
+    onHighlight('yellow');
     hide();
   };
 
@@ -156,54 +154,39 @@ export function SelectionToolbar({
     <div
       ref={toolbarRef}
       role="toolbar"
-      aria-label="Công cụ chú thích"
+      aria-label="Công cụ chú thích nhanh"
+      onMouseDown={(e) => e.preventDefault()}
       className={cn(
         'fixed z-50 flex items-center gap-0.5',
-        'bg-slate-900 text-white rounded-lg shadow-xl px-1.5 py-1',
-        'text-xs select-none',
+        'bg-slate-900 text-white rounded-lg shadow-2xl px-1.5 py-1',
+        'text-xs select-none border border-slate-700/80',
         'animate-in fade-in zoom-in-95 duration-100'
       )}
       style={{ top: position.top, left: position.left }}
     >
-      {/* Highlight button */}
-      <div className="relative">
-        <button
-          onClick={() => setShowColors(!showColors)}
-          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors"
-          title="Tô màu"
-          aria-label="Tô màu đoạn văn"
-          aria-expanded={showColors}
-        >
-          <Highlighter className="w-3.5 h-3.5 text-amber-400" />
-          <span>Tô màu</span>
-        </button>
-
-        {/* Color picker */}
-        {showColors && (
-          <div className="absolute bottom-full mb-1.5 left-0 bg-slate-800 border border-slate-700 rounded-lg p-2 flex items-center gap-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100">
-            {COLORS.map(({ color, label, bg }) => (
-              <button
-                key={color}
-                onClick={() => handleHighlight(color)}
-                className={cn(
-                  'w-5 h-5 rounded-full border-2 border-transparent hover:border-white transition-all hover:scale-110',
-                  bg
-                )}
-                title={label}
-                aria-label={label}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* 1-Click Fast Highlight Button (Default Yellow) */}
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={handleHighlight}
+        className="flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-white/15 transition-colors cursor-pointer text-amber-300 font-medium"
+        title="Tô màu nhanh (Phím tắt: H)"
+        aria-label="Tô màu nhanh (H)"
+      >
+        <Highlighter className="w-3.5 h-3.5 text-amber-300" />
+        <span>Tô màu</span>
+        <kbd className="text-[10px] text-amber-200/90 font-mono bg-white/10 px-1 py-0.2 rounded ml-0.5">H</kbd>
+      </button>
 
       <div className="w-px h-5 bg-white/20 mx-0.5" aria-hidden />
 
       {/* Add note */}
       <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => { onAddNote(); hide(); }}
-        className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors"
-        title="Thêm ghi chú"
+        className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer text-slate-200 hover:text-white"
+        title="Thêm ghi chú vào đoạn này"
         aria-label="Thêm ghi chú vào đoạn này"
       >
         <MessageSquarePlus className="w-3.5 h-3.5 text-blue-400" />
@@ -214,10 +197,12 @@ export function SelectionToolbar({
 
       {/* Copy */}
       <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={handleCopy}
-        className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors"
-        title="Sao chép"
-        aria-label="Sao chép văn bản đã chọn"
+        className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer text-slate-200 hover:text-white"
+        title="Sao chép văn bản"
+        aria-label="Sao chép văn bản"
       >
         <Copy className="w-3.5 h-3.5" />
         <span>{copied ? 'Đã chép' : 'Sao chép'}</span>
@@ -225,13 +210,15 @@ export function SelectionToolbar({
 
       {/* Copy link */}
       <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={handleCopyLink}
-        className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors"
-        title="Sao chép liên kết"
-        aria-label="Sao chép liên kết đến vị trí này"
+        className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer text-slate-200 hover:text-white"
+        title="Sao chép liên kết đến đoạn này"
+        aria-label="Sao chép liên kết đến đoạn này"
       >
         <Link className="w-3.5 h-3.5" />
-        <span>Sao chép liên kết</span>
+        <span className="hidden sm:inline">Sao chép link</span>
       </button>
     </div>
   );

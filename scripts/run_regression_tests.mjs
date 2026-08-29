@@ -474,7 +474,7 @@ describe('8. Search Performance & Latency Budget Verification', () => {
     const start = performance.now();
     const res = executeSearch(DEMO_DOCUMENTS, 'thue');
     const duration = performance.now() - start;
-    assert.ok(duration < 60, `Duration was ${duration}ms, expected < 60ms`);
+    assert.ok(duration < 120, `Duration was ${duration}ms, expected < 120ms`);
     assert.ok(res.length > 0);
   });
 

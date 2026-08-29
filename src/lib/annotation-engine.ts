@@ -66,7 +66,7 @@ export function findAnchorRange(
   container: HTMLElement,
   anchor: AnnotationAnchor
 ): Range | null {
-  if (!anchor.exactText.trim()) return null;
+  if (!anchor.exactText || !anchor.exactText.trim()) return null;
 
   const textNodes: Text[] = [];
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
@@ -75,7 +75,7 @@ export function findAnchorRange(
     textNodes.push(node as Text);
   }
 
-  // Build a full-text string with cumulative offsets
+  // Build fullText and character offsets directly from DOM text nodes
   let fullText = '';
   const offsets: { node: Text; start: number }[] = [];
   for (const tn of textNodes) {
@@ -83,40 +83,32 @@ export function findAnchorRange(
     fullText += tn.nodeValue || '';
   }
 
-  const normalise = (s: string) => s.replace(/\s+/g, ' ');
-  const normFull = normalise(fullText);
+  const targetText = anchor.exactText.trim();
 
-  // Build search pattern: [prefix?] exactText [suffix?]
-  const escapedExact = escapeRegex(normalise(anchor.exactText));
-  const escapedPrefix = anchor.prefix ? escapeRegex(normalise(anchor.prefix)) : '';
-  const escapedSuffix = anchor.suffix ? escapeRegex(normalise(anchor.suffix)) : '';
-
-  // Try with context first, then without
-  const patterns = [
-    escapedPrefix
-      ? new RegExp(escapedPrefix + '(' + escapedExact + ')' + (escapedSuffix || ''))
-      : null,
-    new RegExp(escapedExact),
-  ].filter(Boolean) as RegExp[];
-
-  for (const pattern of patterns) {
-    const match = normFull.match(pattern);
-    if (!match) continue;
-
-    // Index of the exactText group within normFull
-    const groupIdx = pattern.source.includes('(') ? 1 : 0;
-    let exactStart = normFull.indexOf(match[groupIdx] ?? match[0], match.index ?? 0);
-    if (groupIdx === 1 && match.index !== undefined && escapedPrefix) {
-      // Adjust for prefix length
-      const prefixLen = (match[0].length - (match[1]?.length ?? 0));
-      exactStart = (match.index ?? 0) + prefixLen;
-    }
-    const exactEnd = exactStart + (match[groupIdx] ?? match[0]).length;
-
-    // Ensure uniqueness: if multiple matches, try to use startOffset hint
-    const range = buildRange(offsets, exactStart, exactEnd);
+  // 1. Fast Path: Direct exact substring search on raw fullText
+  let exactStart = fullText.indexOf(targetText);
+  if (exactStart !== -1) {
+    const range = buildRange(offsets, exactStart, exactStart + targetText.length);
     if (range) return range;
   }
+
+  // 2. Case-insensitive exact substring search
+  exactStart = fullText.toLowerCase().indexOf(targetText.toLowerCase());
+  if (exactStart !== -1) {
+    const range = buildRange(offsets, exactStart, exactStart + targetText.length);
+    if (range) return range;
+  }
+
+  // 3. Whitespace-tolerant regex search directly against raw fullText
+  const escapedPattern = escapeRegex(targetText).replace(/\s+/g, '\\s+');
+  try {
+    const regex = new RegExp(escapedPattern, 'i');
+    const match = fullText.match(regex);
+    if (match && match.index !== undefined) {
+      const range = buildRange(offsets, match.index, match.index + match[0].length);
+      if (range) return range;
+    }
+  } catch {}
 
   return null;
 }

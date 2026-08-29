@@ -52,8 +52,6 @@ export function isStrictProductionMode(): boolean {
 export function isEmbeddedDataPermitted(): boolean {
   return !isStrictProductionMode();
 }
-
-/**
  * Fetches all categories with hierarchical tree computation.
  */
 export async function getCategories(): Promise<DataResult<{
