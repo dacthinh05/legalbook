@@ -306,5 +306,6 @@ export async function runProductionSeed() {
     return { success: false, error: msg };
   }
 }
-
-runProductionSeed();
+if (process.argv[1] && process.argv[1].includes('seed_supabase_production')) {
+  runProductionSeed().catch(console.error);
+}

@@ -1560,10 +1560,6 @@ export function DocumentReader({
             activeTab === 'banggoc' ? 'p-0 flex flex-col h-full overflow-hidden bg-slate-900/5' : ''
           )}
         >
-      {/* ================================================================
-          1. DOCUMENT HEADER (Standardized Spacing & Refined Actions)
-          ================================================================ */}
-
           {/* ── TAB: NOIDUNG ── */}
           <div className={activeTab === 'noidung' ? 'reader-canvas' : 'hidden'}>
             <div className="document-page">

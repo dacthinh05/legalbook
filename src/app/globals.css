@@ -190,30 +190,30 @@ body.is-resizing * {
 }
 .document-page {
   width: 100%;
-  max-width: 960px;
+  max-width: 860px;
   margin: 0 auto;
   background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.85);
-  border-radius: 4px;
+  border-radius: 6px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
   overflow-x: hidden;
   overflow-wrap: break-word;
   word-break: break-word;
-  padding: 32px 24px 48px 24px;
+  padding: 20px 16px 48px 16px;
 }
 
 @media (min-width: 760px) {
   .document-page {
     width: calc(100% - 24px);
-    padding: 48px 48px 64px 48px;
+    padding: 28px 36px 56px 36px;
   }
 }
 
 @media (min-width: 1100px) {
   .document-page {
-    width: min(100%, 960px);
-    padding: 72px 80px 88px 80px;
+    width: min(100%, 860px);
+    padding: 32px 52px 64px 52px;
   }
 }
 

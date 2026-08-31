@@ -33,6 +33,8 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   cong_van: 'Công văn',
   chuan_muc: 'Chuẩn mực',
   huong_dan: 'Hướng dẫn',
+  vbhn: 'Văn bản hợp nhất',
+  nghi_quyet: 'Nghị quyết',
   khac: 'Khác',
 };
 
@@ -44,7 +46,21 @@ export const DOCUMENT_TYPE_ABBREV: Record<DocumentType, string> = {
   cong_van: 'CV',
   chuan_muc: 'CM',
   huong_dan: 'HD',
+  vbhn: 'VBHN',
+  nghi_quyet: 'NQ',
   khac: 'Khác',
+};
+export const DOCUMENT_TYPE_COLORS: Record<DocumentType, string> = {
+  luat: 'text-blue-700 bg-blue-50 border-blue-200',
+  nghi_dinh: 'text-indigo-700 bg-indigo-50 border-indigo-200',
+  thong_tu: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  quyet_dinh: 'text-teal-700 bg-teal-50 border-teal-200',
+  cong_van: 'text-amber-800 bg-amber-50 border-amber-200',
+  chuan_muc: 'text-purple-700 bg-purple-50 border-purple-200',
+  huong_dan: 'text-cyan-700 bg-cyan-50 border-cyan-200',
+  vbhn: 'text-rose-700 bg-rose-50 border-rose-200',
+  nghi_quyet: 'text-blue-800 bg-sky-50 border-sky-200',
+  khac: 'text-slate-700 bg-slate-50 border-slate-200',
 };
 
 export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
@@ -122,16 +138,6 @@ export function getEffectiveStatus(doc?: {
   return doc.status || 'chua_xac_dinh';
 }
 
-export const DOCUMENT_TYPE_COLORS: Record<DocumentType, string> = {
-  luat: 'text-blue-700 bg-blue-50',
-  nghi_dinh: 'text-purple-700 bg-purple-50',
-  thong_tu: 'text-teal-700 bg-teal-50',
-  quyet_dinh: 'text-orange-700 bg-orange-50',
-  cong_van: 'text-gray-700 bg-gray-100',
-  chuan_muc: 'text-indigo-700 bg-indigo-50',
-  huong_dan: 'text-cyan-700 bg-cyan-50',
-  khac: 'text-gray-600 bg-gray-50',
-};
 
 export const RELATION_TYPE_LABELS: Record<RelationType, string> = {
   can_cu: 'Căn cứ vào',

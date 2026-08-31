@@ -10,8 +10,9 @@ export type DocumentType =
   | 'cong_van'
   | 'chuan_muc'
   | 'huong_dan'
+  | 'vbhn'
+  | 'nghi_quyet'
   | 'khac';
-
 export type DocumentStatus =
   | 'hieu_luc'
   | 'chua_hieu_luc'
