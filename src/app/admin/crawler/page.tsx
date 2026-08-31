@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { getSafeSourceUrl, getMultiSourceLookupUrls, type MultiSourceOption } from '@/lib/utils';
 import { PRIORITY_TOPICS_2024_2026, DISCOVERY_TAX_AUDIT_SAMPLES, type DiscoveredDoc } from '@/lib/crawler/discovery-samples';
+import { resolveOfficialDispatchLive } from '@/lib/crawler/portal-crawler';
 import { saveDocument, isSupabaseConfigured } from '@/lib/data-service';
 import type { DocumentType } from '@/types';
 
@@ -260,37 +261,43 @@ export default function CrawlerAdminPage() {
     if (!dispatchNumber.trim()) return;
 
     setIsSearchingDispatch(true);
-    await new Promise((r) => setTimeout(r, 800));
-
-    const safeUrl = getSafeSourceUrl({
-      document_number: dispatchNumber.trim(),
-      title: `Công văn ${dispatchNumber.trim()}`,
-    });
-
-    const newResult: DiscoveredDoc = {
-      id: `cv-found-${Date.now()}`,
-      source: dispatchSource === 'gdt' ? 'gdt_gov' : dispatchSource === 'mof' ? 'mof_gov' : 'vbpl',
-      sourceName: dispatchSource === 'gdt' ? 'Tổng cục Thuế (gdt.gov.vn)' : dispatchSource === 'mof' ? 'Bộ Tài chính (mof.gov.vn)' : 'CSDL Quốc Gia (vbpl.vn)',
-      sourceUrl: safeUrl,
-      document_number: dispatchNumber.trim(),
-      title: `Công văn số ${dispatchNumber.trim()} hướng dẫn chính sách thuế và hạch toán kế toán`,
-      issuing_body: dispatchSource === 'gdt' ? 'Tổng cục Thuế' : 'Bộ Tài chính',
-      issued_date: new Date().toISOString().slice(0, 10),
-      effective_date: new Date().toISOString().slice(0, 10),
-      status: 'hieu_luc',
-      domain: 'tax',
-      category_name: 'Thuế > Công văn Thuế',
-      file_format: 'docx',
-      summary_main: 'Hướng dẫn giải đáp nghiệp vụ kê khai, khấu trừ thuế và lập chứng từ kế toán cho doanh nghiệp.',
-      crawled_at: 'Vừa quét',
-      is_approved: false,
-      fallbackChain: [`Đã xác thực nguồn: ${dispatchSource.toUpperCase()}`],
-    };
-
-    setDiscoveredDocs((prev) => [newResult, ...prev]);
-    setIsSearchingDispatch(false);
-    setFeedbackMessage(`Đã tìm thấy công văn ${dispatchNumber} và đưa vào hàng đợi chờ duyệt.`);
-    setTimeout(() => setFeedbackMessage(null), 3000);
+    try {
+      const res = await resolveOfficialDispatchLive(dispatchNumber.trim());
+      if (res.document) {
+        setDiscoveredDocs((prev) => [
+          {
+            id: res.document!.id,
+            source: res.document!.source,
+            sourceName: res.document!.sourceName,
+            sourceUrl: res.document!.sourceUrl,
+            downloadUrl: `/documents/${res.document!.document_number.replace(/\//g, '.')}.docx`,
+            document_number: res.document!.document_number,
+            title: res.document!.title,
+            issuing_body: res.document!.issuing_body,
+            issued_date: res.document!.issued_date,
+            effective_date: res.document!.effective_date,
+            status: res.document!.status as 'hieu_luc' | 'chua_hieu_luc',
+            domain: res.document!.domain,
+            category_name: res.document!.domain === 'tax' ? 'Thuế > Công văn Thuế' : 'Kế toán > Công văn hướng dẫn',
+            file_format: 'docx',
+            document_type: 'cong_van',
+            summary_main: res.document!.summary_main,
+            crawled_at: 'Vừa quét từ cổng chính thức',
+            is_approved: false,
+            fallbackChain: [`Xác thực qua ${res.document!.sourceName} (${res.responseTimeMs}ms)`],
+          },
+          ...prev,
+        ]);
+        setFeedbackMessage(`✅ ${res.message}`);
+      } else {
+        setFeedbackMessage(`ℹ️ ${res.message}`);
+      }
+    } catch (err: unknown) {
+      setFeedbackMessage(`❌ Lỗi tra cứu: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsSearchingDispatch(false);
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    }
   };
 
   return (

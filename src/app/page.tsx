@@ -317,8 +317,15 @@ export default function MainPage() {
     if (!selectedCategoryId) {
       return allDocList;
     }
+    if (selectedCategoryId === '__recent_updates__') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const threshold = thirtyDaysAgo.toISOString().slice(0, 10);
+      return allDocList.filter(
+        (d) => (d.issued_date && d.issued_date >= threshold) || (d.effective_date && d.effective_date >= threshold)
+      );
+    }
     if (selectedCategoryId.includes('__type__')) {
-      const [baseCatId, docType] = selectedCategoryId.split('__type__');
       const descendantIds = new Set(getDescendantCategoryIds(baseCatId, categoryData.categories));
       return allDocList.filter((d) => {
         const links = DEMO_CATEGORY_LINKS.filter(
@@ -522,10 +529,13 @@ export default function MainPage() {
     }
   ) => {
     handleDocumentSelect(documentId, navTarget);
+    setSearchTarget(navTarget || null);
     setSearchOpen(false);
   };
 
-  if (readerFullscreen && selectedDocument) {
+  const listCategoryTitle = selectedCategoryId === '__recent_updates__'
+    ? 'Văn bản mới (30 ngày gần đây)'
+    : activeCategory?.name || (selectedDocType ? (DOCUMENT_TYPE_LABELS[selectedDocType] || selectedDocType) : 'Tất cả văn bản');
     return (
       <div className="fullscreen-reader flex flex-col">
         <div className="flex items-center gap-2 px-4 py-2 border-b bg-white">

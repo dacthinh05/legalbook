@@ -221,29 +221,57 @@ function TopicTreeNode({
         }}
         onClick={() => onSelectCategory(category.id)}
         title={`${category.name}${typeof count === 'number' ? ` (${count} văn bản)` : ''}`}
-        style={{ paddingLeft: `${indentPx}px` }}
+        style={{ paddingLeft: `${Math.max(6, indentPx)}px` }}
         className={cn(
-          'tree-row group grid grid-cols-[18px_auto_minmax(0,1fr)_24px] items-center gap-x-[7px] pr-[8px] rounded-[6px] cursor-pointer transition-all text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
+          'tree-row group flex items-center gap-2 pr-2.5 rounded-lg cursor-pointer transition-all text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none',
           heightClass,
-          isDragOver && 'bg-blue-100/90 ring-2 ring-blue-500 text-blue-950 font-bold shadow-md scale-[1.02] z-20',
-          !isDragOver && isSelected && 'bg-[#eff6ff] text-[#1d4ed8] shadow-[inset_2px_0_0_#2563eb]',
+          isDragOver && 'bg-blue-100/90 ring-2 ring-blue-500 text-blue-950 font-bold shadow-md scale-[1.01] z-20',
+          !isDragOver && isSelected && 'bg-blue-50/90 text-blue-900 font-semibold',
           !isDragOver && !isSelected && 'hover:bg-slate-100/70 text-slate-800 hover:text-slate-950'
         )}
       >
-        {/* Column 2: Icon (17px for root) / DocType Badge Tag / Bullet Indicator */}
+        {/* Left vertical accent indicator */}
+        {isSelected && !isDragOver && (
+          <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-blue-600 rounded-r-full" />
+        )}
+
+        {/* Column 1: Expand / Collapse Chevron */}
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpand();
+            }}
+            className="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded cursor-pointer shrink-0 transition-colors"
+            title={isExpanded ? 'Thu gọn' : 'Mở rộng'}
+            aria-label={isExpanded ? 'Thu gọn' : 'Mở rộng'}
+          >
+            <ChevronRight
+              className={cn(
+                'w-3.5 h-3.5 transition-transform duration-150',
+                isExpanded && 'rotate-90 text-blue-700'
+              )}
+            />
+          </button>
+        ) : (
+          <span className="w-4 shrink-0" aria-hidden="true" />
+        )}
+
+        {/* Column 2: Icon (root) / DocType Badge Tag / Bullet */}
         <div className="flex items-center justify-center shrink-0">
           {isRoot ? (
             renderRootCategoryIcon(
               category,
               cn(
-                'w-[17px] h-[17px] transition-colors',
-                isSelected ? 'text-[#1d4ed8]' : 'text-slate-500 group-hover:text-slate-700'
+                'w-4 h-4 transition-colors',
+                isSelected ? 'text-blue-700' : 'text-slate-500 group-hover:text-slate-700'
               )
             )
           ) : catDocType ? (
             <span
               className={cn(
-                'text-[9.5px] font-bold px-1 py-0.2 rounded border uppercase tracking-wider shrink-0 select-none',
+                'text-[9.5px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider shrink-0 select-none shadow-2xs',
                 DOCUMENT_TYPE_COLORS[catDocType] || 'bg-slate-100 text-slate-700 border-slate-200'
               )}
             >
@@ -252,32 +280,32 @@ function TopicTreeNode({
           ) : isLevel1 ? (
             <span
               className={cn(
-                'w-[5px] h-[5px] rounded-full transition-colors',
-                isSelected ? 'bg-[#1d4ed8]' : 'bg-slate-300 group-hover:bg-slate-400'
+                'w-1.5 h-1.5 rounded-full transition-colors shrink-0',
+                isSelected ? 'bg-blue-600' : 'bg-slate-300 group-hover:bg-slate-400'
               )}
             />
           ) : (
             <span
               className={cn(
-                'w-[4px] h-[4px] rounded-full transition-colors',
-                isSelected ? 'bg-[#1d4ed8]' : 'bg-slate-300 group-hover:bg-slate-400'
+                'w-1 h-1 rounded-full transition-colors shrink-0',
+                isSelected ? 'bg-blue-600' : 'bg-slate-300 group-hover:bg-slate-400'
               )}
             />
           )}
         </div>
 
         {/* Column 3: Label */}
-        <span className={cn('truncate text-left', textClass, isSelected ? 'text-[#1d4ed8]' : 'text-slate-800')}>
+        <span className={cn('truncate text-left flex-1 min-w-0', textClass, isSelected ? 'text-blue-900 font-semibold' : 'text-slate-800')}>
           <HighlightedLabel text={category.name} query={filterText} />
         </span>
 
-        {/* Column 4: Count (12px, font-weight 500, tabular-nums, fixed 24px, no badge background) */}
-        <div className="w-[24px] text-right shrink-0">
+        {/* Column 4: Count */}
+        <div className="text-right shrink-0">
           {typeof count === 'number' && count > 0 ? (
             <span
               className={cn(
-                'font-mono text-right tabular-nums transition-colors block text-[12px] font-medium',
-                isSelected ? 'text-[#1d4ed8]' : 'text-slate-400 group-hover:text-slate-600'
+                'font-mono text-right tabular-nums transition-colors block text-[11.5px] font-medium',
+                isSelected ? 'text-blue-700 font-bold' : 'text-slate-400 group-hover:text-slate-600'
               )}
             >
               {count}
@@ -285,7 +313,6 @@ function TopicTreeNode({
           ) : null}
         </div>
       </div>
-
       {/* Children Subtree with 1px spacing */}
       {hasChildren && isExpanded && category.children && (
         <div className="space-y-[1px] relative mt-[1px]">
@@ -810,45 +837,47 @@ export function CategoryTree({
           data-selected={isAllSelected}
           onClick={() => handleSelectCategoryAndExpandAncestors(null)}
           title={`${totalDocsCount} văn bản thuộc tất cả chủ đề`}
-          style={{ paddingLeft: '10px' }}
+          style={{ paddingLeft: '8px' }}
           className={cn(
-            'tree-row group grid grid-cols-[18px_auto_minmax(0,1fr)_24px] items-center gap-x-[7px] pr-[8px] h-[38px] rounded-[6px] cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset mb-[1px]',
+            'tree-row group flex items-center gap-2 pr-2.5 h-[36px] rounded-lg cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 mb-1 select-none',
             isAllSelected
-              ? 'bg-[#eff6ff] text-[#1d4ed8] shadow-[inset_2px_0_0_#2563eb]'
+              ? 'bg-blue-50/90 text-blue-900 font-semibold'
               : 'hover:bg-slate-100/70 text-slate-800 hover:text-slate-950'
           )}
         >
-          {/* Column 1: Spacer (18px) */}
-          <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0" aria-hidden="true">
-            <span className="w-[18px] h-[18px] block" />
-          </div>
+          {isAllSelected && (
+            <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-blue-600 rounded-r-full" />
+          )}
 
-          {/* Column 2: Root Icon (17px) */}
+          {/* Spacer */}
+          <span className="w-4 shrink-0" aria-hidden="true" />
+
+          {/* Root Icon */}
           <div className="flex items-center justify-center shrink-0">
             <BookOpen
               className={cn(
-                'w-[17px] h-[17px] transition-colors',
-                isAllSelected ? 'text-[#1d4ed8]' : 'text-slate-500 group-hover:text-slate-700'
+                'w-4 h-4 transition-colors',
+                isAllSelected ? 'text-blue-700' : 'text-slate-500 group-hover:text-slate-700'
               )}
             />
           </div>
 
-          {/* Column 3: Label */}
+          {/* Label */}
           <span
             className={cn(
-              'truncate leading-[1.25] text-[14px] font-semibold text-left',
-              isAllSelected ? 'text-[#1d4ed8]' : 'text-slate-900'
+              'truncate leading-[1.25] text-[13.5px] font-semibold text-left flex-1 min-w-0',
+              isAllSelected ? 'text-blue-900' : 'text-slate-900'
             )}
           >
             {viewMode === 'topic' ? 'Tất cả chủ đề' : 'Tất cả văn bản'}
           </span>
 
-          {/* Column 4: Count */}
-          <div className="w-[24px] text-right shrink-0">
+          {/* Count */}
+          <div className="text-right shrink-0">
             <span
               className={cn(
-                'font-mono text-right tabular-nums transition-colors block text-[12px] font-medium',
-                isAllSelected ? 'text-[#1d4ed8]' : 'text-slate-400 group-hover:text-slate-600'
+                'font-mono text-right tabular-nums transition-colors block text-[11.5px] font-medium',
+                isAllSelected ? 'text-blue-700 font-bold' : 'text-slate-400 group-hover:text-slate-600'
               )}
             >
               {totalDocsCount}
@@ -856,6 +885,63 @@ export function CategoryTree({
           </div>
         </div>
 
+        {/* Recent Legal Updates Filter Item (Văn bản mới 30 ngày) */}
+        {(() => {
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          const threshold = thirtyDaysAgo.toISOString().slice(0, 10);
+          const recentCount = docsList.filter(
+            (d) => (d.issued_date && d.issued_date >= threshold) || (d.effective_date && d.effective_date >= threshold)
+          ).length;
+          const isRecentSelected = selectedCategoryId === '__recent_updates__';
+
+          return recentCount > 0 ? (
+            <div
+              id="category-node-recent"
+              tabIndex={0}
+              role="treeitem"
+              aria-selected={isRecentSelected}
+              onClick={() => onSelectCategory('__recent_updates__')}
+              title={`${recentCount} văn bản mới ban hành hoặc có hiệu lực trong 30 ngày qua`}
+              style={{ paddingLeft: '8px' }}
+              className={cn(
+                'tree-row group flex items-center gap-2 pr-2.5 h-[36px] rounded-lg cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 mb-1 select-none',
+                isRecentSelected
+                  ? 'bg-amber-50/90 text-amber-950 font-semibold'
+                  : 'hover:bg-amber-50/40 text-slate-800 hover:text-amber-950'
+              )}
+            >
+              {isRecentSelected && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-amber-500 rounded-r-full" />
+              )}
+
+              {/* Spacer */}
+              <span className="w-4 shrink-0" aria-hidden="true" />
+
+              {/* Flame/Clock Icon */}
+              <div className="flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-amber-600 transition-colors" />
+              </div>
+
+              {/* Label + MỚI badge */}
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <span className="truncate leading-[1.25] text-[13px] font-semibold text-slate-800 group-hover:text-amber-950">
+                  Văn bản mới (30 ngày)
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
+                  MỚI
+                </span>
+              </div>
+
+              {/* Count */}
+              <div className="text-right shrink-0">
+                <span className="font-mono text-right tabular-nums transition-colors block text-[11.5px] font-bold text-amber-700">
+                  {recentCount}
+                </span>
+              </div>
+            </div>
+          ) : null;
+        })()}
         {viewMode === 'topic' ? (
           /* ── View 1: Hierarchical Category Tree (space-y-[1px]) ── */
           <div className="space-y-[1px]">
