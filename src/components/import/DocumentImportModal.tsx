@@ -17,8 +17,7 @@ import { restoreVietnameseLegalText } from '@/lib/document-import/vietnamese-nor
 import { detectLegalDocumentMetadata } from '@/lib/document-import/legal-metadata-detector';
 import { ImportedDocument } from '@/lib/document-import/types';
 import type { LegalDocument, DocumentType, DocumentStatus } from '@/types';
-import { DEMO_DOCUMENTS } from '@/lib/demo-data';
-
+import { saveDocument } from '@/lib/data-service';
 interface DocumentImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -145,10 +144,8 @@ export function DocumentImportModal({
   };
 
   // Commit and approve document into LegalBook library
-  const handleApproveDocument = (approvedDoc: ImportedDocument) => {
-    const docId = `doc-imp-${Date.now()}`;
-    const newLegalDoc: LegalDocument = {
-      id: docId,
+  const handleApproveDocument = async (approvedDoc: ImportedDocument) => {
+    const newLegalDoc: Partial<LegalDocument> = {
       title: approvedDoc.standardTitle || approvedDoc.detectedTitle || approvedDoc.originalFileName,
       document_number: approvedDoc.detectedDocumentNumber || null,
       document_type: (approvedDoc.detectedDocumentType || 'cong_van') as DocumentType,
@@ -156,50 +153,38 @@ export function DocumentImportModal({
       signer: approvedDoc.detectedSigner || null,
       issued_date: approvedDoc.detectedIssuedDate || new Date().toISOString().slice(0, 10),
       effective_date: approvedDoc.detectedEffectiveDate || approvedDoc.detectedIssuedDate || new Date().toISOString().slice(0, 10),
-      expiry_date: null,
       status: 'hieu_luc' as DocumentStatus,
       html_content: approvedDoc.htmlContent || `<div class="document-full-body"><p>${approvedDoc.normalizedText || ''}</p></div>`,
       summary_main: approvedDoc.detectedSummary || approvedDoc.standardTitle || '',
       summary_new_points: 'Văn bản đã được kiểm duyệt và nhập từ tệp ' + approvedDoc.originalFileName,
-      summary_affected_parties: null,
-      summary_accounting_impact: null,
-      summary_audit_impact: null,
-      summary_actions_needed: null,
-      summary_is_ai_generated: false,
-      official_source_url: null,
       is_deleted: false,
       is_published: true,
       review_status: 'published',
-      view_count: 0,
-      created_by: 'Chuyên viên Pháp chế',
-      files: [
-        {
-          id: `file-${Date.now()}`,
-          document_id: docId,
-          file_type: approvedDoc.fileExtension === 'pdf' ? 'pdf' : 'docx',
-          file_url: approvedDoc.fileUrl || `/documents/${approvedDoc.suggestedFileName || approvedDoc.originalFileName}`,
-          file_size: approvedDoc.originalSize,
-          original_filename: approvedDoc.originalFileName,
-          is_primary: true,
-          version: 1,
-          uploaded_by: 'Chuyên viên Pháp chế',
-          created_at: new Date().toISOString(),
-        },
-      ],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
 
-    // Add to in-memory DEMO_DOCUMENTS collection so it appears instantly across all views
-    DEMO_DOCUMENTS.unshift(newLegalDoc);
+    const attachments = [
+      {
+        fileBuffer: approvedDoc.fileBuffer,
+        originalFileName: approvedDoc.suggestedFileName || approvedDoc.originalFileName,
+        fileType: (approvedDoc.fileExtension === 'pdf' ? 'pdf' : 'docx') as 'pdf' | 'docx',
+        fileSize: approvedDoc.originalSize,
+        isPrimary: true,
+      },
+    ];
 
-    // Update status in queue
+    const res = await saveDocument(newLegalDoc, attachments);
+
+    if (!res.success) {
+      alert(`Lỗi phê duyệt văn bản: ${res.error}`);
+      return;
+    }
+
     setQueue((prev) =>
       prev.map((d) => (d.id === approvedDoc.id ? { ...d, extractionStatus: 'approved' } : d))
     );
 
-    setSuccessMessage(`Đã phê duyệt và lưu văn bản "${newLegalDoc.title}" vào thư viện LegalBook.`);
-    onDocumentImported?.(newLegalDoc as LegalDocument);
+    setSuccessMessage(`Đã phê duyệt và lưu văn bản "${newLegalDoc.title}" vào CSDL.`);
+    onDocumentImported?.(res.data || (newLegalDoc as LegalDocument));
     setReviewingDocId(null);
   };
 

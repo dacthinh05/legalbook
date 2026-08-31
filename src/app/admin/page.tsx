@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, CheckCircle2, RotateCcw, AlertTriangle, CheckSquare, Square, Loader2 } from 'lucide-react';
-import { getDocuments, deleteDocument, batchDeleteDocuments, restoreAllDeletedDocuments } from '@/lib/data-service';
+import { getDocuments, saveDocument, deleteDocument, batchDeleteDocuments, restoreAllDeletedDocuments } from '@/lib/data-service';
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, formatDate, getEffectiveStatus } from '@/lib/utils';
 import type { LegalDocument, DocumentType, DocumentStatus } from '@/types';
 
@@ -55,24 +55,29 @@ export default function AdminDocumentsPage() {
     );
   }, [documents, searchTerm]);
 
-  const handleSaveDoc = (e: React.FormEvent) => {
+  const handleSaveDoc = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDoc?.title) return;
 
+    const docToSave: Partial<LegalDocument> = {
+      ...(editingDoc as LegalDocument),
+      id: isCreating ? undefined : editingDoc.id,
+      updated_at: new Date().toISOString(),
+    };
+
+    const res = await saveDocument(docToSave);
+    if (!res.success) {
+      showFeedback(`Lỗi lưu văn bản: ${res.error}`, 'info');
+      return;
+    }
+
+    const saved = res.data!;
     if (isCreating) {
-      const newDoc: LegalDocument = {
-        ...(editingDoc as LegalDocument),
-        id: `doc-custom-${Date.now()}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setDocuments([newDoc, ...documents]);
-      showFeedback(`Đã thêm thành công văn bản ${newDoc.document_number || newDoc.title}`);
+      setDocuments([saved, ...documents]);
+      showFeedback(`Đã thêm thành công văn bản ${saved.document_number || saved.title}`);
     } else {
-      setDocuments(
-        documents.map((d) => (d.id === editingDoc.id ? ({ ...d, ...editingDoc, updated_at: new Date().toISOString() } as LegalDocument) : d))
-      );
-      showFeedback(`Đã cập nhật văn bản ${editingDoc.document_number || editingDoc.title}`);
+      setDocuments(documents.map((d) => (d.id === saved.id ? saved : d)));
+      showFeedback(`Đã cập nhật văn bản ${saved.document_number || saved.title}`);
     }
 
     setEditingDoc(null);

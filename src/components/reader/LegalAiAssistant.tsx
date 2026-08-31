@@ -14,8 +14,6 @@ import {
 import { queryLegalAssistant, type LegalAiResponse } from '@/lib/ai/legal-rag';
 import { MarkdownRenderer, renderInlineMarkdown } from '@/components/common/MarkdownRenderer';
 import type { LegalDocument } from '@/types';
-import { DEMO_DOCUMENTS } from '@/lib/demo-data';
-
 interface LegalAiAssistantProps {
   isOpen: boolean;
   onClose: () => void;
@@ -64,13 +62,30 @@ export function LegalAiAssistant({
       setQuery('');
 
       try {
-        const res = await queryLegalAssistant(
-          clean,
-          currentDocument,
-          DEMO_DOCUMENTS as unknown as LegalDocument[]
-        );
-        setResponse(res);
-        setHistory((prev) => [...prev, { query: clean, response: res }]);
+        const apiRes = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: clean,
+            documentId: currentDocument?.id,
+            mode: 'ask',
+          }),
+        }).then((r) => r.json()).catch(() => null);
+
+        if (apiRes && apiRes.success) {
+          const aiResponse: LegalAiResponse = {
+            answer: apiRes.answer,
+            summaryPoints: apiRes.summaryPoints || [],
+            citations: apiRes.citations || [],
+            suggestedFollowUps: apiRes.suggestedFollowUps || [],
+          };
+          setResponse(aiResponse);
+          setHistory((prev) => [...prev, { query: clean, response: aiResponse }]);
+        } else {
+          const res = await queryLegalAssistant(clean, currentDocument);
+          setResponse(res);
+          setHistory((prev) => [...prev, { query: clean, response: res }]);
+        }
       } finally {
         setIsLoading(false);
       }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDocumentById, getDocuments } from '@/lib/data-service';
+import { getDocumentById, getDocuments, isEmbeddedDataPermitted } from '@/lib/data-service';
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
 import { queryLegalAssistant, generateLocalDocumentSummary, type LegalCitation, type LegalAiResponse } from '@/lib/ai/legal-rag';
 import { cleanHtmlToText } from '@/lib/sanitize.server';
@@ -102,8 +102,10 @@ export async function POST(request: NextRequest) {
 
     // Fallback/corpus lookup for multi-document cross analysis or local fallback
     const allDocsRes = await getDocuments(null);
-    const allDocs = (allDocsRes.data && allDocsRes.data.length > 0) ? allDocsRes.data : (DEMO_DOCUMENTS as unknown as LegalDocument[]);
-    // Build RAG System Instruction
+    let allDocs: LegalDocument[] = allDocsRes.data || [];
+    if (allDocs.length === 0 && isEmbeddedDataPermitted()) {
+      allDocs = DEMO_DOCUMENTS as unknown as LegalDocument[];
+    }
     const systemInstruction = `Bạn là Trợ lý Pháp lý & Thuế Kế toán AI cao cấp của LegalBook.
 Nhiệm vụ của bạn:
 1. Trả lời câu hỏi nghiệp vụ một cách chính xác, trung thực, mạch lạc, dễ hiểu cho kế toán, kiểm toán và chuyên viên pháp chế.
