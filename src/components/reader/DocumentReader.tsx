@@ -637,13 +637,10 @@ export function DocumentReader({
 
   // ── Scroll utilities ───────────────────────────────────────────────────
 
-  const [isScrolledHeader, setIsScrolledHeader] = useState(false);
-
   const handleScroll = () => {
     if (viewportRef.current) {
       const top = viewportRef.current.scrollTop;
       setShowBackToTop(top > 300);
-      setIsScrolledHeader(top > 120);
     }
   };
   const scrollToTop = () => viewportRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1265,11 +1262,6 @@ export function DocumentReader({
           ================================================================ */}
       <div className="sticky top-0 z-20 w-full px-2.5 sm:px-4 md:px-5 border-b border-slate-200 bg-white flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs overflow-x-auto no-scrollbar min-w-0">
         <div className="flex items-center gap-1 sm:gap-1.5 py-1 shrink-0">
-          {isScrolledHeader && doc.document_number && (
-            <span className="font-mono text-xs font-bold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/80 shrink-0 hidden sm:inline-block animate-in fade-in duration-150">
-              {doc.document_number}
-            </span>
-          )}
           {(
             [
               { id: 'noidung', label: 'Nội dung' },

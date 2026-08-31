@@ -244,15 +244,25 @@ export function detectLegalDocumentMetadata(
   let docTypeLabel = 'Công văn';
   let typeShort = 'CV';
 
-  if (/^(Luật|Bộ luật)/im.test(first2500Chars) || /\b(Luật|Bo luat)\b/i.test(originalFileName)) {
+  const fnLower = (originalFileName || '').toLowerCase();
+
+  if (
+    /^(Luật|Bộ luật)/im.test(first2500Chars) ||
+    /\b(Luật|Bo luat|luat)\b/i.test(originalFileName) ||
+    fnLower.includes('luat-') ||
+    fnLower.includes('luat_') ||
+    fnLower.includes('qh15') ||
+    fnLower.includes('qh14') ||
+    fnLower.includes('qh16')
+  ) {
     docType = 'luat';
     docTypeLabel = 'Luật';
     typeShort = 'Luat';
-  } else if (/^Nghị quyết/im.test(first2500Chars) || /\b(Nghị quyết|NQ)\b/i.test(originalFileName)) {
-    docType = 'luat';
+  } else if (/^Nghị quyết/im.test(first2500Chars) || /\b(Nghị quyết|NQ)\b/i.test(originalFileName) || fnLower.includes('nghi-quyet') || fnLower.includes('nq-')) {
+    docType = 'nghi_quyet';
     docTypeLabel = 'Nghị quyết';
     typeShort = 'NQ';
-  } else if (/^Nghị định/im.test(first2500Chars) || /\b(Nghị định|Nghị Định|ND|NĐ)\b/i.test(originalFileName)) {
+  } else if (/^Nghị định/im.test(first2500Chars) || /\b(Nghị định|Nghị Định|ND|NĐ)\b/i.test(originalFileName) || fnLower.includes('nghi-dinh') || fnLower.includes('nd-cp') || fnLower.includes('ndcp')) {
     if (/^Công văn|Kính gửi/im.test(first2500Chars) && !/^Nghị định/im.test(first2500Chars)) {
       docType = 'cong_van';
       docTypeLabel = 'Công văn';
@@ -262,7 +272,7 @@ export function detectLegalDocumentMetadata(
       docTypeLabel = 'Nghị định';
       typeShort = 'ND';
     }
-  } else if (/^Thông tư/im.test(first2500Chars) || (first2500Chars.includes('THÔNG TƯ') && !first2500Chars.includes('Kính gửi:')) || originalFileName.toLowerCase().startsWith('tt')) {
+  } else if (/^Thông tư/im.test(first2500Chars) || (first2500Chars.includes('THÔNG TƯ') && !first2500Chars.includes('Kính gửi:')) || fnLower.startsWith('tt') || fnLower.includes('thong-tu')) {
     if (/^Công văn|Kính gửi/im.test(first2500Chars) && !/^Thông tư/im.test(first2500Chars)) {
       docType = 'cong_van';
       docTypeLabel = 'Công văn';
@@ -272,28 +282,27 @@ export function detectLegalDocumentMetadata(
       docTypeLabel = 'Thông tư';
       typeShort = 'TT';
     }
-  } else if (/^Quyết định/im.test(first2500Chars) || originalFileName.toLowerCase().startsWith('qd') || originalFileName.toLowerCase().startsWith('qđ')) {
+  } else if (/Văn bản hợp nhất/i.test(first2500Chars) || /VBHN/i.test(originalFileName) || fnLower.includes('vbhn') || fnLower.includes('hop-nhat')) {
+    docType = 'vbhn';
+    docTypeLabel = 'Văn bản hợp nhất';
+    typeShort = 'VBHN';
+  } else if (/^Quyết định/im.test(first2500Chars) || fnLower.startsWith('qd') || fnLower.startsWith('qđ') || fnLower.includes('quyet-dinh')) {
     docType = 'quyet_dinh';
     docTypeLabel = 'Quyết định';
     typeShort = 'QD';
-  } else if (/Văn bản hợp nhất/i.test(first2500Chars) || /VBHN/i.test(originalFileName)) {
-    docType = 'khac';
-    docTypeLabel = 'Văn bản hợp nhất';
-    typeShort = 'VBHN';
-  } else if (/^Chỉ thị/im.test(first2500Chars) || originalFileName.toLowerCase().startsWith('ct')) {
+  } else if (/^Chỉ thị/im.test(first2500Chars) || fnLower.startsWith('ct') || fnLower.includes('chi-thi')) {
     docType = 'khac';
     docTypeLabel = 'Chỉ thị';
     typeShort = 'CT';
-  } else if (/^Thông báo/im.test(first2500Chars) || originalFileName.toLowerCase().startsWith('tb')) {
+  } else if (/^Thông báo/im.test(first2500Chars) || fnLower.startsWith('tb') || fnLower.includes('thong-bao')) {
     docType = 'khac';
     docTypeLabel = 'Thông báo';
     typeShort = 'TB';
-  } else if (/^Hướng dẫn/im.test(first2500Chars) || originalFileName.toLowerCase().startsWith('hd')) {
+  } else if (/^Hướng dẫn/im.test(first2500Chars) || fnLower.startsWith('hd') || fnLower.includes('huong-dan')) {
     docType = 'huong_dan';
     docTypeLabel = 'Hướng dẫn';
     typeShort = 'HD';
   }
-
   // 2. Extract Document Number (Số hiệu)
   let docNumber: string | null = null;
   let hasOfficialSymbol = false;
@@ -305,11 +314,30 @@ export function detectLegalDocumentMetadata(
     docNumber = numberMatch[1].trim();
     hasOfficialSymbol = docNumber.includes('/');
   } else {
-    const fnMatch = originalFileName.match(/(?:CV|TT|ND|NĐ|QD|QĐ|Luật|NQ|VBHN)\s*([0-9]{4}\s*-\s*[0-9]+|[0-9]+(?:\.[0-9]+)?(?:\/[A-Z0-9\-_]+)?)/i);
-    if (fnMatch) {
-      const rawFnNum = fnMatch[1].replace(/\s*-\s*/g, '/').replace(/\s+/g, '');
-      docNumber = rawFnNum;
-      warnings.push('Số hiệu được trích xuất từ tên tệp, chưa có ký hiệu chính thức đầy đủ từ nội dung.');
+    // Advanced regex extraction from filenames (e.g. Luat-Thue-gia-tri-gia-tang-2024-so-48-2024-QH15, 253-2026-ND-CP)
+    const fnSoMatch = originalFileName.match(/(?:so|số|so-|số-)?([0-9]+)[-_](20[1-3][0-9]|VBHN)[-_]([A-Za-z0-9\-_đĐ]+)/i);
+    const fnDirectMatch = originalFileName.match(/([0-9]+(?:\.[0-9]+)?)\s*[-_./]\s*(20[1-3][0-9])\s*[-_./]\s*([A-Za-z0-9\-_đĐ]+)/i);
+    const fnVbhnMatch = originalFileName.match(/([0-9]+)[-_./](VBHN)[-_./]([A-Za-z0-9\-_đĐ]+)/i);
+
+    if (fnSoMatch) {
+      const numPart = fnSoMatch[1];
+      const midPart = fnSoMatch[2];
+      const suffixPart = fnSoMatch[3].replace(/[-_]/g, '/').toUpperCase();
+      docNumber = `${numPart}/${midPart}/${suffixPart}`.replace(/ND\/CP/i, 'NĐ-CP').replace(/NĐ\/CP/i, 'NĐ-CP');
+      hasOfficialSymbol = true;
+    } else if (fnVbhnMatch) {
+      docNumber = `${fnVbhnMatch[1]}/VBHN-${fnVbhnMatch[3].toUpperCase()}`;
+      hasOfficialSymbol = true;
+    } else if (fnDirectMatch) {
+      docNumber = `${fnDirectMatch[1]}/${fnDirectMatch[2]}/${fnDirectMatch[3].toUpperCase()}`.replace(/ND\/CP/i, 'NĐ-CP').replace(/NĐ\/CP/i, 'NĐ-CP');
+      hasOfficialSymbol = true;
+    } else {
+      const fnMatch = originalFileName.match(/(?:CV|TT|ND|NĐ|QD|QĐ|Luật|NQ|VBHN)\s*([0-9]{4}\s*-\s*[0-9]+|[0-9]+(?:\.[0-9]+)?(?:\/[A-Z0-9\-_]+)?)/i);
+      if (fnMatch) {
+        const rawFnNum = fnMatch[1].replace(/\s*-\s*/g, '/').replace(/\s+/g, '');
+        docNumber = rawFnNum;
+        warnings.push('Số hiệu được trích xuất từ tên tệp.');
+      }
     }
   }
 
