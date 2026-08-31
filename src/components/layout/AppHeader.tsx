@@ -101,20 +101,19 @@ export function AppHeader({
       {/* Center: Global Search Bar */}
       <div className="flex-1 max-w-xl mx-auto px-2">
         <button
-          className="w-full flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded text-xs border border-slate-200 transition-colors text-left group"
+          className="w-full flex items-center gap-2.5 px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100/80 text-slate-500 hover:text-slate-800 rounded-lg text-xs border border-slate-200/90 transition-all text-left group shadow-2xs hover:border-slate-300"
           onClick={onSearchClick}
-          title="Tìm kiếm văn bản (Ctrl+K)"
+          title="Tìm kiếm văn bản (Ctrl+K hoặc ⌘K)"
         >
-          <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-700 transition-colors shrink-0" />
-          <span className="flex-1 truncate text-slate-500">
+          <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors shrink-0" />
+          <span className="flex-1 truncate text-slate-500 group-hover:text-slate-700">
             Tìm số hiệu, tên luật, nghị định, thông tư...
           </span>
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.2 bg-white border border-slate-200 rounded text-[10px] font-mono text-slate-400">
-            Ctrl K
+          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-slate-200 rounded text-[10.5px] font-mono text-slate-500 shadow-2xs group-hover:border-slate-300">
+            <span className="text-[11px]">⌘</span>K
           </kbd>
         </button>
       </div>
-
       {/* Right Actions */}
       <div className="flex items-center gap-2 ml-auto shrink-0">
         {/* NotebookLM Assistant */}

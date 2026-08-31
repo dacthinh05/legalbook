@@ -476,12 +476,12 @@ export function SearchModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Tìm kiếm toàn hệ thống LegalBook"
-      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-0 sm:p-4 md:p-6 animate-in fade-in duration-150"
+      aria-label="Tìm kiếm nhanh Spotlight LegalBook"
+      className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-start justify-center pt-[6vh] sm:pt-[11vh] p-3 sm:p-4 animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-none sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 w-full sm:w-[min(1040px,calc(100vw-64px))] h-full sm:h-auto sm:max-h-[min(820px,calc(100vh-64px))] overflow-hidden flex flex-col focus:outline-none"
+        className="bg-white/98 backdrop-blur-2xl rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.35)] border border-slate-200/90 ring-1 ring-black/[0.05] w-full sm:w-[min(960px,calc(100vw-32px))] h-[86vh] sm:h-auto sm:max-h-[min(780px,80vh)] overflow-hidden flex flex-col focus:outline-none transition-all"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
@@ -544,15 +544,20 @@ export function SearchModal({
             </button>
           )}
 
-          {/* Close / ESC Button */}
-          <button
-            onClick={onClose}
-            className="hidden sm:inline-flex items-center px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded text-xs font-mono font-medium text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-            aria-label="Đóng hộp tìm kiếm"
-            title="Đóng (Esc)"
-          >
-            Esc
-          </button>
+          {/* Spotlight Shortcut Badges */}
+          <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+            <kbd className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 border border-slate-200/80 rounded-md text-[11px] font-mono text-slate-500 shadow-2xs">
+              <span className="text-[11.5px]">⌘</span>K
+            </kbd>
+            <button
+              onClick={onClose}
+              className="inline-flex items-center px-2 py-0.5 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 rounded-md text-[11px] font-mono text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+              aria-label="Đóng tìm kiếm"
+              title="Đóng (Esc)"
+            >
+              esc
+            </button>
+          </div>
           <button
             onClick={onClose}
             className="sm:hidden px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 active:bg-slate-200 rounded-md transition-colors min-h-[44px] flex items-center cursor-pointer"
@@ -913,32 +918,34 @@ export function SearchModal({
         {/* ============================================================
             4. FIXED COMPACT FOOTER (Height 40px)
             ============================================================ */}
-        <div className="h-10 px-4 sm:px-6 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500 shrink-0 select-none">
-          <div className="hidden sm:flex items-center gap-3 text-[11.5px]">
-            <span>
-              <kbd className="px-1.5 py-0.2 bg-white border border-slate-200 rounded font-mono text-[10px]">↑↓</kbd> chọn
+        <div className="h-10 px-4 sm:px-6 border-t border-slate-200/80 bg-slate-50/90 flex items-center justify-between text-xs text-slate-500 shrink-0 select-none backdrop-blur-xs">
+          <div className="hidden sm:flex items-center gap-3.5 text-[11.5px]">
+            <span className="flex items-center gap-1 text-slate-600">
+              <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono shadow-2xs">↑↓</kbd> Di chuyển
             </span>
-            <span>·</span>
-            <span>
-              <kbd className="px-1.5 py-0.2 bg-white border border-slate-200 rounded font-mono text-[10px]">Enter</kbd> mở
+            <span className="text-slate-300">·</span>
+            <span className="flex items-center gap-1 text-slate-600">
+              <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono shadow-2xs">↵</kbd> Mở văn bản
             </span>
-            <span>·</span>
-            <span>
-              <kbd className="px-1.5 py-0.2 bg-white border border-slate-200 rounded font-mono text-[10px]">Ctrl+Enter</kbd> mở tab mới
+            <span className="text-slate-300">·</span>
+            <span className="flex items-center gap-1 text-slate-600">
+              <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono shadow-2xs">Ctrl+↵</kbd> Tab mới
             </span>
-            <span>·</span>
-            <span>
-              <kbd className="px-1.5 py-0.2 bg-white border border-slate-200 rounded font-mono text-[10px]">Esc</kbd> đóng
+            <span className="text-slate-300">·</span>
+            <span className="flex items-center gap-1 text-slate-600">
+              <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono shadow-2xs">esc</kbd> Thoát
             </span>
           </div>
 
-          <div className="text-[11.5px] font-medium ml-auto">
+          <div className="text-[11.5px] font-medium ml-auto flex items-center gap-2">
             {effectiveQuery ? (
-              <span>
-                Đã tìm thấy <strong className="text-slate-900 font-bold">{results.length}</strong> kết quả
+              <span className="text-slate-600">
+                Tìm thấy <strong className="text-blue-700 font-bold">{results.length}</strong> kết quả
               </span>
             ) : (
-              <span>LegalBook Search Engine V2</span>
+              <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1">
+                <Search className="w-3 h-3 text-slate-400" /> Spotlight Search
+              </span>
             )}
           </div>
         </div>

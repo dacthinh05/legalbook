@@ -121,9 +121,13 @@ export default function MainPage() {
           target.tagName === 'SELECT' ||
           target.isContentEditable);
 
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      // Spotlight search shortcut: Ctrl+K / Cmd+K or slash (/)
+      if (
+        ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) ||
+        (!isInput && e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey)
+      ) {
         e.preventDefault();
-        setSearchOpen(true);
+        setSearchOpen((prev) => !prev);
         return;
       }
 

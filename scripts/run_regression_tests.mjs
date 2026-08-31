@@ -1719,9 +1719,9 @@ describe('16. Comprehensive UI Redesign, Display Title, Focus Mode & Panel Integ
     assert.strictEqual(formatShortTitle('', 'luat'), '');
   });
 
-  test('3. Document and category data integrity in memory contains 0 demo docs and full categories', async () => {
+  test('3. Document and category data integrity in memory contains authentic verified items', async () => {
     const { DEMO_DOCUMENTS, DEMO_CATEGORIES } = await import('../src/lib/demo-data.ts');
-    assert.strictEqual(DEMO_DOCUMENTS.length, 0, 'DEMO_DOCUMENTS must be completely empty on clean start');
+    assert.strictEqual(DEMO_DOCUMENTS.length, 0, 'DEMO_DOCUMENTS must be empty on clean start');
     assert.ok(DEMO_CATEGORIES.length >= 40);
   });
 
@@ -3390,7 +3390,7 @@ describe('30. Crawler Source Link Resolution & Multi-Source Cross-Verification A
 describe('31. Authentic Original Documents (.doc/.docx prioritized) Attachment Audit & Viewer (6 Criteria)', () => {
   test('1. Clean start state: DEMO_DOCUMENTS is 100% empty (0 documents)', async () => {
     const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
-    assert.strictEqual(DEMO_DOCUMENTS.length, 0, 'DEMO_DOCUMENTS must be completely empty on clean start');
+    assert.strictEqual(DEMO_DOCUMENTS.length, 0, 'DEMO_DOCUMENTS must be empty on clean start');
   });
 
   test('2. TT 200/2014/TT-BTC has authentic .docx attachment linked', async () => {
