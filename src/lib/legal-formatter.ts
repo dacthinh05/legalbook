@@ -56,6 +56,9 @@ export function formatLegalHtmlContent(htmlContent: string | null | undefined, d
 
   html = formatDocumentTitleBlock(html, doc);
 
+  // 4.5. Format Official Dispatch Elements (V/v, Kính gửi, Nơi nhận & Chữ ký chuẩn Nghị định 30)
+  html = formatOfficialDispatchElements(html);
+
   // 5. Format Legal Basis Block (Căn cứ pháp lý)
   html = formatLegalBasisBlock(html);
 
@@ -347,6 +350,111 @@ function wrapTablesAndSignatures(html: string): string {
   );
 
   return result;
+}
+/**
+ * Formats specific elements of official dispatches (Công văn):
+ * - "V/v:" subject line
+ * - "Kính gửi:" recipient salutation
+ * - "Nơi nhận:" and 2-column signature block (Decree 30/2020/NĐ-CP)
+ */
+function formatOfficialDispatchElements(html: string): string {
+  let res = html;
+
+  // 1. Format Official Dispatch Heading: <p><strong>CÔNG VĂN</strong><br/><strong>Về việc...</strong></p>
+  const dispatchTitleRegex = /<p[^>]*>\s*(?:<strong>|<b>)?\s*CÔNG\s+VĂN\s*(?:<\/strong>|<\/b>)?\s*<br\s*\/?>\s*(?:<strong>|<b>)?\s*([\s\S]*?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>/i;
+  res = res.replace(dispatchTitleRegex, (_m, subjectText) => {
+    const cleanSubject = subjectText
+      .replace(/<\/?(?:strong|b|em|i)[^>]*>/gi, '')
+      .replace(/^(?:Về\s+việc|V\/v:?|Về\s+)\s*:?\s*/i, '')
+      .trim();
+    return `
+<div class="legal-doc-title-block dispatch-title-block">
+  <p class="dispatch-label font-bold text-slate-700 text-xs tracking-wider uppercase mb-1">CÔNG VĂN</p>
+  <h1 class="legal-doc-title text-base sm:text-lg font-bold text-slate-900 leading-snug">V/v: ${cleanSubject}</h1>
+</div>`;
+  });
+
+  // 1.1 Format standalone "V/v:" or "Về việc:" subject line
+  res = res.replace(
+    /<p([^>]*)>\s*(?:<strong>|<b>)?\s*(V\/v:|Về việc:)\s*([\s\S]*?)(?:<\/strong>|<\/b>)?\s*<\/p>/gi,
+    (_m, _attr, prefix, content) => {
+      const cleanContent = content.replace(/<\/?(?:strong|b|em|i)[^>]*>/gi, '').trim();
+      return `<p class="dispatch-subject"><strong>${prefix}</strong> ${cleanContent}</p>`;
+    }
+  );
+
+  // 2. Format "Kính gửi:" recipient block
+  res = res.replace(
+    /<p([^>]*)>\s*(?:<strong>|<b>)?\s*(Kính\s+gửi:?)\s*(?:<\/strong>|<\/b>)?\s*([\s\S]*?)<\/p>/gi,
+    (_m, _attr, prefix, content) => {
+      const cleanContent = content.trim();
+      return `<p class="dispatch-recipient"><strong>${prefix.endsWith(':') ? prefix : prefix + ':'}</strong> ${cleanContent}</p>`;
+    }
+  );
+  // 3. Format 2-Column Administrative Footer (Nơi nhận & Chữ ký)
+  const footerTableRegex = /<table[^>]*>[\s\S]*?Nơi\s+nhận[\s\S]*?(?:KT\.|TL\.|TM\.|TỔNG\s+CỤC\s+TRƯỞNG|CỤC\s+TRƯỞNG|GIÁM\s+ĐỐC|BỘ\s+TRƯỞNG|THỦ\s+TRƯỞNG)[\s\S]*?<\/table>/gi;
+  res = res.replace(footerTableRegex, (match) => {
+    // Extract recipients from left td
+    const leftCellMatch = match.match(/<td[^>]*>([\s\S]*?)<\/td>/i);
+    const leftContent = leftCellMatch ? leftCellMatch[1] : '';
+
+    // Extract signature from right td
+    const rightCellMatches = [...match.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    const rightContent = rightCellMatches.length > 1 ? rightCellMatches[1][1] : '';
+
+    // Parse recipient lines
+    const recipientLines = leftContent
+      .replace(/<p[^>]*>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0 && !l.toLowerCase().includes('nơi nhận'));
+
+    // Parse signature lines
+    const signatureLines = rightContent
+      .replace(/<p[^>]*>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+
+    const positionLines = signatureLines.filter(
+      (l) =>
+        l.startsWith('KT.') ||
+        l.startsWith('TL.') ||
+        l.startsWith('TM.') ||
+        l.includes('TỔNG CỤC TRƯỞNG') ||
+        l.includes('PHÓ TỔNG CỤC TRƯỞNG') ||
+        l.includes('CỤC TRƯỞNG') ||
+        l.includes('PHÓ CỤC TRƯỞNG') ||
+        l.includes('GIÁM ĐỐC') ||
+        l.includes('THỦ TRƯỞNG')
+    );
+
+    const signerName = signatureLines.length > 0 ? signatureLines[signatureLines.length - 1] : '';
+    const hasSigned = rightContent.toLowerCase().includes('đã ký');
+
+    return `
+<div class="dispatch-footer-grid" role="region" aria-label="Nơi nhận và Chữ ký">
+  <div class="dispatch-recipients-box">
+    <p class="dispatch-recipients-title"><em><strong>Nơi nhận:</strong></em></p>
+    <ul class="dispatch-recipients-list">
+      ${recipientLines.map((line) => `<li>${line.startsWith('-') ? line : '- ' + line}</li>`).join('\n      ')}
+    </ul>
+  </div>
+  <div class="dispatch-signature-box">
+    <p class="signature-position"><strong>${positionLines.join('<br/>') || 'KT. THỦ TRƯỞNG CƠ QUAN'}</strong></p>
+    ${hasSigned ? '<p class="signature-signed"><em>(Đã ký điện tử)</em></p>' : '<p class="signature-signed" style="height: 36px;"></p>'}
+    <p class="signature-name"><strong>${signerName && !positionLines.includes(signerName) ? signerName : ''}</strong></p>
+  </div>
+</div>`;
+  });
+
+  return res;
 }
 
 function extractAgencyFromHtml(html: string): string | null {

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, Send, Link2, Loader2 } from 'lucide-react';
+import { X, Upload, Link2, FileText, CheckCircle2 } from 'lucide-react';
 import type { LegalDocument } from '@/types';
+import { reconstructStructuredLegalHtml } from '@/lib/document-import/auto-ocr-service';
 
 interface AddOfficialDispatchModalProps {
   isOpen: boolean;
@@ -63,27 +64,52 @@ export function AddOfficialDispatchModal({
     e.preventDefault();
     if (!docNumber.trim() || !title.trim()) return;
 
+    const dispatchId = `doc-cv-${Date.now()}`;
+    const cleanTitle = title.trim();
+    const cleanDocNum = docNumber.trim();
+    const cleanIssuingBody = issuingBody.trim();
+    const cleanSigner = signer.trim() || 'THỦ TRƯỞNG ĐƠN VỊ';
+    const cleanSummary = summary.trim() || cleanTitle;
+
+    const effectiveHtml = htmlContent
+      ? htmlContent.trim()
+      : reconstructStructuredLegalHtml({
+          id: dispatchId,
+          title: cleanTitle,
+          document_number: cleanDocNum,
+          document_type: 'cong_van',
+          issuing_body: cleanIssuingBody,
+          signer: cleanSigner,
+          issued_date: issuedDate,
+          effective_date: null,
+          status: 'hieu_luc',
+          summary_main: cleanSummary,
+          summary_new_points: cleanSummary,
+          summary_affected_parties: 'Doanh nghiệp và tổ chức có tình huống tương tự.',
+          summary_accounting_impact: 'Hạch toán theo hướng dẫn cụ thể của công văn.',
+          html_content: '',
+        } as unknown as LegalDocument);
+
     const newDispatch: Partial<LegalDocument> = {
-      id: `doc-cv-${Date.now()}`,
-      title: title.trim(),
-      document_number: docNumber.trim(),
+      id: dispatchId,
+      title: cleanTitle,
+      document_number: cleanDocNum,
       document_type: 'cong_van',
-      issuing_body: issuingBody.trim(),
-      signer: signer.trim() || null,
+      issuing_body: cleanIssuingBody,
+      signer: cleanSigner,
       issued_date: issuedDate,
-      effective_date: issuedDate,
+      effective_date: null,
       status: 'hieu_luc',
-      summary_main: summary.trim() || title.trim(),
-      summary_new_points: 'Hướng dẫn giải quyết trường hợp cụ thể phát sinh trong thực tế.',
+      summary_main: cleanSummary,
+      summary_new_points: cleanSummary,
       summary_affected_parties: 'Doanh nghiệp và tổ chức có tình huống tương tự.',
       summary_accounting_impact: 'Hạch toán theo hướng dẫn cụ thể của công văn.',
       summary_is_ai_generated: true,
-      html_content: htmlContent ? htmlContent.trim() : null,
+      html_content: effectiveHtml,
       is_published: true,
       review_status: 'published',
       files: file
         ? [
-            {
               id: `file-${Date.now()}`,
               document_id: `doc-cv-${Date.now()}`,
               file_type: file.name.endsWith('.pdf') ? 'pdf' : 'docx',

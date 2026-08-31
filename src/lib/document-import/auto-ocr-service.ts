@@ -52,15 +52,48 @@ export function reconstructStructuredLegalHtml(doc: LegalDocument): string {
         ];
 
     const mainOverview = doc.summary_main || 'Căn cứ các quy định pháp luật hiện hành và văn bản hướng dẫn chuyên ngành, cơ quan ban hành hướng dẫn thực hiện như sau:';
+    const subjectClean = title.replace(/^Công văn\s+(?:số\s+)?[\d\/\w\-]+\s+về việc\s*/i, '').replace(/^Công văn\s+về việc\s*/i, '').replace(/^Về việc\s*/i, '').trim();
 
     return `<div class="document-full-body">
-<table><tr><td><p><strong>${issuingBody}</strong><br />_______<br />Số: ${docNumber}</p></td><td><p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>${placeName}, ngày ${issuedDateFormatted}</em></p></td></tr></table>
-<p><strong>CÔNG VĂN</strong><br /><strong>${title.replace(/^Công văn\s+[\d\/\w\-]+\s+về việc\s*/i, 'Về việc ').replace(/^Công văn\s+về việc\s*/i, 'Về việc ')}</strong></p>
-<p><strong>Kính gửi:</strong> Các cơ quan, tổ chức, doanh nghiệp và người nộp thuế có liên quan</p>
+<div class="document-letterhead" role="region" aria-label="Đầu văn bản hành chính">
+  <section class="letterhead-left">
+    <p class="letterhead-agency">${issuingBody}</p>
+    <div class="letterhead-rule letterhead-rule-agency" aria-hidden="true"></div>
+    <p class="letterhead-number">Số: ${docNumber}</p>
+  </section>
+  <section class="letterhead-right">
+    <p class="letterhead-motto-country">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+    <p class="letterhead-motto-slogan">Độc lập - Tự do - Hạnh phúc</p>
+    <div class="letterhead-rule letterhead-rule-motto" aria-hidden="true"></div>
+    <p class="letterhead-date">${placeName}, ngày ${issuedDateFormatted}</p>
+  </section>
+</div>
+
+<p class="dispatch-subject"><strong>V/v:</strong> ${subjectClean}</p>
+<p class="dispatch-recipient"><strong>Kính gửi:</strong> Các cơ quan, tổ chức, doanh nghiệp và người nộp thuế có liên quan</p>
+
 <p>${mainOverview}</p>
-${summaryPoints.map((point, idx) => `<p>${idx + 1}. ${point}</p>`).join('\n')}
+
+${summaryPoints.map((point, idx) => `<p><strong>${idx + 1}.</strong> ${point}</p>`).join('\n\n')}
+
 <p>${issuingBody} thông báo để Quý cơ quan, đơn vị biết và thực hiện theo đúng quy định pháp luật./.</p>
-<table><tr><td><p><strong><em>Nơi nhận:</em></strong><br />- Như trên;<br />- Lãnh đạo cơ quan (để b/c);<br />- Các phòng ban nghiệp vụ;<br />- Lưu: VT, Văn thư.</p></td><td><p><strong>KT. THỦ TRƯỞNG CƠ QUAN<br />PHÓ THỦ TRƯỞNG</strong><br /><em>(Đã ký điện tử)</em><br /><br /><strong>${signer}</strong></p></td></tr></table>
+
+<div class="dispatch-footer-grid" role="region" aria-label="Nơi nhận và Chữ ký">
+  <div class="dispatch-recipients-box">
+    <p class="dispatch-recipients-title"><em><strong>Nơi nhận:</strong></em></p>
+    <ul class="dispatch-recipients-list">
+      <li>- Như trên;</li>
+      <li>- Lãnh đạo ${issuingBody} (để b/c);</li>
+      <li>- Các phòng ban nghiệp vụ;</li>
+      <li>- Lưu: VT, Văn thư.</li>
+    </ul>
+  </div>
+  <div class="dispatch-signature-box">
+    <p class="signature-position"><strong>KT. THỦ TRƯỞNG CƠ QUAN<br />PHÓ THỦ TRƯỞNG</strong></p>
+    <p class="signature-signed"><em>(Đã ký điện tử)</em></p>
+    <p class="signature-name"><strong>${signer}</strong></p>
+  </div>
+</div>
 </div>`;
   }
 
