@@ -20,6 +20,7 @@ import {
   FileText,
   Filter,
 } from 'lucide-react';
+import { TaxStatisticsDashboard } from '../dashboard/TaxStatisticsDashboard';
 interface LegalUpdatesFeedProps {
   allDocuments: LegalDocument[];
   categoryDocuments: LegalDocument[];
@@ -311,7 +312,16 @@ export function LegalUpdatesFeed({
             ))}
           </div>
         </div>
-        {/* ── 2. Unified Filter Tabs (Height 38px, Single Count per tab) ── */}
+
+        {/* ── 2. Real-Time Tax-by-Tax Analytics & Update Dashboard ── */}
+        {!activeCategory && !activeDocType && (
+          <TaxStatisticsDashboard
+            allDocuments={allDocuments}
+            onSelectDoc={onSelectDocument}
+          />
+        )}
+
+        {/* ── 3. Unified Filter Tabs (Height 38px, Single Count per tab) ── */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[12px]">
           <button
             type="button"
