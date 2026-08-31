@@ -15,11 +15,12 @@ import { Packer, Document, Paragraph, TextRun, Table, TableRow, TableCell, Width
 const DEMO_DATA_PATH = path.resolve('src/lib/demo-data.ts');
 const DEMO_EFFECTS_PATH = path.resolve('src/lib/legal-effects/demo-effects.ts');
 const DOCS_DIR = path.resolve('public/documents');
+const ORIGINAL_CATS_PATH = path.resolve('scripts/original_categories.json');
+const originalCategories = JSON.parse(fs.readFileSync(ORIGINAL_CATS_PATH, 'utf8'));
 
 if (!fs.existsSync(DOCS_DIR)) {
   fs.mkdirSync(DOCS_DIR, { recursive: true });
 }
-
 // 1. Read existing demo-data.ts to preserve authentic large documents
 const currentContent = fs.readFileSync(DEMO_DATA_PATH, 'utf8');
 const match = currentContent.match(/export const DEMO_DOCUMENTS: LegalDocument\[\] = (\[[\s\S]*?\]);\n\nexport/);
@@ -1027,6 +1028,69 @@ const updatedLegalEffects = [
     reviewStatus: "verified",
     confidence: 0.99
   },
+  // 2. Nghị định 158/2025 hướng dẫn Luật BHXH 41/2024/QH15 (Khoản 1 & Điểm d Điều 2)
+  {
+    id: "eff-nd158-bhxh-k1",
+    category: "substantive_change",
+    effectType: "guides",
+    sourceDocumentId: "doc-nd-158-2025-nd-cp",
+    sourceDocumentNumber: "158/2025/NĐ-CP",
+    sourceDocumentTitle: "Nghị định 158/2025/NĐ-CP quy định chi tiết và hướng dẫn thi hành một số điều của Luật BHXH",
+    targetDocumentId: "doc-luat-41-2024-qh15",
+    targetDocumentNumber: "41/2024/QH15",
+    targetProvisionId: "dieu-2",
+    targetProvisionLabel: "Điều 2. Đối tượng tham gia bảo hiểm xã hội bắt buộc và tự nguyện",
+    clauseLabel: "Khoản 1",
+    effectiveFrom: "2025-07-01",
+    effectiveTo: null,
+    impactScope: "whole_provision",
+    legalCitation: "Khoản 1 Điều 2 Luật Bảo hiểm xã hội số 41/2024/QH15",
+    sourceProvisionCitation: "Điều 3 Nghị định số 158/2025/NĐ-CP",
+    sourceExcerpt: "Quy định chi tiết đối tượng tham gia bảo hiểm xã hội bắt buộc.",
+    explanationSummary: "Khoản 1 Điều này được hướng dẫn chi tiết bởi Nghị định 158/2025/NĐ-CP quy định về đối tượng tham gia BHXH.",
+    sourceUrl: "https://thuvienphapluat.vn/van-ban/Bao-hiem/Luat-Bao-hiem-xa-hoi-2024-41-2024-QH15.aspx",
+    anchor: {
+      id: "anc-nd158-bhxh-k1",
+      legalEffectId: "eff-nd158-bhxh-k1",
+      targetProvisionId: "dieu-2",
+      exactText: "1. Người lao động là công dân Việt Nam thuộc đối tượng tham gia bảo hiểm xã hội bắt buộc",
+      contentHash: "h_nd158_bhxh_k1",
+      resolutionStatus: "resolved"
+    },
+    reviewStatus: "verified",
+    confidence: 0.99
+  },
+  {
+    id: "eff-nd158-bhxh-d1",
+    category: "substantive_change",
+    effectType: "guides",
+    sourceDocumentId: "doc-nd-158-2025-nd-cp",
+    sourceDocumentNumber: "158/2025/NĐ-CP",
+    sourceDocumentTitle: "Nghị định 158/2025/NĐ-CP quy định chi tiết và hướng dẫn thi hành một số điều của Luật BHXH",
+    targetDocumentId: "doc-luat-41-2024-qh15",
+    targetDocumentNumber: "41/2024/QH15",
+    targetProvisionLabel: "Điều 2. Đối tượng tham gia bảo hiểm xã hội bắt buộc và tự nguyện",
+    clauseLabel: "Khoản 1",
+    pointLabel: "Điểm d",
+    effectiveFrom: "2025-07-01",
+    effectiveTo: null,
+    impactScope: "whole_provision",
+    legalCitation: "Điểm d Khoản 1 Điều 2 Luật Bảo hiểm xã hội số 41/2024/QH15",
+    sourceProvisionCitation: "Khoản 2 Điều 4 Nghị định số 158/2025/NĐ-CP",
+    sourceExcerpt: "Quy định đối với người làm việc theo hợp đồng lao động không trọn thời gian.",
+    explanationSummary: "Điểm d Khoản 1 Điều này được hướng dẫn chi tiết bởi Nghị định 158/2025/NĐ-CP về điều kiện tham gia BHXH.",
+    sourceUrl: "https://thuvienphapluat.vn/van-ban/Bao-hiem/Luat-Bao-hiem-xa-hoi-2024-41-2024-QH15.aspx",
+    anchor: {
+      id: "anc-nd158-bhxh-d1",
+      legalEffectId: "eff-nd158-bhxh-d1",
+      targetProvisionId: "dieu-2",
+      exactText: "d) Người làm việc không trọn thời gian",
+      contentHash: "h_nd158_bhxh_d1",
+      resolutionStatus: "resolved"
+    },
+    reviewStatus: "verified",
+    confidence: 0.99
+  },
 
   // 2. Nghị định 20/2025 sửa đổi Nghị định 132/2020 về GDLK
   {
@@ -1065,11 +1129,9 @@ const updatedLegalEffects = [
     reviewStatus: "verified",
     confidence: 0.99
   },
-
-  // 3. Thông tư 99/2025 thay thế Thông tư 200/2014 về Chế độ kế toán
   {
-    id: "eff-tt99-tt200-bchkt",
-    category: "replacement",
+    id: "eff-tt99-tt200",
+    category: "substantive_change",
     effectType: "replaces",
     sourceDocumentId: "53d8a6c0-91f3-44e9-a2fb-02197c03e814",
     sourceDocumentNumber: "99/2025/TT-BTC",
@@ -1098,13 +1160,23 @@ const updatedLegalEffects = [
       resolutionStatus: "resolved"
     },
     previousContent: "Áp dụng Chế độ kế toán doanh nghiệp theo Thông tư 200/2014/TT-BTC.",
-    replacementContent: "Áp dụng Chế độ kế toán doanh nghiệp hiện đại hóa theo Thông tư 99/2025/TT-BTC.",
     reviewStatus: "verified",
     confidence: 0.99
   }
 ];
 
-fs.writeFileSync(DEMO_EFFECTS_PATH, `import type { LegalEffect } from '@/types';\n\nexport const DEMO_LEGAL_EFFECTS: LegalEffect[] = ${JSON.stringify(updatedLegalEffects, null, 2)};\n`, 'utf8');
+const demoEffectsContent = `import type { LegalEffect } from '@/types';
+
+export const DEMO_LEGAL_EFFECTS: LegalEffect[] = ${JSON.stringify(updatedLegalEffects, null, 2)};
+
+export function getDocumentLegalEffects(docId: string): LegalEffect[] {
+  return DEMO_LEGAL_EFFECTS.filter(
+    (e) => e.targetDocumentId === docId || e.sourceDocumentId === docId
+  );
+}
+`;
+
+fs.writeFileSync(DEMO_EFFECTS_PATH, demoEffectsContent, 'utf8');
 console.log('Successfully updated demo-effects.ts with authentic verified relationships.');
 
 // Write demo-data.ts with complete data
@@ -1112,28 +1184,21 @@ const demoDataFileContent = `/**
  * demo-data.ts
  * Single source of truth for all verified legal documents, categories, and relations.
  */
-import type { LegalDocument, Category, CategoryDocumentLink, DocumentRelation } from '@/types';
+import type { LegalDocument, Category, DocumentCategoryLink, DocumentRelation } from '@/types';
 
-export const DEMO_CATEGORIES: Category[] = [
-  { id: "cat-doanh-nghiep", name: "Doanh nghiệp & Đăng ký kinh doanh", slug: "doanh-nghiep", parent_id: null, level: 1, icon: "Building2", color: "blue", display_order: 1, is_active: true, created_at: "2026-08-29T00:00:00.000Z" },
-  { id: "cat-kiem-toan", name: "Kiểm toán độc lập & VSA", slug: "kiem-toan", parent_id: null, level: 1, icon: "ShieldCheck", color: "emerald", display_order: 2, is_active: true, created_at: "2026-08-29T00:00:00.000Z" },
-  { id: "cat-ke-toan", name: "Kế toán & Báo cáo tài chính", slug: "ke-toan", parent_id: null, level: 1, icon: "BookOpen", color: "indigo", display_order: 3, is_active: true, created_at: "2026-08-29T00:00:00.000Z" },
-  { id: "cat-thue-tndn", name: "Thuế Thu nhập Doanh nghiệp", slug: "thue-tndn", parent_id: null, level: 1, icon: "Calculator", color: "amber", display_order: 4, is_active: true, created_at: "2026-08-29T00:00:00.000Z" },
-  { id: "cat-thue-gtgt", name: "Thuế Giá trị Gia tăng & Hóa đơn", slug: "thue-gtgt", parent_id: null, level: 1, icon: "Receipt", color: "purple", display_order: 5, is_active: true, created_at: "2026-08-29T00:00:00.000Z" },
-  { id: "cat-thue-tncn", name: "Thuế TNCN & Tiền lương", slug: "thue-tncn", parent_id: null, level: 1, icon: "Users", color: "rose", display_order: 6, is_active: true, created_at: "2026-08-29T00:00:00.000Z" },
-  { id: "cat-quan-ly-thue", name: "Quản lý thuế & Xử phạt VPHC", slug: "quan-ly-thue", parent_id: null, level: 1, icon: "Scale", color: "red", display_order: 7, is_active: true, created_at: "2026-08-29T00:00:00.000Z" }
-];
+export const DEMO_CATEGORIES: Category[] = ${JSON.stringify(originalCategories, null, 2)};
 
-export const DEMO_CATEGORY_LINKS: CategoryDocumentLink[] = ${JSON.stringify(
-  authenticCorpus.map((d, i) => ({
+export const DEMO_CATEGORY_LINKS: DocumentCategoryLink[] = ${JSON.stringify(
+  authenticCorpus.map((d, idx) => ({
+    id: `link-${d.id || idx}`,
     document_id: d.id,
-    category_id: d.document_type === 'cong_van' ? 'cat-quan-ly-thue'
-      : (d.title.includes('Kiểm toán') || d.title.includes('VSA')) ? 'cat-kiem-toan'
-      : (d.title.includes('Kế toán') || d.title.includes('khấu hao') || d.title.includes('dự phòng')) ? 'cat-ke-toan'
-      : (d.title.includes('doanh nghiệp') || d.title.includes('biểu mẫu') || d.title.includes('Đầu tư')) ? 'cat-doanh-nghiep'
-      : (d.title.includes('TNDN') || d.title.includes('liên kết')) ? 'cat-thue-tndn'
-      : (d.title.includes('GTGT') || d.title.includes('hóa đơn')) ? 'cat-thue-gtgt'
-      : 'cat-thue-tncn',
+    category_id: d.document_type === 'cong_van' ? '9d224384-b33d-432e-a016-c2f0a2fd8a66'
+      : (d.title.includes('Kiểm toán') || d.title.includes('VSA')) ? 'a29b6e82-e25f-4029-9e8c-5a9f24300301'
+      : (d.title.includes('Kế toán') || d.title.includes('khấu hao') || d.title.includes('dự phòng')) ? '8380fdb0-0318-42e6-aba5-263c62922d9a'
+      : (d.title.includes('doanh nghiệp') || d.title.includes('biểu mẫu') || d.title.includes('Đầu tư')) ? '33d0c530-17e1-46bb-adb3-9ff5dbaf55c8'
+      : (d.title.includes('TNDN') || d.title.includes('liên kết')) ? 'fb501a15-6742-449b-a0eb-34d445aaa745'
+      : (d.title.includes('GTGT') || d.title.includes('hóa đơn')) ? '9d224384-b33d-432e-a016-c2f0a2fd8a66'
+      : '331e58b6-5a2f-480a-a0e8-e8b6b40bb5af',
     is_primary: true
   })), null, 2
 )};
@@ -1144,28 +1209,32 @@ export const DEMO_RELATIONS: DocumentRelation[] = [
     source_document_id: "doc-tt-02-2023-bkhdt",
     target_document_id: "doc-tt-01-2021-bkhdt",
     relation_type: "sua_doi",
-    notes: "Thông tư 02/2023/TT-BKHĐT sửa đổi, bổ sung Thông tư 01/2021/TT-BKHĐT về đăng ký hộ kinh doanh điện tử"
+    notes: "Thông tư 02/2023/TT-BKHĐT sửa đổi, bổ sung Thông tư 01/2021/TT-BKHĐT về đăng ký hộ kinh doanh điện tử",
+    created_at: "2026-08-31T00:00:00.000Z"
   },
   {
     id: "rel-01-01-ndcp",
     source_document_id: "doc-tt-01-2021-bkhdt",
     target_document_id: "doc-nd-01-2021-ndcp",
     relation_type: "huong_dan",
-    notes: "Thông tư 01/2021/TT-BKHĐT hướng dẫn thi hành Nghị định 01/2021/NĐ-CP về đăng ký doanh nghiệp"
+    notes: "Thông tư 01/2021/TT-BKHĐT hướng dẫn thi hành Nghị định 01/2021/NĐ-CP về đăng ký doanh nghiệp",
+    created_at: "2026-08-31T00:00:00.000Z"
   },
   {
     id: "rel-nd20-nd132",
     source_document_id: "8ea00d09-efda-4832-aaf0-7b43e459b9c8",
     target_document_id: "27391d5a-3d79-40dd-a0bc-af04c2d8aed8",
     relation_type: "sua_doi",
-    notes: "Nghị định 20/2025/NĐ-CP sửa đổi Nghị định 132/2020/NĐ-CP về giao dịch liên kết và chi phí lãi vay"
+    notes: "Nghị định 20/2025/NĐ-CP sửa đổi Nghị định 132/2020/NĐ-CP về giao dịch liên kết và chi phí lãi vay",
+    created_at: "2026-08-31T00:00:00.000Z"
   },
   {
     id: "rel-tt99-tt200",
     source_document_id: "53d8a6c0-91f3-44e9-a2fb-02197c03e814",
     target_document_id: "doc-tt-200-2014-tt-btc",
     relation_type: "thay_the",
-    notes: "Thông tư 99/2025/TT-BTC thay thế Thông tư 200/2014/TT-BTC về Chế độ kế toán doanh nghiệp"
+    notes: "Thông tư 99/2025/TT-BTC thay thế Thông tư 200/2014/TT-BTC về Chế độ kế toán doanh nghiệp",
+    created_at: "2026-08-31T00:00:00.000Z"
   }
 ];
 
@@ -1179,21 +1248,24 @@ export function getDocumentByNumber(docNumber: string): LegalDocument | undefine
   return DEMO_DOCUMENTS.find((d) => d.document_number === docNumber);
 }
 
-export function getDocumentRelations(documentId: string): DocumentRelation[] {
-  return DEMO_RELATIONS.filter(
-    (r) => r.source_document_id === documentId || r.target_document_id === documentId
-  );
+export function getDocumentRelations(documentId: string): any {
+  const asSource = DEMO_RELATIONS.filter((r) => r.source_document_id === documentId);
+  const asTarget = DEMO_RELATIONS.filter((r) => r.target_document_id === documentId);
+  const all = [...asSource, ...asTarget];
+  (all as any).as_source = asSource;
+  (all as any).as_target = asTarget;
+  return all;
 }
 
-export function buildCategoryTree(): Category[] {
+export function buildCategoryTree(cats: Category[] = DEMO_CATEGORIES): Category[] {
   const map = new Map<string, Category & { children: Category[] }>();
   const roots: (Category & { children: Category[] })[] = [];
 
-  DEMO_CATEGORIES.forEach((cat) => {
+  cats.forEach((cat) => {
     map.set(cat.id, { ...cat, children: [] });
   });
 
-  DEMO_CATEGORIES.forEach((cat) => {
+  cats.forEach((cat) => {
     const node = map.get(cat.id)!;
     if (cat.parent_id && map.has(cat.parent_id)) {
       const parent = map.get(cat.parent_id)!;

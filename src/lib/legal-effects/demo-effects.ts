@@ -38,6 +38,7 @@ export const DEMO_LEGAL_EFFECTS: LegalEffect[] = [
     "confidence": 0.99
   },
   {
+    "id": "eff-nd158-bhxh-k1",
     "category": "substantive_change",
     "effectType": "guides",
     "sourceDocumentId": "doc-nd-158-2025-nd-cp",
@@ -68,6 +69,7 @@ export const DEMO_LEGAL_EFFECTS: LegalEffect[] = [
     "confidence": 0.99
   },
   {
+    "id": "eff-nd158-bhxh-d1",
     "category": "substantive_change",
     "effectType": "guides",
     "sourceDocumentId": "doc-nd-158-2025-nd-cp",
@@ -75,7 +77,6 @@ export const DEMO_LEGAL_EFFECTS: LegalEffect[] = [
     "sourceDocumentTitle": "Nghị định 158/2025/NĐ-CP quy định chi tiết và hướng dẫn thi hành một số điều của Luật BHXH",
     "targetDocumentId": "doc-luat-41-2024-qh15",
     "targetDocumentNumber": "41/2024/QH15",
-    "targetProvisionId": "dieu-2",
     "targetProvisionLabel": "Điều 2. Đối tượng tham gia bảo hiểm xã hội bắt buộc và tự nguyện",
     "clauseLabel": "Khoản 1",
     "pointLabel": "Điểm d",
