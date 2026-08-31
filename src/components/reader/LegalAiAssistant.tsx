@@ -77,6 +77,7 @@ export function LegalAiAssistant({
             answer: apiRes.answer,
             summaryPoints: apiRes.summaryPoints || [],
             citations: apiRes.citations || [],
+            relevantArticles: apiRes.relevantArticles || [],
             suggestedFollowUps: apiRes.suggestedFollowUps || [],
           };
           setResponse(aiResponse);

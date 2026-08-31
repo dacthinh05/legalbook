@@ -7,10 +7,10 @@
  */
 
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
+import { isEmbeddedDataPermitted } from '@/lib/data-service';
 import { formatShortTitle, formatDate } from '@/lib/utils';
 import { extractStructuredArticles } from '@/lib/diff-engine';
 import type { LegalDocument } from '@/types';
-
 export interface SummaryCitation {
   documentId: string;
   documentNumber: string;
@@ -125,7 +125,7 @@ export interface LegalDocumentSummary {
 export async function queryLegalAssistant(
   question: string,
   currentDoc?: LegalDocument | null,
-  allDocs: LegalDocument[] = DEMO_DOCUMENTS as unknown as LegalDocument[]
+  allDocs?: LegalDocument[]
 ): Promise<LegalAiResponse> {
   const cleanQ = question.trim().toLowerCase();
   if (!cleanQ) {
@@ -138,14 +138,28 @@ export async function queryLegalAssistant(
     };
   }
 
+  const permitted = isEmbeddedDataPermitted();
+  const effectiveDocs = (allDocs && allDocs.length > 0)
+    ? allDocs
+    : (permitted ? (DEMO_DOCUMENTS as unknown as LegalDocument[]) : (currentDoc ? [currentDoc] : []));
+
+  if (effectiveDocs.length === 0) {
+    return {
+      answer: 'Hệ thống AI không thể truy cập CSDL văn bản pháp luật trên môi trường Production. Vui lòng kiểm tra kết nối CSDL hoặc cấu hình API Key.',
+      summaryPoints: [],
+      citations: [],
+      relevantArticles: [],
+      suggestedFollowUps: [],
+    };
+  }
+
   // 1. Identify primary context document or find top matching docs in library
   const candidateDocs: LegalDocument[] = [];
   if (currentDoc) {
     candidateDocs.push(currentDoc);
   }
-
   // Rank docs by keyword matching in title, doc number, or summaries
-  const scoredDocs = allDocs.map((d) => {
+  const scoredDocs = effectiveDocs.map((d) => {
     let score = 0;
     const title = (d.title || '').toLowerCase();
     const num = (d.document_number || '').toLowerCase();
@@ -169,10 +183,9 @@ export async function queryLegalAssistant(
     }
   }
 
-  if (candidateDocs.length === 0 && allDocs.length > 0) {
-    candidateDocs.push(allDocs[0]);
+  if (candidateDocs.length === 0 && effectiveDocs.length > 0) {
+    candidateDocs.push(effectiveDocs[0]);
   }
-
   // 2. Extract specific relevant Articles (Điều) from candidate documents
   const citations: LegalCitation[] = [];
   const relevantArticles: Array<{ documentNumber: string; article: string; text: string }> = [];

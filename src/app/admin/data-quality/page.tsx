@@ -11,18 +11,12 @@ import {
   Eye, 
   ExternalLink
 } from 'lucide-react';
-import { DEMO_DOCUMENTS } from '@/lib/demo-data';
 import { getDocuments } from '@/lib/data-service';
 import { ContentQualityValidator, type ContentQualityResult } from '@/lib/quality/content-validator';
 import type { LegalDocument } from '@/types';
 
-let cachedAuditedDemoDocs: Array<{ doc: Partial<LegalDocument>; quality: ContentQualityResult }> | null = null;
-
 function getAuditedDocs(docs: Partial<LegalDocument>[]) {
-  if (docs === DEMO_DOCUMENTS && cachedAuditedDemoDocs) {
-    return cachedAuditedDemoDocs;
-  }
-  const result = docs.map((doc) => ({
+  return docs.map((doc) => ({
     doc,
     quality: ContentQualityValidator.validate({
       htmlContent: doc.html_content,
@@ -34,10 +28,6 @@ function getAuditedDocs(docs: Partial<LegalDocument>[]) {
       hasAttachedFiles: Boolean(doc.files && doc.files.length > 0),
     }),
   }));
-  if (docs === DEMO_DOCUMENTS) {
-    cachedAuditedDemoDocs = result;
-  }
-  return result;
 }
 
 export default function DataQualityAdminPage() {

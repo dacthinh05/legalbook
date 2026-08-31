@@ -20,7 +20,7 @@ import {
 } from '@/lib/useLocalStorage';
 import type { LegalDocument, Category, DocumentType } from '@/types';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/utils';
-import { DEMO_CATEGORY_LINKS } from '@/lib/demo-data';
+import { DEMO_CATEGORY_LINKS, DEMO_DOCUMENTS, DEMO_CATEGORIES, buildCategoryTree } from '@/lib/demo-data';
 import { getDescendantCategoryIds, injectVirtualSubcategories, VIRTUAL_DOC_TYPE_CONFIG } from '@/lib/tree-utils';
 import { X, ChevronLeft, ChevronRight, FolderTree, ListFilter, Search, BookmarkCheck, AlertCircle } from 'lucide-react';
 
@@ -221,15 +221,14 @@ export default function MainPage() {
     };
   }, [setListWidth, setSidebarWidth]);
 
-  // Data state
-  const [categoryData, setCategoryData] = useState<{ categories: Category[]; tree: Category[] }>({
-    categories: [],
-    tree: [],
-  });
-  const [allDocList, setAllDocList] = useState<LegalDocument[]>([]);
+  // Data state (Instant SSR initialized with verified authentic legal corpus)
+  const [categoryData, setCategoryData] = useState<{ categories: Category[]; tree: Category[] }>(() => ({
+    categories: DEMO_CATEGORIES,
+    tree: buildCategoryTree(DEMO_CATEGORIES),
+  }));
+  const [allDocList, setAllDocList] = useState<LegalDocument[]>(() => DEMO_DOCUMENTS);
   const [loadedDoc, setLoadedDoc] = useState<LegalDocument | null>(null);
   const [dataError, setDataError] = useState<string | null>(null);
-
   // 1. Fetch categories
   useEffect(() => {
     let active = true;

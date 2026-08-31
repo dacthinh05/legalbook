@@ -40,10 +40,9 @@ class VerificationDataService {
     return VerificationDataService.instance;
   }
 
-  private initializeData() {
+  public initializeData(customDocs?: LegalDocument[]) {
     const analyzer = LegalDocumentAnalyzer.getInstance();
-    const demoDocs = DEMO_DOCUMENTS as unknown as LegalDocument[];
-
+    const demoDocs = (customDocs || DEMO_DOCUMENTS) as unknown as LegalDocument[];
     // 1. Initialize Document Verification Records
     // Prioritize unverified/pending docs or highlight key test docs like 572/TNG-QLDN2
     const targetDocs = demoDocs.filter(
@@ -836,6 +835,9 @@ class VerificationDataService {
 
     this.lastActionSnapshot = null;
     return { success: true, message: 'Đã hoàn tác hành động gần nhất.' };
+  }
+  public resetWithDocuments(docs: LegalDocument[]) {
+    this.initializeData(docs);
   }
 }
 

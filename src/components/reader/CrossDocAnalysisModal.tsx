@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
 import type { LegalDocument, DocumentRelation } from '@/types';
+import { getDocuments, isEmbeddedDataPermitted } from '@/lib/data-service';
 import { DEMO_DOCUMENTS, DEMO_RELATIONS } from '@/lib/demo-data';
 import type {
   AnalysisObjective,
@@ -159,18 +160,40 @@ export function CrossDocAnalysisModal({
     setAnalysisResult(null);
     setQaMessages([]);
   }, [primaryDocument.id, isOpen]);
+  const [liveDocs, setLiveDocs] = useState<LegalDocument[]>([]);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      getDocuments(null).then((res) => {
+        if (res.source === 'unavailable') {
+          setLiveDocs([]);
+          setDataError(res.error || 'CSDL văn bản pháp luật không khả dụng.');
+          return;
+        }
+        setDataError(null);
+        if (res.data && res.data.length > 0) {
+          setLiveDocs(res.data);
+        }
+      });
+    }
+  }, [isOpen]);
+
+  const permitted = isEmbeddedDataPermitted();
+  const availableDocs = liveDocs.length > 0
+    ? liveDocs
+    : (permitted ? (DEMO_DOCUMENTS as unknown as LegalDocument[]) : [primaryDocument]);
+
   // Suggestions based on 8-level signal priority
   const suggestions: DocumentSuggestion[] = useMemo(() => {
-    return getRelatedDocumentSuggestions(primaryDocument, DEMO_DOCUMENTS as unknown as LegalDocument[], DEMO_RELATIONS);
-  }, [primaryDocument]);
-
-  // Filtered documents from search
+    return getRelatedDocumentSuggestions(primaryDocument, availableDocs, DEMO_RELATIONS);
+  }, [primaryDocument, availableDocs]);
   const filteredSearchDocs = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase().trim();
     const alreadySelectedIds = new Set([primaryDocument.id, ...selectedDocs.map((d) => d.id)]);
 
-    return (DEMO_DOCUMENTS as unknown as LegalDocument[])
+    return availableDocs
       .filter((d) => !alreadySelectedIds.has(d.id))
       .filter(
         (d) =>
@@ -179,8 +202,7 @@ export function CrossDocAnalysisModal({
           d.issuing_body?.toLowerCase().includes(q)
       )
       .slice(0, 8);
-  }, [searchQuery, primaryDocument.id, selectedDocs]);
-
+  }, [searchQuery, primaryDocument.id, selectedDocs, availableDocs]);
   // Check if current 2-doc selection is eligible for exact diff
   const exactDiffEligibility = useMemo(() => {
     if (selectedDocs.length === 1) {
