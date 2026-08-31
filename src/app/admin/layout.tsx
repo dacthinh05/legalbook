@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, FolderTree, Upload, Users, ArrowLeft, Shield, Sparkles } from 'lucide-react';
+import { BookOpen, FolderTree, Upload, Users, ArrowLeft, Shield, RefreshCw } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { PacoLogo } from '@/components/common/PacoLogo';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -108,7 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-amber-600" />
+            <RefreshCw className="w-4 h-4 text-slate-600" />
             Tự tìm & Crawl luật mới
           </Link>
 

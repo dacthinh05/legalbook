@@ -17,7 +17,7 @@ import {
   getDaysUntil,
 } from '@/lib/legal-feed-utils';
 import {
-  Sparkles,
+  FileText,
   Filter,
 } from 'lucide-react';
 interface LegalUpdatesFeedProps {
@@ -282,7 +282,7 @@ export function LegalUpdatesFeed({
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-[16px] md:text-[18px] font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+              <FileText className="w-4 h-4 text-blue-600 shrink-0" />
               <span>{headerTitle}</span>
             </h1>
             <p className="text-[12px] text-slate-500 mt-0.5">

@@ -429,7 +429,7 @@ export default function AdminUploadPage() {
               disabled={!pastedText.trim() || isProcessingPaste}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors"
             >
-              {isProcessingPaste ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {isProcessingPaste ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
               <span>Phân tích và kiểm duyệt nội dung</span>
             </button>
           </div>
@@ -475,7 +475,7 @@ export default function AdminUploadPage() {
               <span className="text-xs text-slate-500 font-mono">50 Top Documents</span>
             </div>
             <h3 className="font-bold text-sm text-slate-900">
-              📦 Xuất kho dữ liệu đồng bộ Sổ tay Google NotebookLM
+              Xuất kho dữ liệu đồng bộ Sổ tay Google NotebookLM
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed max-w-2xl">
               Tự động đóng gói và làm sạch 50 văn bản pháp luật trọng tâm thành 1 tệp Markdown chuẩn cấu trúc tiêu đề. Bạn có thể tải về và nạp ngay vào Google NotebookLM để tạo Audio Overview và hỏi đáp tổng hợp đa văn bản.

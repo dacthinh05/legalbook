@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   BookOpen,
-  Sparkles,
+  ListFilter,
   FileText,
   Clock,
   Users,
@@ -357,7 +357,7 @@ export function DocumentSummaryView({
               </div>
               <div className="space-y-2 text-xs sm:text-[13px] text-slate-700 flex-1">
                 <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg text-amber-950 space-y-1">
-                  <span className="font-bold block">⚠️ Lưu ý áp dụng:</span>
+                  <span className="font-bold block">Lưu ý áp dụng:</span>
                   <p className="text-slate-800 leading-relaxed">
                     Công văn hướng dẫn mang tính chất giải đáp nghiệp vụ cho một tình huống cụ thể. Khi áp dụng
                     cho doanh nghiệp, cần đối chiếu với các Nghị định/Thông tư quy định chung để đảm bảo tính
@@ -386,7 +386,7 @@ export function DocumentSummaryView({
           <section className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-4 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2 text-slate-900 font-bold text-sm sm:text-base">
-                <Sparkles className="w-4 h-4 text-blue-700 shrink-0" />
+                <ListFilter className="w-4 h-4 text-blue-700 shrink-0" />
                 <h3>2. Nội dung đáng chú ý</h3>
               </div>
               <span className="text-xs text-slate-500 font-medium font-mono">
@@ -473,8 +473,8 @@ export function DocumentSummaryView({
                     <div className="flex items-center justify-between font-semibold">
                       <span className="text-[11px] uppercase tracking-wider text-slate-700 font-bold">
                         {note.type === 'statutory'
-                          ? '📌 Quy định trong văn bản'
-                          : '💡 Gợi ý rà soát (Tham khảo)'}
+                          ? 'Quy định trong văn bản'
+                          : 'Gợi ý rà soát (Tham khảo)'}
                       </span>
                       {note.citation && (
                         <button

@@ -7,6 +7,7 @@ import {
   useMemo,
   useCallback,
 } from 'react';
+import Link from 'next/link';
 import {
   Check,
   Bookmark,
@@ -31,7 +32,8 @@ import {
   Info,
   ListTree,
   StickyNote,
-  Sparkles,
+  GitCompare,
+  MessageSquareText,
   Loader2,
   X,
 } from 'lucide-react';
@@ -204,6 +206,9 @@ export function DocumentReader({
     qualityResult.status !== 'invalid' &&
     !qualityResult.isFakeOrPlaceholder &&
     Boolean(effectiveHtml);
+  const [undoToast, setUndoToast] = useState<{ message: string; actionText?: string; onAction?: () => void } | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | number | undefined>(undefined);
+
   const showToast = useCallback((message: string, actionText?: string, onAction?: () => void) => {
     clearTimeout(toastTimeoutRef.current);
     setUndoToast({ message, actionText, onAction });
@@ -305,8 +310,6 @@ export function DocumentReader({
   const undoManagerRef = useRef<DocumentUndoManager>(new DocumentUndoManager());
   const [canUndoState, setCanUndoState] = useState(false);
   const [canRedoState, setCanRedoState] = useState(false);
-  const [undoToast, setUndoToast] = useState<{ message: string; actionText?: string; onAction?: () => void } | null>(null);
-  const toastTimeoutRef = useRef<NodeJS.Timeout | number | undefined>(undefined);
 
   const updateUndoRedoState = useCallback(() => {
     setCanUndoState(undoManagerRef.current.canUndo());
@@ -1045,7 +1048,7 @@ export function DocumentReader({
                     onClick={() => { setShowCrossDocAnalysisModal(true); setShowMoreMenu(false); }}
                     className="w-full px-3 py-2 text-left text-blue-800 hover:bg-blue-50 flex items-center gap-2 cursor-pointer font-semibold"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    <GitCompare className="w-3.5 h-3.5 text-blue-600" />
                     <span>Phân tích với văn bản khác</span>
                   </button>
                   <button
@@ -1285,13 +1288,13 @@ export function DocumentReader({
                 'flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs',
                 panelMode === 'ai'
                   ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                  : 'bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 text-blue-900 border-blue-200/90 hover:border-blue-300 hover:bg-blue-100/70'
+                  : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200 hover:border-slate-300'
               )}
               title="Trợ lý Pháp lý AI (Hỏi đáp & Tóm tắt với Gemini 2.5)"
               aria-label="Trợ lý Pháp lý AI"
               aria-pressed={panelMode === 'ai'}
             >
-              <Sparkles className={cn('w-3.5 h-3.5 shrink-0', panelMode === 'ai' ? 'text-white' : 'text-blue-600')} />
+              <MessageSquareText className={cn('w-3.5 h-3.5 shrink-0', panelMode === 'ai' ? 'text-white' : 'text-blue-700')} />
               <span className="hidden sm:inline">Hỏi đáp AI</span>
             </button>
           )}
@@ -1616,7 +1619,7 @@ export function DocumentReader({
                             </>
                           ) : (
                             <>
-                              <Sparkles className="w-4 h-4 text-amber-300" />
+                              <FileText className="w-4 h-4 text-white" />
                               <span>Tự động xử lý AI OCR & Bóc tách ngay</span>
                             </>
                           )}
@@ -1678,9 +1681,9 @@ export function DocumentReader({
                               Xem Bản Gốc →
                             </button>
                           )}
-                          <a href="/admin/upload" className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white font-semibold rounded text-xs shrink-0">
+                          <Link href="/admin/upload" className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white font-semibold rounded text-xs shrink-0 transition-colors">
                             Kích hoạt OCR
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     )}

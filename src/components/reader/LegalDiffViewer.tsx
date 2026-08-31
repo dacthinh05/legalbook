@@ -13,7 +13,7 @@ import {
   FileText,
   Search,
   BookOpen,
-  Sparkles,
+  Bot,
   Layers,
   Loader2,
   AlertTriangle,
@@ -163,7 +163,7 @@ export function LegalDiffViewer({
             ) : exactEligibility.isEligibleForExactDiff ? (
               <GitCompare className="w-4 h-4" />
             ) : (
-              <Sparkles className="w-4 h-4" />
+              <Bot className="w-4 h-4" />
             )}
           </div>
           <div className="min-w-0">
@@ -237,11 +237,11 @@ export function LegalDiffViewer({
               className={cn(
                 'px-2.5 py-1 rounded-md text-[11.5px] transition-all cursor-pointer flex items-center gap-1',
                 activeTab === 'ai_summary'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
+                  ? 'bg-blue-700 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               )}
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <Bot className="w-3.5 h-3.5" />
               <span>Phân tích bằng AI</span>
             </button>
           </div>
@@ -329,7 +329,7 @@ export function LegalDiffViewer({
               }}
               className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-amber-300" />
+              <Bot className="w-4 h-4 text-white" />
               <span>Chuyển sang Phân tích bằng AI</span>
             </button>
 
@@ -625,7 +625,7 @@ export function LegalDiffViewer({
               <div className="flex items-center justify-between pb-2 border-b border-blue-100 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 bg-blue-600 text-white rounded-md shadow-2xs">
-                    <Sparkles className="w-4 h-4" />
+                    <FileText className="w-4 h-4" />
                   </div>
                   <h4 className="font-bold text-sm text-slate-900">
                     Bản tóm tắt phân tích & Điểm khác biệt cốt lõi

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { 
   Globe, 
-  Sparkles, 
+  ListFilter, 
   RefreshCw, 
   CheckCircle2, 
   Clock, 
@@ -77,7 +77,7 @@ export default function CrawlerAdminPage() {
     if (selectedDocIds.size === 0) return;
     const simulatedSelected = discoveredDocs.filter((d) => selectedDocIds.has(d.id) && d.is_simulated);
     if (simulatedSelected.length > 0) {
-      setFeedbackMessage('⛔ Không thể phê duyệt văn bản mô phỏng (simulated) từ cron staging feed.');
+      setFeedbackMessage('Không thể phê duyệt văn bản mô phỏng từ cron staging feed.');
       setTimeout(() => setFeedbackMessage(null), 4000);
       return;
     }
@@ -86,7 +86,7 @@ export default function CrawlerAdminPage() {
       prev.map((d) => (selectedDocIds.has(d.id) ? { ...d, is_approved: true } : d))
     );
     setSelectedDocIds(new Set());
-    setFeedbackMessage(`🎉 Đã phê duyệt và nạp thành công ${count} văn bản vào CSDL LegalBook.`);
+    setFeedbackMessage(`Đã phê duyệt và nạp thành công ${count} văn bản vào CSDL LegalBook.`);
     setTimeout(() => setFeedbackMessage(null), 4000);
   };
 
@@ -178,7 +178,7 @@ export default function CrawlerAdminPage() {
     addLog(`[Tier 1] Đang kết nối tới nguồn: ${crawlUrl}`);
     await new Promise((r) => setTimeout(r, 600));
 
-    addLog('🏛️ Đang bóc tách metadata, cấu trúc điều khoản và tệp đính kèm...');
+    addLog('Đang bóc tách metadata, cấu trúc điều khoản và tệp đính kèm...');
     await new Promise((r) => setTimeout(r, 700));
 
     const safeUrl = getSafeSourceUrl({
@@ -307,7 +307,7 @@ export default function CrawlerAdminPage() {
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Sparkles className="w-4 h-4" />
+          <ListFilter className="w-4 h-4" />
           <span>Hàng đợi Chọn lọc ({discoveredDocs.length})</span>
         </button>
 
@@ -409,7 +409,7 @@ export default function CrawlerAdminPage() {
                   setIngestionLog(['[08:00] Bắt đầu nạp lô văn bản chuyên đề Thuế - Kế toán 2024-2026...', '[08:01] Đang kết nối Cổng TTĐT Tổng cục Thuế và Cổng Chính phủ...', '[08:02] Bóc tách 14 văn bản mới có tệp đính kèm .docx...', '[08:03] Chấm điểm chất lượng 4 chiều: 13 văn bản đạt >=90% (Auto-published), 1 văn bản <90% (Đưa vào Hàng đợi Admin)...', '[08:04] Hoàn tất nạp và sinh vector embeddings!']);
                   await new Promise((r) => setTimeout(r, 1200));
                   setIsBatchIngesting(false);
-                  setFeedbackMessage('🎉 Đã hoàn tất nạp và kích hoạt Hybrid Auto-Publish cho các chuyên đề 2024-2026!');
+                  setFeedbackMessage('Đã hoàn tất nạp và kích hoạt Hybrid Auto-Publish cho các chuyên đề 2024-2026.');
                   setTimeout(() => setFeedbackMessage(null), 4000);
                 }}
                 disabled={isBatchIngesting}
