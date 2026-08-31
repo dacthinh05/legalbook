@@ -1872,7 +1872,7 @@ describe('17. Legal Document PDF-to-HTML Layout, Administrative Hierarchy (20 Sc
     const res = formatLegalHtmlContent(raw);
     assert.ok(res.includes('class="legal-clause"'));
     assert.ok(res.includes('class="clause-num">1.</span>'));
-    assert.ok(res.includes('class="clause-text">Văn bản này quy định chi tiết về chế độ chứng từ kế toán.</div>'));
+    assert.ok(res.includes('class="clause-text">Văn bản này quy định chi tiết về chế độ chứng từ kế toán.</span>'));
   });
 
   test('15. Recognizes and formats Points (a) ...) with .legal-point and .point-num', async () => {

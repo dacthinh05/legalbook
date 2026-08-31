@@ -549,47 +549,40 @@ body.is-resizing * {
 }
 
 /* Legal Clauses & Points */
-.legal-clause {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  column-gap: 4px;
-  margin-bottom: 10px;
-  line-height: 1.7;
-  color: #334155;
+.legal-clause,
+p.legal-clause {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 0.75em;
+  line-height: inherit;
+  color: inherit;
+  text-indent: 1.25em;
+  text-align: justify;
 }
 
 .legal-clause .clause-num {
-  font-weight: 600;
+  font-weight: 700;
   color: #0f172a;
-  text-align: left;
+  margin-right: 4px;
 }
 
-.legal-clause .clause-text {
-  text-align: left;
-  overflow-wrap: break-word;
-}
-
-.legal-point {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  column-gap: 4px;
-  margin-bottom: 8px;
-  margin-left: 20px;
-  line-height: 1.7;
-  color: #334155;
+.legal-point,
+p.legal-point {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 0.65em;
+  line-height: inherit;
+  color: inherit;
+  padding-left: 2em;
+  text-indent: 0;
+  text-align: justify;
 }
 
 .legal-point .point-num {
-  font-weight: 600;
+  font-weight: 700;
   color: #0f172a;
-  text-align: left;
+  margin-right: 4px;
 }
-
-.legal-point .point-text {
-  text-align: left;
-  overflow-wrap: break-word;
-}
-
 .document-content p,
 .document-full-body p {
   font-size: inherit;

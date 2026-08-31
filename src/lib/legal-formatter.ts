@@ -50,11 +50,10 @@ export function formatLegalHtmlContent(htmlContent: string | null | undefined, d
 
   // 2. Format 2-Column Administrative Letterhead (Nghị định 30/2020/NĐ-CP)
   html = formatAdministrativeMasthead(html, doc);
-
-  // 3. Clean up empty paragraphs, repeated <br> tags and unnecessary whitespace blocks
+  // 3. Clean up empty paragraphs, repeated <br> tags and merge broken PDF paragraph splits
   html = cleanEmptyParagraphsAndSpacers(html);
+  html = mergeBrokenParagraphs(html);
 
-  // 4. Format Document Title Block (Loại văn bản + Trích yếu / Tên văn bản)
   html = formatDocumentTitleBlock(html, doc);
 
   // 5. Format Legal Basis Block (Căn cứ pháp lý)
@@ -255,20 +254,59 @@ function formatArticlesAndClauses(html: string): string {
     }
   );
 
-  // 2. Clauses: <p>1. Nội dung khoản...</p>
+  // 2. Clauses: <p>1. Nội dung khoản...</p> or <p><strong>1.</strong> Nội dung...</p>
   res = res.replace(
-    /<p([^>]*)>\s*(\d+)\.\s+([^<]+(?:<(?!\/p>)[^>]+>[^<]*)*)<\/p>/gi,
-    (_match, _attr, num, content) => {
-      return `<div class="legal-clause"><span class="clause-num">${num}.</span><div class="clause-text">${content.trim()}</div></div>`;
+    /<p([^>]*)>\s*(?:<strong>|<b>)?\s*(\d+)\.\s*(?:<\/strong>|<\/b>)?\s+([^<]+(?:<(?!\/p>)[^>]+>[^<]*)*)<\/p>/gi,
+    (_match, attr, num, content) => {
+      return `<p${attr} class="legal-clause"><span class="clause-num">${num}.</span> <span class="clause-text">${content.trim()}</span></p>`;
     }
   );
 
-  // 3. Points: <p>a) Nội dung điểm...</p>
+  // 3. Points: <p>a) Nội dung điểm...</p> or <p><strong>a)</strong> Nội dung...</p>
   res = res.replace(
-    /<p([^>]*)>\s*([a-zđ])\)\s+([^<]+(?:<(?!\/p>)[^>]+>[^<]*)*)<\/p>/gi,
-    (_match, _attr, letter, content) => {
-      return `<div class="legal-point"><span class="point-num">${letter})</span><div class="point-text">${content.trim()}</div></div>`;
+    /<p([^>]*)>\s*(?:<strong>|<b>)?\s*([a-zđ])\)\s*(?:<\/strong>|<\/b>)?\s+([^<]+(?:<(?!\/p>)[^>]+>[^<]*)*)<\/p>/gi,
+    (_match, attr, letter, content) => {
+      return `<p${attr} class="legal-point"><span class="point-num">${letter})</span> <span class="point-text">${content.trim()}</span></p>`;
     }
+  );
+
+  return res;
+}
+
+/**
+ * Merges isolated numbers, article labels, and chapter titles that were broken into separate paragraphs by raw PDF parsing.
+ */
+function mergeBrokenParagraphs(html: string): string {
+  let res = html;
+
+  // 1. Merge isolated Chapter titles: <p>Chương I</p><p>QUY ĐỊNH CHUNG</p>
+  res = res.replace(
+    /<p[^>]*>\s*(?:<strong>|<b>)?\s*(Chương\s+[IVXLCDM\d]+)\s*(?:<\/strong>|<\/b>)?\s*<\/p>\s*<p([^>]*)>/gi,
+    (_m, ch, pAttr) => `<p${pAttr}><strong>${ch} - </strong> `
+  );
+
+  // 2. Merge isolated Article titles: <p>Điều 1.</p><p>Phạm vi điều chỉnh</p>
+  res = res.replace(
+    /<p[^>]*>\s*(?:<strong>|<b>)?\s*(Điều\s+\d+[a-z]?\.?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>\s*<p([^>]*)>/gi,
+    (_m, d, pAttr) => {
+      const cleanD = d.endsWith('.') ? d : `${d}.`;
+      return `<p${pAttr}><strong>${cleanD}</strong> `;
+    }
+  );
+
+  // 3. Merge isolated Clause numbers: <p>2.</p><p>“Thỏa thuận của Nhà chức trách...”</p>
+  res = res.replace(
+    /<p[^>]*>\s*(?:<strong>|<b>)?\s*(\d+\.?)\s*(?:<\/strong>|<\/b>)?\s*<\/p>\s*<p([^>]*)>/gi,
+    (_m, num, pAttr) => {
+      const cleanNum = num.endsWith('.') ? num : `${num}.`;
+      return `<p${pAttr}><strong>${cleanNum}</strong> `;
+    }
+  );
+
+  // 4. Merge isolated Point letters: <p>a)</p><p>Nội dung điểm a...</p>
+  res = res.replace(
+    /<p[^>]*>\s*(?:<strong>|<b>)?\s*([a-zđ]\)|[a-zđ]\.)\s*(?:<\/strong>|<\/b>)?\s*<\/p>\s*<p([^>]*)>/gi,
+    (_m, pt, pAttr) => `<p${pAttr}><strong>${pt}</strong> `
   );
 
   return res;
