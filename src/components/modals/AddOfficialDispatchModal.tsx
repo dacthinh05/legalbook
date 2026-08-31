@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, Link2, FileText, CheckCircle2 } from 'lucide-react';
+import { X, Upload, Link2, FileText, CheckCircle2, Loader2, Send } from 'lucide-react';
 import type { LegalDocument } from '@/types';
 import { reconstructStructuredLegalHtml } from '@/lib/document-import/auto-ocr-service';
 
@@ -110,6 +110,7 @@ export function AddOfficialDispatchModal({
       review_status: 'published',
       files: file
         ? [
+            {
               id: `file-${Date.now()}`,
               document_id: `doc-cv-${Date.now()}`,
               file_type: file.name.endsWith('.pdf') ? 'pdf' : 'docx',

@@ -41,9 +41,10 @@ export function CompareWorkspace({
 
   const doc = documentRecord.document;
   const docNumber = doc.document_number || '---';
-  const totalPages = documentRecord.ocrPages.length || 2;
-  const activePageData = documentRecord.ocrPages.find((p) => p.pageNumber === effectivePage) || documentRecord.ocrPages[0];
-
+  const targetField = activeFieldKey ? documentRecord.fields[activeFieldKey] : null;
+  const effectivePage = targetField?.sourcePage || currentPage;
+  const totalPages = documentRecord.ocrPages?.length || 2;
+  const activePageData = documentRecord.ocrPages?.find((p) => p.pageNumber === effectivePage) || documentRecord.ocrPages?.[0];
   const pdfUrl = doc.files?.find((f) => f.file_type === 'pdf')?.file_url;
 
   // Synchronized scroll handlers
@@ -71,9 +72,6 @@ export function CompareWorkspace({
     }, 50);
   };
 
-  // If active field specifies a source page, determine effective page
-  const targetField = activeFieldKey ? documentRecord.fields[activeFieldKey] : null;
-  const effectivePage = targetField?.sourcePage || currentPage;
   return (
     <main className="flex-1 flex flex-col h-full bg-slate-100/70 overflow-hidden select-text min-w-0">
       {/* Top Workspace Toolbar */}
