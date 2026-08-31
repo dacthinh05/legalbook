@@ -75,17 +75,22 @@ export function DocumentCard({
           )}
         </div>
 
-        {/* Trạng thái duy nhất bên phải */}
-        <span
-          className={cn(
-            'inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium border shrink-0 whitespace-nowrap',
-            DOCUMENT_STATUS_COLORS[effStatus]
-          )}
-        >
-          {DOCUMENT_STATUS_LABELS[effStatus]}
-        </span>
+        {/* Trạng thái: Chỉ làm nổi bật trạng thái bất thường, 'Hiệu lực' hiển thị tối giản */}
+        {effStatus === 'hieu_luc' ? (
+          <span className="text-[10px] text-slate-400 font-medium shrink-0">
+            Hiệu lực
+          </span>
+        ) : (
+          <span
+            className={cn(
+              'inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold border shrink-0 whitespace-nowrap',
+              DOCUMENT_STATUS_COLORS[effStatus]
+            )}
+          >
+            {DOCUMENT_STATUS_LABELS[effStatus]}
+          </span>
+        )}
       </div>
-
       {/* DÒNG 2: TÊN VĂN BẢN (NỔI BẬT NHẤT) */}
       <h3
         className={cn(

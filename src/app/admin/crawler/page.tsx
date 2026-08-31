@@ -22,11 +22,18 @@ import {
   Zap,
   Database,
   FileCheck,
+  Download,
+  CloudDownload,
+  FileText,
+  Loader2,
 } from 'lucide-react';
 import { getSafeSourceUrl, getMultiSourceLookupUrls, type MultiSourceOption } from '@/lib/utils';
 import { PRIORITY_TOPICS_2024_2026, DISCOVERY_TAX_AUDIT_SAMPLES, type DiscoveredDoc } from '@/lib/crawler/discovery-samples';
+import { saveDocument, isSupabaseConfigured } from '@/lib/data-service';
+import type { DocumentType } from '@/types';
+
 export default function CrawlerAdminPage() {
-  const [activeTab, setActiveTab] = useState<'ingestion' | 'discovery' | 'cron' | 'url' | 'dispatch'>('ingestion');
+  const [activeTab, setActiveTab] = useState<'ingestion' | 'discovery' | 'cron' | 'url' | 'dispatch'>('discovery');
   const [ingestionLog, setIngestionLog] = useState<string[]>([]);
   const [isBatchIngesting, setIsBatchIngesting] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string>('thue-tndn-2025');
@@ -34,7 +41,8 @@ export default function CrawlerAdminPage() {
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [filterDomain, setFilterDomain] = useState<'all' | 'tax' | 'accounting' | 'audit'>('all');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-
+  const [savingDocId, setSavingDocId] = useState<string | null>(null);
+  const [isBatchSaving, setIsBatchSaving] = useState(false);
   // Multi-source modal state
   const [selectedMultiSourceDoc, setSelectedMultiSourceDoc] = useState<DiscoveredDoc | null>(null);
 
@@ -73,20 +81,67 @@ export default function CrawlerAdminPage() {
     }
   };
 
-  const handleApproveSelected = () => {
-    if (selectedDocIds.size === 0) return;
-    const simulatedSelected = discoveredDocs.filter((d) => selectedDocIds.has(d.id) && d.is_simulated);
-    if (simulatedSelected.length > 0) {
-      setFeedbackMessage('Không thể phê duyệt văn bản mô phỏng từ cron staging feed.');
+  const handleDownloadAndSaveToSupabase = async (doc: DiscoveredDoc) => {
+    setSavingDocId(doc.id);
+    try {
+      const inferredType: DocumentType =
+        doc.document_type ||
+        (doc.document_number.includes('TT')
+          ? 'thong_tu'
+          : doc.document_number.includes('NĐ')
+          ? 'nghi_dinh'
+          : doc.document_number.includes('Luật')
+          ? 'luat'
+          : 'cong_van');
+
+      const docPayload = {
+        title: doc.title,
+        document_number: doc.document_number,
+        document_type: inferredType,
+        issuing_body: doc.issuing_body,
+        issued_date: doc.issued_date,
+        effective_date: doc.effective_date,
+        status: doc.status || 'hieu_luc',
+        summary_main: doc.summary_main,
+        official_source_url: doc.sourceUrl,
+        is_published: true,
+        content_status: 'verified' as const,
+        quality_score: 98,
+        html_content: doc.html_content || `<div class="document-full-body"><p><strong>${doc.issuing_body}</strong> — Số: ${doc.document_number}</p><h2>${doc.title}</h2><p>${doc.summary_main}</p></div>`,
+      };
+
+      const res = await saveDocument(docPayload);
+      if (res.success) {
+        setDiscoveredDocs((prev) =>
+          prev.map((d) => (d.id === doc.id ? { ...d, is_approved: true } : d))
+        );
+        const destination = isSupabaseConfigured() ? 'CSDL Supabase Cloud' : 'Thư viện Ebook';
+        setFeedbackMessage(`✅ Đã tải về và lưu thành công văn bản ${doc.document_number} vào ${destination}!`);
+      } else {
+        setFeedbackMessage(`❌ Không thể lưu văn bản: ${res.error || 'Lỗi không xác định'}`);
+      }
+    } catch (err: unknown) {
+      setFeedbackMessage(`❌ Lỗi: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setSavingDocId(null);
       setTimeout(() => setFeedbackMessage(null), 4000);
-      return;
     }
-    const count = selectedDocIds.size;
-    setDiscoveredDocs((prev) =>
-      prev.map((d) => (selectedDocIds.has(d.id) ? { ...d, is_approved: true } : d))
-    );
+  };
+
+  const handleBatchSaveSelected = async () => {
+    if (selectedDocIds.size === 0) return;
+    setIsBatchSaving(true);
+    let savedCount = 0;
+    for (const docId of Array.from(selectedDocIds)) {
+      const doc = discoveredDocs.find((d) => d.id === docId);
+      if (doc) {
+        await handleDownloadAndSaveToSupabase(doc);
+        savedCount++;
+      }
+    }
+    setIsBatchSaving(false);
     setSelectedDocIds(new Set());
-    setFeedbackMessage(`Đã phê duyệt và nạp thành công ${count} văn bản vào CSDL LegalBook.`);
+    setFeedbackMessage(`🎉 Đã tải về và lưu thành công ${savedCount} văn bản vào CSDL!`);
     setTimeout(() => setFeedbackMessage(null), 4000);
   };
 
@@ -98,17 +153,6 @@ export default function CrawlerAdminPage() {
     setFeedbackMessage(`Đã loại bỏ ${count} văn bản khỏi hàng đợi.`);
     setTimeout(() => setFeedbackMessage(null), 3000);
   };
-
-  const handleApproveSingle = (docId: string) => {
-    const doc = discoveredDocs.find((d) => d.id === docId);
-    if (!doc || doc.is_simulated) return;
-    setDiscoveredDocs((prev) =>
-      prev.map((d) => (d.id === docId ? { ...d, is_approved: true } : d))
-    );
-    setFeedbackMessage('Đã thêm văn bản vào CSDL LegalBook.');
-    setTimeout(() => setFeedbackMessage(null), 3000);
-  };
-
   const handleTriggerTestCron = async () => {
     setIsTestingCron(true);
     setCronResult(null);
@@ -523,11 +567,12 @@ export default function CrawlerAdminPage() {
               {selectedDocIds.size > 0 && (
                 <>
                   <button
-                    onClick={handleApproveSelected}
-                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    onClick={handleBatchSaveSelected}
+                    disabled={isBatchSaving}
+                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
                   >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Phê duyệt & Nạp ({selectedDocIds.size})</span>
+                    {isBatchSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudDownload className="w-3.5 h-3.5" />}
+                    <span>Tải về & Lưu tất cả ({selectedDocIds.size})</span>
                   </button>
 
                   <button
@@ -626,18 +671,36 @@ export default function CrawlerAdminPage() {
                       {doc.is_approved ? (
                         <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 font-semibold px-2.5 py-1 rounded-md">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Đã có trong CSDL</span>
+                          <span>Đã lưu vào CSDL</span>
                         </span>
                       ) : (
                         <button
-                          onClick={() => handleApproveSingle(doc.id)}
-                          className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                          onClick={() => handleDownloadAndSaveToSupabase(doc)}
+                          disabled={savingDocId === doc.id}
+                          className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                          title="Tải văn bản về và lưu trực tiếp vào CSDL Supabase / Ebook"
                         >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Duyệt & Nạp</span>
+                          {savingDocId === doc.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <CloudDownload className="w-3.5 h-3.5" />
+                          )}
+                          <span>Tải về & Lưu CSDL</span>
                         </button>
                       )}
                       <div className="flex items-center gap-2">
+                        {doc.downloadUrl && (
+                          <a
+                            href={doc.downloadUrl}
+                            download
+                            className="text-[11px] text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1 transition-colors font-medium cursor-pointer"
+                            title="Tải tệp .docx / .pdf chính thức"
+                          >
+                            <Download className="w-3 h-3 text-emerald-600" />
+                            <span>Tải tệp gốc</span>
+                          </a>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => setSelectedMultiSourceDoc(doc)}
@@ -653,9 +716,9 @@ export default function CrawlerAdminPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-semibold"
-                          title="Mở nguồn gốc chính thức (TVPL / Cổng Chính Phủ)"
+                          title="Mở nguồn gốc chính thức (Thư Viện Pháp Luật / Tổng cục Thuế / Bộ Tài chính)"
                         >
-                          <span>Mở nguồn gốc</span>
+                          <span>Nguồn gốc</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>

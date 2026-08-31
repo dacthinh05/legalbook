@@ -497,7 +497,7 @@ export function SearchModal({
             aria-expanded={results.length > 0}
             aria-controls="search-results-list"
             aria-activedescendant={selectedResult ? `search-result-${selectedIndex}` : undefined}
-            placeholder="Tìm số hiệu, tên văn bản, điều khoản, trích yếu hoặc nội dung..."
+            placeholder="Tìm toàn bộ kho pháp luật theo số hiệu, điều khoản, từ khóa..."
             value={inputValue}
             onChange={(e) => {
               setInputValue(e.target.value);

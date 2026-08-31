@@ -205,8 +205,8 @@ export function DocumentList({
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm theo số hiệu, tên..."
-            aria-label="Tìm kiếm trong danh sách"
+            placeholder={`Lọc ${totalCount} văn bản đang hiển thị...`}
+            aria-label="Lọc danh sách văn bản"
             className="w-full pl-7 pr-6 py-1 bg-slate-50 border border-slate-200 rounded text-xs placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-500 transition-colors"
           />
           {searchQuery && (

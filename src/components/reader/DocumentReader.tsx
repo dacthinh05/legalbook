@@ -885,30 +885,30 @@ export function DocumentReader({
         '--reader-background': '#f8fafc',
       } as React.CSSProperties}
     >
-      <header className="px-4 sm:px-6 py-2 sm:py-2.5 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
+      <header className="px-3.5 sm:px-5 py-1.5 sm:py-2 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
         {/* Dòng 1: Breadcrumb + Số hiệu (trái) + Trạng thái & Actions (phải) */}
-        <div className="flex items-center justify-between gap-2.5 mb-1.5 min-w-0">
+        <div className="flex items-center justify-between gap-2.5 mb-1 min-w-0">
           {/* Breadcrumb + Document Number */}
           <div className="flex items-center gap-1.5 text-xs text-slate-600 min-w-0 truncate">
             {onBack && (
               <button
                 onClick={onBack}
-                className="flex items-center gap-1 p-1 -ml-1 text-slate-600 hover:text-blue-900 hover:bg-slate-100 rounded transition-colors shrink-0 cursor-pointer font-medium"
+                className="flex items-center gap-1 p-0.5 -ml-1 text-slate-600 hover:text-blue-900 hover:bg-slate-100 rounded transition-colors shrink-0 cursor-pointer font-medium"
                 title="Quay lại danh sách / Trang chủ"
                 aria-label="Quay lại danh sách hoặc trang chủ"
               >
-                <ArrowLeft className="w-4 h-4 text-blue-700 shrink-0" />
+                <ArrowLeft className="w-3.5 h-3.5 text-blue-700 shrink-0" />
                 <span className="hidden sm:inline text-xs font-semibold text-blue-900">Trang chủ</span>
                 <span className="text-slate-300 hidden sm:inline">/</span>
               </button>
             )}
             <span className="text-slate-500 font-medium truncate">{topicName || 'Pháp luật'}</span>
             <span className="text-slate-300">/</span>
-            <span className="text-slate-500 font-medium truncate">{DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}</span>
+            <span className="text-slate-600 font-semibold truncate">{DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}</span>
             {doc.document_number && (
               <>
                 <span className="text-slate-300">/</span>
-                <span className="font-mono text-blue-900 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/80 truncate">
+                <span className="font-mono text-blue-900 font-bold bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200/80 truncate">
                   {doc.document_number}
                 </span>
               </>
@@ -917,30 +917,30 @@ export function DocumentReader({
 
           {/* Actions & Status Badges */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Status Badge */}
+            {/* 1. Trạng thái pháp lý */}
             {(() => {
               const effStatus = getEffectiveStatus(doc);
               return (
-                <span className={cn('px-2 py-0.5 rounded text-[11px] font-semibold border', DOCUMENT_STATUS_COLORS[effStatus])}>
+                <span className={cn('px-2 py-0.5 rounded text-[10.5px] font-semibold border shrink-0', DOCUMENT_STATUS_COLORS[effStatus])}>
                   {DOCUMENT_STATUS_LABELS[effStatus]}
                 </span>
               );
             })()}
 
-            {/* Verification status badge with tooltip */}
+            {/* 2. Trạng thái kiểm duyệt dữ liệu hệ thống */}
             {(() => {
               const breakdown = getVerificationBreakdown(doc);
               return (
-                <div className="relative group">
+                <div className="relative group shrink-0">
                   <button
                     className={cn(
-                      'px-2 py-0.5 rounded text-[11px] font-semibold border transition-colors flex items-center gap-1 cursor-help',
+                      'px-2 py-0.5 rounded text-[10.5px] font-medium border transition-colors flex items-center gap-1 cursor-help',
                       breakdown.primaryBadge.badgeColor
                     )}
                     title={breakdown.primaryBadge.tooltip}
                   >
+                    <ShieldCheck className="w-3 h-3 opacity-70" />
                     <span>{breakdown.primaryBadge.label}</span>
-                    <Info className="w-3 h-3 opacity-60" />
                   </button>
                   <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 hidden group-hover:block group-focus-within:block text-xs space-y-2 animate-in fade-in duration-150">
                     <div className="font-bold text-slate-900 border-b border-slate-100 pb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-700">
@@ -1095,18 +1095,48 @@ export function DocumentReader({
           </h1>
         </div>
 
-        {/* Dòng 3: Metadata gọn gàng (Ngày ban hành → Ngày hiệu lực · Cơ quan · Người ký · Nguồn ↗) */}
+        {/* Dòng 3: Metadata chi tiết minh bạch */}
         <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-slate-600 flex-wrap pt-0.5 leading-normal">
-          {doc.issued_date && (
-            <span className="whitespace-nowrap text-slate-700 font-medium">
-              {formatDate(doc.issued_date)}
+          {doc.document_type === 'vbhn' ? (
+            <>
+              {doc.issued_date && (
+                <span className="whitespace-nowrap text-slate-700">
+                  Xác thực: <strong className="text-slate-900 font-medium">{formatDate(doc.issued_date)}</strong>
+                </span>
+              )}
               {doc.effective_date && (
                 <>
-                  <span className="text-slate-400 font-normal mx-1">→</span>
-                  <strong className="text-slate-900 font-semibold">{formatDate(doc.effective_date)}</strong>
+                  <span className="text-slate-300">·</span>
+                  <span className="whitespace-nowrap text-slate-700">
+                    Áp dụng từ: <strong className="text-slate-900 font-semibold">{formatDate(doc.effective_date)}</strong>
+                  </span>
                 </>
               )}
-            </span>
+            </>
+          ) : doc.document_type === 'cong_van' ? (
+            <>
+              {doc.issued_date && (
+                <span className="whitespace-nowrap text-slate-700">
+                  Ban hành: <strong className="text-slate-900 font-medium">{formatDate(doc.issued_date)}</strong>
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              {doc.issued_date && (
+                <span className="whitespace-nowrap text-slate-700">
+                  Ban hành: <strong className="text-slate-900 font-medium">{formatDate(doc.issued_date)}</strong>
+                </span>
+              )}
+              {doc.effective_date && (
+                <>
+                  <span className="text-slate-300">·</span>
+                  <span className="whitespace-nowrap text-slate-700">
+                    Hiệu lực: <strong className="text-slate-900 font-semibold">{formatDate(doc.effective_date)}</strong>
+                  </span>
+                </>
+              )}
+            </>
           )}
 
           {doc.issuing_body && (
@@ -1119,7 +1149,7 @@ export function DocumentReader({
           {doc.signer && (
             <>
               <span className="text-slate-300">·</span>
-              <span className="whitespace-nowrap text-slate-600">{doc.signer}</span>
+              <span className="whitespace-nowrap text-slate-600">Người ký: {doc.signer}</span>
             </>
           )}
 
@@ -1131,7 +1161,7 @@ export function DocumentReader({
             className="inline-flex items-center gap-0.5 text-blue-700 hover:text-blue-900 font-medium hover:underline ml-auto sm:ml-0"
             title="Mở nguồn chính thức Thư Viện Pháp Luật"
           >
-            <span>Nguồn</span>
+            <span>Nguồn gốc</span>
             <ExternalLink className="w-3 h-3 text-blue-600" />
           </a>
         </div>
@@ -1209,7 +1239,8 @@ export function DocumentReader({
               value={searchInputValue}
               onChange={(e) => setSearchInputValue(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Tìm trong văn bản..."
+              placeholder="Tìm Điều, Khoản, từ khóa..."
+              title="Tìm kiếm trong văn bản (Ctrl+F)"
               className={cn(
                 'pl-6.5 py-1 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-md text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all shrink-0',
                 searchInputValue ? 'pr-16 w-32 sm:w-40 md:w-44 lg:w-52' : 'pr-2 w-20 sm:w-24 md:w-28 lg:w-32 focus:w-44'
@@ -1333,29 +1364,31 @@ export function DocumentReader({
             </button>
           )}
 
-          {/* Undo / Redo Toolbar buttons */}
-          <div className="hidden xl:flex items-center bg-white border border-slate-200/90 rounded-md p-0.5 shadow-2xs">
-            <button
-              type="button"
-              onClick={executeUndo}
-              disabled={!canUndoState}
-              className="p-1 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed rounded hover:bg-slate-100 transition-colors cursor-pointer"
-              title="Hoàn tác thao tác trên văn bản (Ctrl + Z)"
-              aria-label="Hoàn tác (Ctrl+Z)"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={executeRedo}
-              disabled={!canRedoState}
-              className="p-1 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed rounded hover:bg-slate-100 transition-colors cursor-pointer"
-              title="Làm lại thao tác trên văn bản (Ctrl + Y)"
-              aria-label="Làm lại (Ctrl+Y)"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          {/* Undo / Redo Container (Only shown if operations exist) */}
+          {(canUndoState || canRedoState) && (
+            <div className="flex items-center gap-0.5 border border-slate-200 rounded p-0.5 bg-slate-50">
+              <button
+                type="button"
+                onClick={executeUndo}
+                disabled={!canUndoState}
+                className="p-1 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed rounded hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Hoàn tác thao tác trên văn bản (Ctrl + Z)"
+                aria-label="Hoàn tác (Ctrl+Z)"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={executeRedo}
+                disabled={!canRedoState}
+                className="p-1 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed rounded hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Làm lại thao tác trên văn bản (Ctrl + Y)"
+                aria-label="Làm lại (Ctrl+Y)"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* Unified Typography & Display Popover [Aa] */}
           <div className="relative shrink-0" ref={fontSizeMenuRef}>
@@ -1505,7 +1538,7 @@ export function DocumentReader({
               value={searchInputValue}
               onChange={(e) => setSearchInputValue(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Tìm trong văn bản..."
+              placeholder="Tìm Điều, Khoản, từ khóa..."
               className={cn(
                 'w-full pl-7 py-1 bg-white border border-slate-200 rounded text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500',
                 searchInputValue ? 'pr-20' : 'pr-2'
