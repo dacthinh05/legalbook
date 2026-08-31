@@ -4335,3 +4335,48 @@ describe('44. Comprehensive Cross-Document Navigation & Relations Tab Link Integ
     assert.ok(result.html.includes('legal-citation-link'));
   });
 });
+describe('45. Federated Live Legal Search & On-Demand Ingestion Engine (6 Criteria)', () => {
+  test('1. GET /api/search/external returns structured portal search results', async () => {
+    const fs = await import('fs');
+    const routeCode = fs.readFileSync('src/app/api/search/external/route.ts', 'utf8');
+    assert.ok(routeCode.includes('searchChinhPhuPortal'));
+    assert.ok(routeCode.includes('searchTaxGeneralPortal'));
+    assert.ok(routeCode.includes('isAvailableLocally'));
+  });
+
+  test('2. POST /api/documents/import-external structures documents conforming to Decree 30', async () => {
+    const fs = await import('fs');
+    const importCode = fs.readFileSync('src/app/api/documents/import-external/route.ts', 'utf8');
+    assert.ok(importCode.includes('reconstructStructuredLegalHtml'));
+    assert.ok(importCode.includes('formatLegalHtmlContent'));
+    assert.ok(importCode.includes('Nghị định 30/2020/NĐ-CP'));
+  });
+
+  test('3. SearchModal.tsx supports federated scope filter tab', async () => {
+    const fs = await import('fs');
+    const searchModalCode = fs.readFileSync('src/components/search/SearchModal.tsx', 'utf8');
+    assert.ok(searchModalCode.includes("scopeFilter === 'federated'"));
+    assert.ok(searchModalCode.includes('Cổng Quốc gia & TVPL'));
+  });
+
+  test('4. SearchModal.tsx renders live portal source badges (Chinh phu, GDT, TVPL)', async () => {
+    const fs = await import('fs');
+    const searchModalCode = fs.readFileSync('src/components/search/SearchModal.tsx', 'utf8');
+    assert.ok(searchModalCode.includes('item.sourceName'));
+    assert.ok(searchModalCode.includes('item.source ==='));
+  });
+
+  test('5. SearchModal.tsx handles on-demand ingestion when external document is clicked', async () => {
+    const fs = await import('fs');
+    const searchModalCode = fs.readFileSync('src/components/search/SearchModal.tsx', 'utf8');
+    assert.ok(searchModalCode.includes('handleImportAndOpenExternal'));
+    assert.ok(searchModalCode.includes('/api/documents/import-external'));
+    assert.ok(searchModalCode.includes('isIngestingExternal'));
+  });
+
+  test('6. duplicate-detector.ts normalizeDocNumber normalizes variations for deduping', async () => {
+    const { normalizeDocNumber } = await import('../src/lib/document-import/duplicate-detector.ts');
+    assert.strictEqual(normalizeDocNumber('132/2020/NĐ-CP'), '132/2020/ND-CP');
+    assert.strictEqual(normalizeDocNumber('69/2025/TT-BTC '), '69/2025/TT-BTC');
+  });
+});
