@@ -20,6 +20,7 @@ import {
   FileSpreadsheet,
   LucideIcon,
   X,
+  Clock,
 } from 'lucide-react';
 import { cn, DOCUMENT_TYPE_ABBREV, DOCUMENT_TYPE_COLORS } from '@/lib/utils';
 import type { Category, DocumentType, LegalDocument } from '@/types';
@@ -241,7 +242,7 @@ function TopicTreeNode({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onToggleExpand();
+              onToggleExpand(category.id);
             }}
             className="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded cursor-pointer shrink-0 transition-colors"
             title={isExpanded ? 'Thu gọn' : 'Mở rộng'}

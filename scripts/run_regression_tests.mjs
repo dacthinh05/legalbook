@@ -4289,3 +4289,49 @@ describe('43. Navigation History Stack, Quick Back Pill & Multi-Hop Back/Forward
     assert.ok(fullscreenBlock.includes('onNavigateBackInHistory'));
   });
 });
+describe('44. Comprehensive Cross-Document Navigation & Relations Tab Link Integrity (6 Criteria)', () => {
+  test('1. page.tsx passes onSelectRelatedDocument in standard 3-column DocumentReader', async () => {
+    const fs = await import('fs');
+    const pageCode = fs.readFileSync('src/app/page.tsx', 'utf8');
+    const standardReaderSection = pageCode.slice(pageCode.indexOf('/* Document Reader when a document is selected */'), pageCode.indexOf('/* Document Reader when a document is selected */') + 800);
+    assert.ok(standardReaderSection.includes('onSelectRelatedDocument={handleDocumentSelect}'), 'Must wire onSelectRelatedDocument in standard view');
+  });
+
+  test('2. page.tsx passes onSelectRelatedDocument in fullscreen DocumentReader', async () => {
+    const fs = await import('fs');
+    const pageCode = fs.readFileSync('src/app/page.tsx', 'utf8');
+    const fullscreenSection = pageCode.slice(pageCode.indexOf('fullscreen-reader'), pageCode.indexOf('fullscreen-reader') + 1200);
+    assert.ok(fullscreenSection.includes('onSelectRelatedDocument={handleDocumentSelect}'), 'Must wire onSelectRelatedDocument in fullscreen view');
+  });
+
+  test('3. LegalHierarchyTree.tsx renders click targets for onSelectDocument', async () => {
+    const fs = await import('fs');
+    const treeCode = fs.readFileSync('src/components/reader/LegalHierarchyTree.tsx', 'utf8');
+    assert.ok(treeCode.includes('onSelectDocument(node.document.id)'));
+    assert.ok(treeCode.includes('LegalKnowledgeGraph'));
+  });
+
+  test('4. LegalKnowledgeGraph.tsx renders interactive 2D SVG canvas and triggers onSelectDocument', async () => {
+    const fs = await import('fs');
+    const graphCode = fs.readFileSync('src/components/reader/LegalKnowledgeGraph.tsx', 'utf8');
+    assert.ok(graphCode.includes('onSelectDocument(node.document.id)'));
+    assert.ok(graphCode.includes('<svg'));
+    assert.ok(graphCode.includes('BẢN ĐỒ PHẢ HỆ PHÁP LÝ'));
+  });
+
+  test('5. DocumentReader.tsx wires onSelectDocument in activeTab === "quanhe"', async () => {
+    const fs = await import('fs');
+    const readerCode = fs.readFileSync('src/components/reader/DocumentReader.tsx', 'utf8');
+    assert.ok(readerCode.includes("<LegalHierarchyTree document={doc} onSelectDocument={onSelectRelatedDocument || (() => {})} />"));
+  });
+
+  test('6. citation-linker.ts creates data-doc-id attributes for in-text click navigation', async () => {
+    const { linkLegalCitations } = await import('../src/lib/legal-engine/citation-linker.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const sampleHtml = '<p>Theo quy định tại Nghị định 123/2020/NĐ-CP về hóa đơn chứng từ.</p>';
+    const result = linkLegalCitations(sampleHtml, DEMO_DOCUMENTS);
+    assert.ok(result.citationsCount > 0);
+    assert.ok(result.html.includes('data-doc-id='));
+    assert.ok(result.html.includes('legal-citation-link'));
+  });
+});

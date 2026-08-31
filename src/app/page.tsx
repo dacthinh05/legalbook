@@ -326,6 +326,7 @@ export default function MainPage() {
       );
     }
     if (selectedCategoryId.includes('__type__')) {
+      const [baseCatId, docType] = selectedCategoryId.split('__type__');
       const descendantIds = new Set(getDescendantCategoryIds(baseCatId, categoryData.categories));
       return allDocList.filter((d) => {
         const links = DEMO_CATEGORY_LINKS.filter(
@@ -532,10 +533,11 @@ export default function MainPage() {
     setSearchTarget(navTarget || null);
     setSearchOpen(false);
   };
-
   const listCategoryTitle = selectedCategoryId === '__recent_updates__'
     ? 'Văn bản mới (30 ngày gần đây)'
     : activeCategory?.name || (selectedDocType ? (DOCUMENT_TYPE_LABELS[selectedDocType] || selectedDocType) : 'Tất cả văn bản');
+
+  if (readerFullscreen && selectedDocument) {
     return (
       <div className="fullscreen-reader flex flex-col">
         <div className="flex items-center gap-2 px-4 py-2 border-b bg-white">
@@ -571,8 +573,6 @@ export default function MainPage() {
       </div>
     );
   }
-
-  const listCategoryTitle = activeCategory?.name || (selectedDocType ? (DOCUMENT_TYPE_LABELS[selectedDocType] || selectedDocType) : 'Tất cả văn bản');
 
   return (
     <div className="flex flex-col h-screen bg-slate-100 overflow-hidden select-text min-h-0">
@@ -763,6 +763,7 @@ export default function MainPage() {
               allDocuments={allDocList}
               isBookmarked={bookmarkedDocuments.has(selectedDocument.id!)}
               onToggleBookmark={() => handleToggleBookmark(selectedDocument.id!)}
+              onSelectRelatedDocument={handleDocumentSelect}
               onFullscreen={() => setReaderFullscreen(true)}
               isFullscreen={false}
               onBack={handleResetHome}

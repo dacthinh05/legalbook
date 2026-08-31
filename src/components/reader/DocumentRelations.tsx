@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, GitFork, ArrowUpRight, ArrowDownLeft, Columns2, GitCompare, FileText, Bot } from 'lucide-react';
+import { X, GitFork, ArrowUpRight, ArrowDownLeft, Columns2, GitCompare, FileText, Bot, Network } from 'lucide-react';
 import { getDocumentRelations, getDocumentById } from '@/lib/demo-data';
 import { RELATION_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, getEffectiveStatus } from '@/lib/utils';
 import { LegalDiffViewer } from './LegalDiffViewer';
 import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
+import { LegalRelationshipGraphModal } from '../graph/LegalRelationshipGraphModal';
 import type { LegalDocument, RelationType, DocumentRelation } from '@/types';
 interface DocumentRelationsProps {
   document: LegalDocument;
@@ -25,8 +26,8 @@ export function DocumentRelations({
 
   const [compareDoc, setCompareDoc] = useState<{ doc: LegalDocument; relationType?: string } | null>(null);
   const [showAiCrossModal, setShowAiCrossModal] = useState(false);
+  const [showGraphModal, setShowGraphModal] = useState(false);
   const [aiSelectedDocs, setAiSelectedDocs] = useState<LegalDocument[]>([]);
-
   const handleOpenAiAnalysis = (targetDoc?: LegalDocument) => {
     if (targetDoc) {
       setAiSelectedDocs([targetDoc]);
@@ -73,6 +74,15 @@ export function DocumentRelations({
         />
       )}
 
+      {/* 2D Interactive Legal Knowledge Graph Modal */}
+      {showGraphModal && (
+        <LegalRelationshipGraphModal
+          document={doc}
+          onClose={() => setShowGraphModal(false)}
+          onSelectDocument={onSelectDocument}
+        />
+      )}
+
       <div className="w-80 md:w-96 bg-white border-l border-gray-200 flex flex-col h-full overflow-hidden shadow-lg animate-slide-in flex-shrink-0">
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50 flex-shrink-0">
@@ -85,12 +95,21 @@ export function DocumentRelations({
           <div className="flex items-center gap-1.5">
             <button
               type="button"
+              onClick={() => setShowGraphModal(true)}
+              className="px-2 py-1 rounded bg-purple-700 hover:bg-purple-800 text-white text-[11px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer"
+              title="Xem bản đồ liên kết dạng Đồ thị 2D"
+            >
+              <Network className="w-3 h-3 text-white" />
+              <span>Đồ thị 2D</span>
+            </button>
+            <button
+              type="button"
               onClick={() => handleOpenAiAnalysis()}
-              className="px-2.5 py-1 rounded bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer"
+              className="px-2 py-1 rounded bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer"
               title="Phân tích với văn bản khác bằng AI"
             >
               <GitCompare className="w-3 h-3 text-white" />
-              <span>Phân tích liên văn bản</span>
+              <span>Phân tích</span>
             </button>
             <button
               onClick={onClose}

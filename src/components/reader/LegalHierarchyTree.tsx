@@ -158,9 +158,14 @@ export function LegalHierarchyTree({
             <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
               <div className="flex items-center gap-1.5 flex-wrap">
                 {getTierBadge(node.tier)}
-                <span className="font-mono text-xs font-bold text-slate-900">
+                <button
+                  type="button"
+                  onClick={() => onSelectDocument(node.document.id)}
+                  className="font-mono text-xs font-bold text-slate-900 hover:text-blue-700 hover:underline cursor-pointer"
+                  title="Nhấn để mở toàn văn văn bản này"
+                >
                   {node.document.document_number}
-                </span>
+                </button>
                 <span
                   className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${
                     DOCUMENT_STATUS_COLORS[effStatus]

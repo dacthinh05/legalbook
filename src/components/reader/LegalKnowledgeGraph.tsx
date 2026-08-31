@@ -432,10 +432,17 @@ export function LegalKnowledgeGraph({
                     </span>
                   )}
                 </div>
-                <div className="text-[11.5px] text-slate-300 line-clamp-2 leading-snug">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectDocument(node.document.id);
+                  }}
+                  className="text-[11.5px] text-slate-300 hover:text-blue-300 line-clamp-2 leading-snug text-left cursor-pointer transition-colors"
+                  title="Nhấn để mở văn bản này"
+                >
                   {node.document.title}
-                </div>
-
+                </button>
                 {/* Bottom Metadata & Quick Action */}
                 <div className="mt-2 pt-1.5 border-t border-slate-700/60 flex items-center justify-between text-[10px] text-slate-400">
                   <span>{node.document.issuing_body}</span>
