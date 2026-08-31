@@ -8,7 +8,7 @@
  *    explicit NEXT_PUBLIC_DEMO_MODE='true' flag is set.
  */
 
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from './supabase/client';
 import { 
   DEMO_CATEGORIES, 
   DEMO_DOCUMENTS, 
@@ -16,10 +16,10 @@ import {
   getDocumentById as getEmbeddedDocumentById, 
   getDocumentRelations as getEmbeddedDocumentRelations,
   getDocumentsForCategoryTree as getEmbeddedDocsForCategory 
-} from '@/lib/demo-data';
-import { getCategoryDocumentType } from '@/lib/tree-utils';
-import type { LegalDocument, Category, DocumentRelation, DocumentType } from '@/types';
-
+} from './demo-data';
+import { getCategoryDocumentType } from './tree-utils';
+import { executeSearch } from './search';
+import type { LegalDocument, Category, DocumentRelation, DocumentType, DocumentFile, FileType } from '@/types';
 export type DataSourceType = 'supabase_live' | 'embedded_repository' | 'unavailable';
 
 export interface DataResult<T> {
@@ -41,11 +41,7 @@ export function isSupabaseConfigured(): boolean {
  * Determines whether running in production mode without explicit demo allowance.
  */
 export function isStrictProductionMode(): boolean {
-  // NEXT_PUBLIC_DEMO_MODE và NODE_ENV đều được Next.js inline tại build time,
-  // nên logic này hoạt động thống nhất cả phía client lẫn server.
-  // Fail-closed: production mặc định là strict (không dùng dữ liệu mô phỏng)
-  // trừ khi NEXT_PUBLIC_DEMO_MODE='true' được bật tường minh.
-  const isProd = process.env.NODE_ENV === 'production';
+  const isProd = process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_STRICT_PROD === 'true';
   const isDemoExplicit = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
   return isProd && !isDemoExplicit;
 }
@@ -55,6 +51,18 @@ export function isStrictProductionMode(): boolean {
  */
 export function isEmbeddedDataPermitted(): boolean {
   return !isStrictProductionMode();
+}
+
+interface CachedDocsResult {
+  data: LegalDocument[];
+  source: DataSourceType;
+  timestamp: number;
+}
+const documentCache = new Map<string, CachedDocsResult>();
+const CACHE_TTL_MS = 60000;
+
+export function invalidateDocumentCache(): void {
+  documentCache.clear();
 }
 
 const STORAGE_KEY_DELETED_DOCS = 'lb_deleted_document_ids';
@@ -77,6 +85,7 @@ export function getDeletedDocumentIds(): Set<string> {
 }
 
 export function markDocumentAsDeleted(id: string): void {
+  invalidateDocumentCache();
   inMemoryDeletedIds.add(id);
   if (typeof window !== 'undefined') {
     try {
@@ -88,6 +97,7 @@ export function markDocumentAsDeleted(id: string): void {
 }
 
 export function markDocumentsAsDeleted(ids: string[]): void {
+  invalidateDocumentCache();
   ids.forEach((id) => inMemoryDeletedIds.add(id));
   if (typeof window !== 'undefined') {
     try {
@@ -102,6 +112,7 @@ export function markDocumentsAsDeleted(ids: string[]): void {
  * Restores all deleted documents (clear local deleted cache).
  */
 export function restoreAllDeletedDocuments(): void {
+  invalidateDocumentCache();
   inMemoryDeletedIds.clear();
   if (typeof window !== 'undefined') {
     try {
@@ -146,6 +157,228 @@ export async function batchDeleteDocuments(ids: string[]): Promise<{ success: bo
   }
 
   return { success: true, count: ids.length };
+}
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function ensureValidUUID(id?: string | null): string {
+  if (id && UUID_REGEX.test(id)) {
+    return id;
+  }
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+export function sanitizeStorageKey(filename: string): string {
+  const str = filename.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return str.replace(/[^a-zA-Z0-9.\-_]/g, '_').replace(/_+/g, '_');
+}
+
+export interface FileAttachmentInput {
+  id?: string;
+  fileBuffer?: Uint8Array | ArrayBuffer | Blob;
+  originalFileName: string;
+  fileType: 'pdf' | 'docx' | 'doc' | 'html';
+  fileSize?: number;
+  isPrimary?: boolean;
+}
+
+/**
+ * Saves or updates a legal document into Supabase (including Storage upload for attachments) and/or client persistence.
+ */
+export async function saveDocument(
+  doc: Partial<LegalDocument>,
+  attachments?: FileAttachmentInput[]
+): Promise<{ success: boolean; data?: LegalDocument; error?: string }> {
+  invalidateDocumentCache();
+
+  const isConfigured = isSupabaseConfigured();
+  const isStrictProd = isStrictProductionMode();
+  const isExplicitNewDoc = !doc.id;
+  const docId = ensureValidUUID(doc.id);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+
+  const processedFiles: DocumentFile[] = [];
+  const fileUploadTasks: Array<{ storageKey: string; buffer: Uint8Array | ArrayBuffer | Blob; contentType: string }> = [];
+  // Build document files payload with namespaced unique storage keys
+  if (attachments && attachments.length > 0) {
+    for (const att of attachments) {
+      const fileId = ensureValidUUID(att.id);
+      const cleanName = sanitizeStorageKey(att.originalFileName || 'document.docx');
+      const storageKey = `imports/${docId}/${fileId}_${cleanName}`;
+      const publicUrl = isConfigured
+        ? `${supabaseUrl}/storage/v1/object/public/documents/${storageKey}`
+        : `/documents/${att.originalFileName}`;
+
+      processedFiles.push({
+        id: fileId,
+        document_id: docId,
+        file_type: (att.fileType === 'pdf' || att.fileType === 'html') ? att.fileType : 'docx',
+        file_url: publicUrl,
+        original_filename: att.originalFileName || 'document.docx',
+        file_size: att.fileSize || 0,
+        is_primary: att.isPrimary ?? true,
+        version: 1,
+        uploaded_by: null,
+        created_at: new Date().toISOString(),
+      });
+
+      if (att.fileBuffer) {
+        const contentType =
+          att.fileType === 'pdf'
+            ? 'application/pdf'
+            : att.fileType === 'docx'
+            ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            : 'application/octet-stream';
+        fileUploadTasks.push({ storageKey, buffer: att.fileBuffer, contentType });
+      }
+    }
+  } else if (doc.files && doc.files.length > 0) {
+    for (const f of doc.files) {
+      processedFiles.push({
+        ...f,
+        id: ensureValidUUID(f.id),
+        document_id: docId,
+      });
+    }
+  }
+
+  const fullDoc: LegalDocument = {
+    id: docId,
+    title: doc.title || 'Văn bản chưa đặt tên',
+    document_number: doc.document_number || '',
+    document_type: doc.document_type || 'thong_tu',
+    status: doc.status || 'hieu_luc',
+    issuing_body: doc.issuing_body || '',
+    signer: doc.signer || '',
+    issued_date: doc.issued_date || new Date().toISOString().slice(0, 10),
+    effective_date: doc.effective_date || new Date().toISOString().slice(0, 10),
+    expiry_date: doc.expiry_date || null,
+    html_content: doc.html_content || '',
+    summary_main: doc.summary_main || '',
+    summary_new_points: doc.summary_new_points || '',
+    summary_affected_parties: doc.summary_affected_parties || null,
+    summary_accounting_impact: doc.summary_accounting_impact || null,
+    summary_audit_impact: doc.summary_audit_impact || null,
+    summary_actions_needed: doc.summary_actions_needed || null,
+    summary_is_ai_generated: doc.summary_is_ai_generated ?? false,
+    official_source_url: doc.official_source_url || null,
+    is_deleted: doc.is_deleted ?? false,
+    is_published: doc.is_published ?? true,
+    review_status: doc.review_status || 'published',
+    view_count: doc.view_count || 0,
+    created_by: doc.created_by || null,
+    created_at: doc.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    content_status: doc.content_status || 'verified',
+    source_type: doc.source_type || 'manual',
+    files: processedFiles,
+  };
+  if (isConfigured) {
+    const uploadedKeys: string[] = [];
+    const supabase = createClient();
+
+    try {
+      // 1. Upload binary file buffers to Supabase Storage with unique keys
+      for (const task of fileUploadTasks) {
+        const { error: uploadErr } = await supabase.storage
+          .from('documents')
+          .upload(task.storageKey, task.buffer, { contentType: task.contentType, upsert: true });
+
+        if (uploadErr) {
+          if (uploadedKeys.length > 0) {
+            await supabase.storage.from('documents').remove(uploadedKeys);
+          }
+          return { success: false, error: `Lỗi upload tệp đính kèm lên Storage: ${uploadErr.message}` };
+        }
+        uploadedKeys.push(task.storageKey);
+      }
+
+      // 2. Upsert legal_documents record
+      const dbPayload = {
+        id: fullDoc.id,
+        title: fullDoc.title,
+        document_number: fullDoc.document_number,
+        document_type: fullDoc.document_type,
+        status: fullDoc.status,
+        issuing_body: fullDoc.issuing_body,
+        signer: fullDoc.signer,
+        issued_date: fullDoc.issued_date,
+        effective_date: fullDoc.effective_date,
+        html_content: fullDoc.html_content,
+        summary_main: fullDoc.summary_main,
+        summary_new_points: fullDoc.summary_new_points,
+        is_deleted: false,
+        is_published: true,
+        review_status: 'published',
+        created_by: null,
+        updated_at: fullDoc.updated_at,
+      };
+
+      const { error: docErr } = await supabase.from('legal_documents').upsert(dbPayload, { onConflict: 'id' });
+      if (docErr) {
+        if (uploadedKeys.length > 0) {
+          await supabase.storage.from('documents').remove(uploadedKeys);
+        }
+        return { success: false, error: `Lỗi lưu văn bản vào CSDL: ${docErr.message}` };
+      }
+
+      // 3. Upsert document_files table records
+      if (processedFiles.length > 0) {
+        const filesPayload = processedFiles.map((f) => ({
+          id: f.id,
+          document_id: fullDoc.id,
+          file_type: f.file_type || 'docx',
+          file_url: f.file_url || '',
+          file_size: f.file_size || 0,
+          original_filename: f.original_filename || 'document.docx',
+          is_primary: f.is_primary ?? true,
+          version: f.version || 1,
+          uploaded_by: null,
+        }));
+
+        const { error: fileErr } = await supabase.from('document_files').upsert(filesPayload, { onConflict: 'id' });
+        if (fileErr) {
+          if (uploadedKeys.length > 0) {
+            await supabase.storage.from('documents').remove(uploadedKeys);
+          }
+          // Only rollback parent document if this was a brand-new insert to prevent deleting pre-existing docs on update
+          if (isExplicitNewDoc) {
+            await supabase.from('legal_documents').delete().eq('id', fullDoc.id);
+          }
+          return { success: false, error: `Lỗi lưu thông tin tệp đính kèm: ${fileErr.message}` };
+        }
+      }
+
+      return { success: true, data: fullDoc };
+    } catch (err: unknown) {
+      if (uploadedKeys.length > 0) {
+        await supabase.storage.from('documents').remove(uploadedKeys);
+      }
+      if (isExplicitNewDoc) {
+        await supabase.from('legal_documents').delete().eq('id', fullDoc.id);
+      }
+      return { success: false, error: `Không thể kết nối CSDL: ${err instanceof Error ? err.message : String(err)}` };
+    }
+  }
+
+  // Fallback to in-memory collection ONLY in non-production environments when permitted
+  if (!isConfigured && isEmbeddedDataPermitted()) {
+    const idx = DEMO_DOCUMENTS.findIndex((d) => d.id === fullDoc.id);
+    if (idx >= 0) {
+      DEMO_DOCUMENTS[idx] = fullDoc;
+    } else {
+      DEMO_DOCUMENTS.unshift(fullDoc);
+    }
+    return { success: true, data: fullDoc };
+  }
+
+  return { success: false, error: 'CSDL Supabase chưa được cấu hình trên môi trường Production.' };
 }
 
 /**
@@ -220,6 +453,18 @@ export async function getCategories(): Promise<DataResult<{
 export async function getDocuments(categoryId?: string | null): Promise<DataResult<LegalDocument[]>> {
   const isConfigured = isSupabaseConfigured();
   const isStrictProd = isStrictProductionMode();
+  const cacheKey = categoryId || '__ALL__';
+  const cached = documentCache.get(cacheKey);
+  const now = Date.now();
+
+  if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+    const deletedIds = isConfigured ? inMemoryDeletedIds : getDeletedDocumentIds();
+    const filtered = cached.data.filter((d) => !deletedIds.has(d.id));
+    return {
+      data: filtered,
+      source: cached.source,
+    };
+  }
 
   if (isConfigured) {
     try {
@@ -306,8 +551,14 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
           };
         }
       } else if (data && data.length > 0) {
-        const deletedIds = getDeletedDocumentIds();
-        const filtered = (data as LegalDocument[]).filter((d) => !deletedIds.has(d.id));
+        const rawList = data as LegalDocument[];
+        documentCache.set(cacheKey, {
+          data: rawList,
+          source: 'supabase_live',
+          timestamp: now,
+        });
+        const deletedIds = inMemoryDeletedIds;
+        const filtered = deletedIds.size > 0 ? rawList.filter((d) => !deletedIds.has(d.id)) : rawList;
         return {
           data: filtered,
           source: 'supabase_live',
@@ -338,6 +589,12 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
     ? (getEmbeddedDocsForCategory(categoryId) as unknown as LegalDocument[])
     : (DEMO_DOCUMENTS as unknown as LegalDocument[]);
 
+  documentCache.set(cacheKey, {
+    data: rawDocs,
+    source: 'embedded_repository',
+    timestamp: now,
+  });
+
   const deletedIds = getDeletedDocumentIds();
   const docs = rawDocs.filter((d) => !deletedIds.has(d.id));
 
@@ -346,38 +603,61 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
     source: 'embedded_repository',
   };
 }
+
 /**
  * Fetches a single document by ID.
  */
 export async function getDocumentById(id: string): Promise<DataResult<LegalDocument | null>> {
+  if (!id) {
+    return { data: null, source: 'unavailable', error: 'Thiếu ID văn bản' };
+  }
+
   const isConfigured = isSupabaseConfigured();
   const isStrictProd = isStrictProductionMode();
+  const isUUID = UUID_REGEX.test(id);
 
   if (isConfigured) {
     try {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from('legal_documents')
-        .select('*, files:document_files(*)')
-        .eq('id', id)
-        .single();
+      let data = null;
+      let error = null;
 
-      if (error) {
-        if (isStrictProd) {
-          return {
-            data: null,
-            source: 'unavailable',
-            error: `Không tìm thấy văn bản trong CSDL: ${error.message}`,
-          };
-        }
-      } else if (data) {
+      if (isUUID) {
+        const res = await supabase
+          .from('legal_documents')
+          .select('*, files:document_files(*)')
+          .eq('id', id)
+          .maybeSingle();
+        data = res.data;
+        error = res.error;
+      } else {
+        // Fallback: search by document_number or slug
+        const res = await supabase
+          .from('legal_documents')
+          .select('*, files:document_files(*)')
+          .or(`document_number.eq.${id},slug.eq.${id}`)
+          .limit(1)
+          .maybeSingle();
+        data = res.data;
+        error = res.error;
+      }
+
+      if (data) {
         return {
           data: data as LegalDocument,
           source: 'supabase_live',
         };
       }
+
+      if (error && isStrictProd && isUUID) {
+        return {
+          data: null,
+          source: 'unavailable',
+          error: `Không tìm thấy văn bản trong CSDL: ${error.message}`,
+        };
+      }
     } catch (err: unknown) {
-      if (isStrictProd) {
+      if (isStrictProd && isUUID) {
         return {
           data: null,
           source: 'unavailable',
@@ -387,19 +667,80 @@ export async function getDocumentById(id: string): Promise<DataResult<LegalDocum
     }
   }
 
+  // Fallback to embedded authentic repository
+  const doc = getEmbeddedDocumentById(id) || DEMO_DOCUMENTS.find(
+    (d) => d.id === id || d.document_number === id || (d.slug && d.slug === id)
+  );
+
+  if (doc) {
+    return {
+      data: (doc as unknown as LegalDocument),
+      source: 'embedded_repository',
+    };
+  }
+
   if (isStrictProd) {
     return {
       data: null,
       source: 'unavailable',
-      error: 'CSDL văn bản pháp luật chính thức chưa được cấu hình.',
+      error: 'Văn bản không tồn tại trong CSDL.',
     };
   }
 
-  const doc = getEmbeddedDocumentById(id);
   return {
-    data: (doc as unknown as LegalDocument) || null,
+    data: null,
     source: 'embedded_repository',
   };
+}
+
+export async function getDocumentRelations(docId: string): Promise<DataResult<{
+  as_source: DocumentRelation[];
+  as_target: DocumentRelation[];
+}>> {
+  const isConfigured = isSupabaseConfigured();
+  const isStrictProd = isStrictProductionMode();
+  const isUUID = UUID_REGEX.test(docId);
+
+  if (isConfigured && isUUID) {
+    try {
+      const supabase = createClient();
+      const [srcRes, tgtRes] = await Promise.all([
+        supabase
+          .from('document_relations')
+          .select('*, target_document:legal_documents!document_relations_target_document_id_fkey(*)')
+          .eq('source_document_id', docId),
+        supabase
+          .from('document_relations')
+          .select('*, source_document:legal_documents!document_relations_source_document_id_fkey(*)')
+          .eq('target_document_id', docId),
+      ]);
+
+      if (!srcRes.error && !tgtRes.error && ((srcRes.data && srcRes.data.length > 0) || (tgtRes.data && tgtRes.data.length > 0))) {
+        return {
+          data: {
+            as_source: (srcRes.data || []) as DocumentRelation[],
+            as_target: (tgtRes.data || []) as DocumentRelation[],
+          },
+          source: 'supabase_live',
+        };
+      }
+    } catch (err: unknown) {
+      console.warn('Supabase relations fetch note:', err);
+    }
+  }
+
+  const rels = getEmbeddedDocumentRelations(docId);
+  return {
+    data: {
+      as_source: rels?.as_source || [],
+      as_target: rels?.as_target || [],
+    },
+    source: 'embedded_repository',
+  };
+}
+
+function getEmbeddedRelationsFallback(docId: string) {
+  return getEmbeddedDocumentRelations(docId);
 }
 
 /**
@@ -553,7 +894,6 @@ export async function searchDocumentsHybrid(
 
   // High-speed embedded fallback
   const allEmbeddedDocs = DEMO_DOCUMENTS as unknown as LegalDocument[];
-  const { executeSearch } = await import('@/lib/search');
   const embeddedMatches = executeSearch(allEmbeddedDocs, params.query || '', {
     typeFilter: params.docType ? (params.docType as unknown as DocumentType) : 'all',
     statusFilter: 'all',
