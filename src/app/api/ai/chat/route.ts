@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocumentById, getDocuments, isEmbeddedDataPermitted } from '@/lib/data-service';
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
-import { queryLegalAssistant, generateLocalDocumentSummary, type LegalCitation, type LegalAiResponse } from '@/lib/ai/legal-rag';
+import { queryLegalAssistant, generateLocalDocumentSummary, type LegalCitation } from '@/lib/ai/legal-rag';
 import { cleanHtmlToText } from '@/lib/sanitize.server';
+import { executeSearch } from '@/lib/search';
+import { getCandidateDocNumbersForSituation } from '@/lib/search/audit-situation-dictionary';
+import { extractStructuredArticles } from '@/lib/diff-engine';
 import type { LegalDocument } from '@/types';
 
 export const runtime = 'nodejs';
@@ -18,13 +21,20 @@ interface ChatRequestBody {
   mode?: 'ask' | 'compare' | 'summary' | 'cross_analysis';
 }
 
+const CANDIDATE_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-flash-latest',
+  'gemini-2.5-pro',
+  'gemini-pro-latest',
+];
+
 /**
- * Calls Google Gemini REST API with automated key rotation (Primary -> Backup).
+ * Calls Google Gemini REST API with automated model & key rotation.
  */
 async function callGeminiApi(
   prompt: string,
   systemInstruction: string
-): Promise<{ text: string; keyUsed: string } | null> {
+): Promise<{ text: string; keyUsed: string; modelUsed: string } | null> {
   const keys = [
     process.env.GEMINI_API_KEY,
     process.env.GEMINI_API_BACKUP_KEY,
@@ -32,46 +42,51 @@ async function callGeminiApi(
 
   if (keys.length === 0) return null;
 
-  for (let i = 0; i < keys.length; i++) {
-    const apiKey = keys[i];
-    try {
-      // Using gemini-2.5-flash
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  for (let k = 0; k < keys.length; k++) {
+    const apiKey = keys[k];
+    for (const model of CANDIDATE_MODELS) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }],
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: prompt }],
+              },
+            ],
+            systemInstruction: {
+              parts: [{ text: systemInstruction }],
             },
-          ],
-          systemInstruction: {
-            parts: [{ text: systemInstruction }],
-          },
-          generationConfig: {
-            temperature: 0.2, // Low temperature for legal accuracy
-            maxOutputTokens: 2048,
-          },
-        }),
-      });
+            generationConfig: {
+              temperature: 0.2, // Low temperature for high legal grounding
+              maxOutputTokens: 2500,
+            },
+          }),
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (generatedText) {
-          return { text: generatedText, keyUsed: `key-${i + 1}` };
+        if (res.ok) {
+          const data = await res.json();
+          const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (generatedText && generatedText.trim().length > 0) {
+            return {
+              text: generatedText,
+              keyUsed: `key-${k + 1}`,
+              modelUsed: model,
+            };
+          }
+        } else {
+          const errText = await res.text();
+          console.warn(`Gemini API key-${k + 1} (${model}) status ${res.status}:`, errText.slice(0, 150));
         }
-      } else {
-        const errText = await res.text();
-        console.warn(`Gemini API key-${i + 1} error (${res.status}):`, errText);
+      } catch (err) {
+        console.warn(`Gemini API key-${k + 1} (${model}) network exception:`, err);
       }
-    } catch (err) {
-      console.warn(`Gemini API key-${i + 1} network exception:`, err);
     }
   }
 
@@ -82,7 +97,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as ChatRequestBody;
     const { question, documentId, docAId, docBId, mode = 'ask' } = body;
-    // 1. Resolve Document Context (Live DB with fallback)
+
+    // 1. Resolve Document Context
     let targetDoc: LegalDocument | null = null;
     let docA: LegalDocument | null = null;
     let docB: LegalDocument | null = null;
@@ -100,29 +116,33 @@ export async function POST(request: NextRequest) {
       docB = res.data;
     }
 
-    // Fallback/corpus lookup for multi-document cross analysis or local fallback
+    // Load full corpus for multi-doc search / Whole Library RAG
     const allDocsRes = await getDocuments(null);
     let allDocs: LegalDocument[] = allDocsRes.data || [];
     if (allDocs.length === 0 && isEmbeddedDataPermitted()) {
       allDocs = DEMO_DOCUMENTS as unknown as LegalDocument[];
     }
-    const systemInstruction = `Bạn là Trợ lý Pháp lý & Thuế Kế toán AI cao cấp của LegalBook.
-Nhiệm vụ của bạn:
-1. Trả lời câu hỏi nghiệp vụ một cách chính xác, trung thực, mạch lạc, dễ hiểu cho kế toán, kiểm toán và chuyên viên pháp chế.
-2. BẮT BUỘC TRÍCH DẪN RÕ RÀNG: Mọi khẳng định, hướng dẫn, mức thuế, thời hạn đều phải ghi rõ [Căn cứ Điều X, Khoản Y số hiệu văn bản ...].
-3. TUYỆT ĐỐI KHÔNG TỰ BỊA ĐẶT (ZERO-HALLUCINATION): Chỉ trả lời dựa trên 100% nội dung pháp lý được cung cấp trong phần [VĂN BẢN QUY PHẠM]. Nếu trong văn bản không quy định nội dung người dùng hỏi, hãy nói rõ: "Văn bản này không có quy định về nội dung bạn hỏi. Bạn vui lòng tra cứu thêm tại các văn bản liên quan khác."
-4. Trình bày định dạng Markdown sạch đẹp, có các gạch đầu dòng rõ ràng, bảng số liệu (nếu có).`;
-    // ── Mode: CROSS_ANALYSIS (Phân tích liên văn bản AI đa văn bản) ───────────
+
+    const systemInstruction = `Bạn là Trợ lý Pháp lý & Kế toán - Thuế AI chuyên nghiệp của LegalBook (chuẩn xác, trung thực, có căn cứ điều khoản).
+Quy tắc trả lời:
+1. TRẢ LỜI RÕ RÀNG, TRỰC DIỆN: Đưa ra câu trả lời dứt khoát, dễ hiểu cho Kế toán, Kiểm toán viên và Doanh nghiệp.
+2. BẮT BUỘC TRÍCH DẪN ĐIỀU KHOẢN: Mọi khẳng định về tỷ lệ thuế, thời hạn, điều kiện, hồ sơ phải ghi rõ căn cứ [Điều X, Khoản Y số hiệu văn bản].
+3. DỰA TRÊN VĂN BẢN ĐƯỢC CUNG CẤP: Sử dụng tri thức từ các văn bản pháp luật được cung cấp dưới đây. Nếu văn bản không quy định, hãy nêu rõ phạm vi chưa quy định và hướng dẫn tìm kiếm thêm.
+4. Trình bày định dạng Markdown mạch lạc, có gạch đầu dòng và phân mục rõ ràng.`;
+
+    // ── Mode: CROSS_ANALYSIS (Phân tích liên văn bản đa văn bản) ───────────
     if (mode === 'cross_analysis' && (targetDoc || (body.selectedDocIds && body.selectedDocIds.length > 0))) {
       const primary = targetDoc || allDocs.find((d) => d.id === body.selectedDocIds?.[0]);
       const otherIds = (body.selectedDocIds || []).filter((id) => id !== primary?.id);
       const otherDocs = allDocs.filter((d) => otherIds.includes(d.id)).slice(0, 4);
       const docsToAnalyze = primary ? [primary, ...otherDocs] : otherDocs.slice(0, 5);
 
-      const docSectionsText = docsToAnalyze.map((d, idx) => {
-        const text = d.html_content ? cleanHtmlToText(d.html_content).slice(0, 10000) : '';
-        return `[VĂN BẢN ${idx + 1}]: ${d.document_number || '---'} | ${d.title} | Cơ quan: ${d.issuing_body || 'N/A'} | Hiệu lực: ${d.effective_date || 'N/A'} | Trạng thái: ${d.status}\nNội dung trích đoạn:\n${text}\n`;
-      }).join('\n');
+      const docSectionsText = docsToAnalyze
+        .map((d, idx) => {
+          const text = d.html_content ? cleanHtmlToText(d.html_content).slice(0, 10000) : '';
+          return `[VĂN BẢN ${idx + 1}]: ${d.document_number || '---'} | ${d.title} | Cơ quan: ${d.issuing_body || 'N/A'} | Hiệu lực: ${d.effective_date || 'N/A'} | Trạng thái: ${d.status}\nNội dung trích đoạn:\n${text}\n`;
+        })
+        .join('\n');
 
       const crossPrompt = `Hãy thực hiện phân tích liên văn bản chuyên sâu cho ${docsToAnalyze.length} văn bản pháp luật sau:
 
@@ -131,12 +151,12 @@ ${docSectionsText}
 MỤC TIÊU PHÂN TÍCH: ${body.objective || 'Tổng quan điểm giống và khác'}
 CÂU HỎI CỤ THỂ / YÊU CẦU: ${question || 'Hãy đối chiếu và phân tích toàn diện mối quan hệ, vai trò và tác động thực tế của các văn bản trên.'}
 
-BẮT BUỘC TRẢ LỜI CÓ CẤU TRÚC JSON HOẶC MARKDOWN RÕ RÀNG VỚI 6 PHẦN:
-1. KẾT LUẬN NGẮN (Trả lời trực diện câu hỏi hoặc tóm tắt bản chất quan hệ)
+BẮT BUỘC TRẢ LỜI CÓ CẤU TRÚC MARKDOWN RÕ RÀNG VỚI 6 PHẦN:
+1. KẾT LUẬN NGẮN (Trả lời trực diện câu hỏi)
 2. VAI TRÒ CỦA TỪNG VĂN BẢN (Phân cấp thứ bậc, phạm vi)
 3. ĐIỂM GIỐNG VÀ KHÁC (So sánh chi tiết các tiêu chí)
 4. TÁC ĐỘNG THỰC TẾ (Đối tượng, điều kiện, hồ sơ, rủi ro)
-5. ĐIỂM CHƯA CHẮC CHẮN & CẢNH BÁO (Quan hệ chưa xác minh, văn bản hết hiệu lực)
+5. CẢNH BÁO PHÁP LÝ (Văn bản hết hiệu lực hoặc sửa đổi)
 6. NGUỒN DẪN CHIẾU (Số hiệu, Điều, Khoản cụ thể)`;
 
       const aiResult = await callGeminiApi(crossPrompt, systemInstruction);
@@ -145,6 +165,7 @@ BẮT BUỘC TRẢ LỜI CÓ CẤU TRÚC JSON HOẶC MARKDOWN RÕ RÀNG VỚI 6 
           success: true,
           source: 'gemini',
           keyUsed: aiResult.keyUsed,
+          modelUsed: aiResult.modelUsed,
           answer: aiResult.text,
           executiveConclusion: aiResult.text.slice(0, 500),
           citations: docsToAnalyze.map((d) => ({
@@ -187,6 +208,7 @@ ${question || 'Hãy tóm tắt 4 điểm khác biệt hoặc quy định chi ti�
           success: true,
           source: 'gemini',
           keyUsed: aiResult.keyUsed,
+          modelUsed: aiResult.modelUsed,
           answer: aiResult.text,
           citations: [
             primaryA ? { documentId: primaryA.id, documentNumber: primaryA.document_number, documentTitle: primaryA.title, exactQuote: 'Toàn văn văn bản 1', confidence: 0.95 } : null,
@@ -264,6 +286,7 @@ Trình bày định dạng Markdown chuyên nghiệp, rõ ràng theo đúng 5 ph
           success: true,
           source: 'gemini',
           keyUsed: aiResult.keyUsed,
+          modelUsed: aiResult.modelUsed,
           answer: aiResult.text,
           citations,
           suggestedFollowUps: [
@@ -298,35 +321,124 @@ Trình bày định dạng Markdown chuyên nghiệp, rõ ràng theo đúng 5 ph
       });
     }
 
-    // ── Mode: IN-DOCUMENT ASK / SUMMARY ─────────────────────────────────────
-    const docText = targetDoc?.html_content ? cleanHtmlToText(targetDoc.html_content).slice(0, 30000) : '';
-    const docMeta = targetDoc
-      ? `Số hiệu: ${targetDoc.document_number} | Tên: ${targetDoc.title} | Cơ quan: ${targetDoc.issuing_body} | Hiệu lực: ${targetDoc.effective_date}`
-      : 'Thư viện pháp luật chung';
-    const askPrompt = `[VĂN BẢN QUY PHẠM PHÁP LUẬT ĐANG ĐỌC]
-${docMeta}
-Nội dung toàn văn:
-${docText}
+    // ── Mode: ASK (In-Document OR Whole-Library RAG) ─────────────────────────
+    let ragContextText = '';
+    const relevantDocs: LegalDocument[] = [];
+
+    if (targetDoc) {
+      // In-document Q&A: provide targeted articles
+      const fullText = cleanHtmlToText(targetDoc.html_content || '');
+      if (fullText.length <= 35000) {
+        ragContextText = `[VĂN BẢN ĐANG ĐỌC]: ${targetDoc.document_number} — ${targetDoc.title}
+Cơ quan ban hành: ${targetDoc.issuing_body || 'N/A'} | Hiệu lực: ${targetDoc.effective_date || 'N/A'} | Trạng thái: ${targetDoc.status}
+Toàn văn nội dung:
+${fullText}`;
+      } else {
+        // Large document: extract structured articles and find keyword matches
+        const articles = extractStructuredArticles(targetDoc.html_content || '');
+        const qLower = (question || '').toLowerCase();
+        const matchedArticles = articles.filter(
+          (a) =>
+            a.title.toLowerCase().includes(qLower) ||
+            a.body.toLowerCase().includes(qLower) ||
+            qLower.includes(a.title.toLowerCase().slice(0, 15))
+        );
+
+        const prioritized = matchedArticles.length > 0 ? matchedArticles.slice(0, 12) : articles.slice(0, 10);
+        const articlesText = prioritized.map((a) => `${a.title}\n${a.body}`).join('\n\n');
+
+        ragContextText = `[VĂN BẢN ĐANG ĐỌC]: ${targetDoc.document_number} — ${targetDoc.title}
+Cơ quan ban hành: ${targetDoc.issuing_body || 'N/A'} | Hiệu lực: ${targetDoc.effective_date || 'N/A'}
+Các điều khoản trọng yếu liên quan câu hỏi:
+${articlesText}`;
+      }
+      relevantDocs.push(targetDoc);
+    } else {
+      // Whole-library search: retrieve top candidate documents
+      const candidateNumbers = getCandidateDocNumbersForSituation(question || '');
+      const searchResults = executeSearch(allDocs, question || '');
+
+      const foundDocsMap = new Map<string, LegalDocument>();
+
+      // 1. Add docs matched by situation dictionary
+      candidateNumbers.forEach((num) => {
+        const found = allDocs.find((d) => d.document_number?.toUpperCase().includes(num.toUpperCase()));
+        if (found) foundDocsMap.set(found.id, found);
+      });
+
+      // 2. Add top search results
+      searchResults.slice(0, 5).forEach((res) => {
+        const found = allDocs.find((d) => d.id === res.documentId);
+        if (found) foundDocsMap.set(found.id, found);
+      });
+
+      // 3. If still empty, include core tax & legal framework docs
+      if (foundDocsMap.size === 0) {
+        allDocs.slice(0, 4).forEach((d) => foundDocsMap.set(d.id, d));
+      }
+
+      const topMatchedDocs = Array.from(foundDocsMap.values()).slice(0, 5);
+      relevantDocs.push(...topMatchedDocs);
+
+      const multiDocExcerpts = topMatchedDocs
+        .map((d, idx) => {
+          const text = d.html_content ? cleanHtmlToText(d.html_content).slice(0, 6000) : (d.summary_main || '');
+          return `[VĂN BẢN ${idx + 1}]: ${d.document_number} — ${d.title} (Hiệu lực: ${d.effective_date || 'N/A'}, Cơ quan: ${d.issuing_body})
+Nội dung quy định:
+${text}`;
+        })
+        .join('\n\n---\n\n');
+
+      ragContextText = `[CÁC VĂN BẢN QUY PHẠM PHÁP LUẬT LIÊN QUAN TRONG THƯ VIỆN]:
+${multiDocExcerpts}`;
+    }
+
+    const askPrompt = `${ragContextText}
 
 [CÂU HỎI CỦA NGƯỜI DÙNG]
-${question || 'Hãy tóm tắt ngắn gọn 3 điểm cốt lõi của văn bản này.'}`;
+${question || 'Hãy tóm tắt ngắn gọn các quy định cốt lõi.'}
+
+Hãy trả lời câu hỏi trên một cách chi tiết, chính xác, có dẫn chứng [Điều X, Khoản Y, Số hiệu văn bản].`;
 
     const aiResult = await callGeminiApi(askPrompt, systemInstruction);
 
     if (aiResult) {
-      // Extract rough citations from markdown brackets
+      // Parse citations from markdown text
       const citations: LegalCitation[] = [];
-      const articleMatches = aiResult.text.matchAll(/\[(?:Căn cứ\s+)?(Điều\s+\d+[a-z]?(?:,\s*Khoản\s+\d+)?)[^\]]*\]/gi);
+      const articleMatches = aiResult.text.matchAll(/\[(?:Căn cứ\s+)?(Điều\s+\d+[a-z]?(?:,\s*Khoản\s+\d+)?)(?:[,\s]+(?:của\s+)?(?:Nghị định|Thông tư|Luật|Quyết định|Công văn)?\s*([0-9\/\w-]+))?[^\]]*\]/gi);
+
       for (const m of articleMatches) {
+        const artNum = m[1];
+        const docNumMatch = m[2];
+        const matchedDoc = docNumMatch
+          ? allDocs.find((d) => d.document_number?.toUpperCase().includes(docNumMatch.toUpperCase()))
+          : relevantDocs[0];
+
         citations.push({
-          documentId: targetDoc?.id || 'doc-current',
-          documentNumber: targetDoc?.document_number || 'Văn bản',
-          documentTitle: targetDoc?.title || '',
-          documentType: targetDoc?.document_type || 'van_ban',
-          articleNumber: m[1],
-          articleTitle: m[1],
+          documentId: matchedDoc?.id || relevantDocs[0]?.id || 'doc-ref',
+          documentNumber: matchedDoc?.document_number || relevantDocs[0]?.document_number || 'Văn bản',
+          documentTitle: matchedDoc?.title || relevantDocs[0]?.title || '',
+          documentType: matchedDoc?.document_type || 'van_ban',
+          articleNumber: artNum,
+          articleTitle: artNum,
           exactQuote: m[0],
           confidence: 0.98,
+        });
+      }
+
+      // If no bracketed citations were extracted, add relevant doc citations
+      if (citations.length === 0 && relevantDocs.length > 0) {
+        relevantDocs.slice(0, 3).forEach((d) => {
+          citations.push({
+            documentId: d.id,
+            documentNumber: d.document_number || d.title,
+            documentTitle: d.title,
+            documentType: d.document_type || 'van_ban',
+            articleNumber: 'Căn cứ áp dụng',
+            articleTitle: d.title,
+            exactQuote: d.title,
+            confidence: 0.95,
+          });
         });
       }
 
@@ -334,17 +446,18 @@ ${question || 'Hãy tóm tắt ngắn gọn 3 điểm cốt lõi của văn bả
         success: true,
         source: 'gemini',
         keyUsed: aiResult.keyUsed,
+        modelUsed: aiResult.modelUsed,
         answer: aiResult.text,
         citations,
         suggestedFollowUps: [
-          `Trách nhiệm và nghĩa vụ của doanh nghiệp theo văn bản này?`,
-          `Mức xử phạt và chế tài nếu vi phạm?`,
-          `Điều kiện khấu trừ hoặc miễn giảm thuế?`,
+          `Trách nhiệm và nghĩa vụ của doanh nghiệp theo quy định này?`,
+          `Mức xử phạt và rủi ro nếu áp dụng sai?`,
+          `Hồ sơ và chứng từ cần chuẩn bị để quyết toán thuế?`,
         ],
       });
     }
 
-    // ── Local Fallback when no API keys or network offline ───────────────────
+    // ── Local Fallback when API keys are exhausted ───────────────────────────
     const localRes = await queryLegalAssistant(question || 'Tóm tắt nội dung', targetDoc, allDocs);
 
     return NextResponse.json({
