@@ -94,6 +94,9 @@ export function linkLegalCitations(
         const provisionCitation = provParts.join(' ');
 
         const targetProvisionId = article ? `dieu-${article}` : undefined;
+        const clauseAttr = clause ? ` data-clause-num="${clause}"` : '';
+        const pointAttr = point ? ` data-point-letter="${point}"` : '';
+        const provCitationAttr = provisionCitation ? ` data-provision-citation="${encodeURIComponent(provisionCitation)}"` : '';
 
         const citation: DetectedCitation = {
           id: citationId,
@@ -110,15 +113,14 @@ export function linkLegalCitations(
         detectedCitations.push(citation);
 
         if (targetDoc) {
-          const tooltip = `Mở ${targetDoc.document_number}: ${targetDoc.title.slice(0, 60)}...`;
-          return `<a href="#doc-${targetDoc.id}${targetProvisionId ? `:${targetProvisionId}` : ''}" class="legal-citation-link inline-flex items-center gap-1 font-semibold text-blue-700 hover:text-blue-900 bg-blue-50/90 hover:bg-blue-100/90 px-1.5 py-0.2 rounded border border-blue-200/80 transition-all cursor-pointer select-none no-underline" data-citation-id="${citationId}" data-doc-id="${targetDoc.id}" data-doc-number="${cleanDocNum}" ${targetProvisionId ? `data-provision-id="${targetProvisionId}"` : ''} ${provisionCitation ? `data-provision-citation="${encodeURIComponent(provisionCitation)}"` : ''} title="${tooltip}"><span>${fullMatch}</span></a>`;
+          const tooltip = `Mở ${targetDoc.document_number}${provisionCitation ? ` (${provisionCitation})` : ''}: ${targetDoc.title.slice(0, 60)}...`;
+          return `<a href="#doc-${targetDoc.id}${targetProvisionId ? `:${targetProvisionId}` : ''}" class="legal-citation-link inline-flex items-center gap-1 font-semibold text-blue-700 hover:text-blue-900 bg-blue-50/90 hover:bg-blue-100/90 px-1.5 py-0.2 rounded border border-blue-200/80 transition-all cursor-pointer select-none no-underline" data-citation-id="${citationId}" data-doc-id="${targetDoc.id}" data-doc-number="${cleanDocNum}" ${targetProvisionId ? `data-provision-id="${targetProvisionId}"` : ''}${clauseAttr}${pointAttr}${provCitationAttr} title="${tooltip}"><span>${fullMatch}</span></a>`;
         }
 
-        return `<span class="legal-citation-badge inline-flex items-center gap-0.5 text-slate-700 bg-slate-100/90 px-1.5 py-0.2 rounded border border-slate-200 text-[11.5px] font-medium" data-citation-id="${citationId}" data-doc-number="${cleanDocNum}" ${targetProvisionId ? `data-provision-id="${targetProvisionId}"` : ''} ${provisionCitation ? `data-provision-citation="${encodeURIComponent(provisionCitation)}"` : ''} title="Văn bản chưa có trong thư viện"><span>${fullMatch}</span></span>`;
+        return `<span class="legal-citation-badge inline-flex items-center gap-0.5 text-slate-700 bg-slate-100/90 px-1.5 py-0.2 rounded border border-slate-200 text-[11.5px] font-medium" data-citation-id="${citationId}" data-doc-number="${cleanDocNum}" ${targetProvisionId ? `data-provision-id="${targetProvisionId}"` : ''}${clauseAttr}${pointAttr}${provCitationAttr} title="Văn bản chưa có trong thư viện"><span>${fullMatch}</span></span>`;
       });
     }
   );
-
   return {
     html: processedHtml,
     citationsCount: detectedCitations.length,
