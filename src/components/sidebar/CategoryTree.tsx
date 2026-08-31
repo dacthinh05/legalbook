@@ -21,7 +21,7 @@ import {
   LucideIcon,
   X,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, DOCUMENT_TYPE_ABBREV, DOCUMENT_TYPE_COLORS } from '@/lib/utils';
 import type { Category, DocumentType, LegalDocument } from '@/types';
 import { DEMO_DOCUMENTS, DEMO_CATEGORY_LINKS } from '@/lib/demo-data';
 import {
@@ -29,8 +29,8 @@ import {
   getDescendantCategoryIds,
   flattenVisibleTree,
   injectVirtualSubcategories,
+  getCategoryDocType,
 } from '@/lib/tree-utils';
-
 export interface CategoryTreeProps {
   categories: Category[];
   allDocuments?: LegalDocument[];
@@ -172,6 +172,7 @@ function TopicTreeNode({
   const count = categoryCounts.get(category.id);
   const isRoot = depth === 0;
   const isLevel1 = depth === 1;
+  const catDocType = useMemo(() => getCategoryDocType(category), [category]);
 
   // Strict indentation specifications:
   // Cấp 0: 10px; Cấp 1: 28px; Cấp 2: 46px; mỗi cấp tăng 18px
@@ -229,7 +230,7 @@ function TopicTreeNode({
           !isDragOver && !isSelected && 'hover:bg-slate-100/70 text-slate-800 hover:text-slate-950'
         )}
       >
-        {/* Column 2: Icon (17px for root) / Bullet Indicator (max 5px for sub-nodes) */}
+        {/* Column 2: Icon (17px for root) / DocType Badge Tag / Bullet Indicator */}
         <div className="flex items-center justify-center shrink-0">
           {isRoot ? (
             renderRootCategoryIcon(
@@ -239,6 +240,15 @@ function TopicTreeNode({
                 isSelected ? 'text-[#1d4ed8]' : 'text-slate-500 group-hover:text-slate-700'
               )
             )
+          ) : catDocType ? (
+            <span
+              className={cn(
+                'text-[9.5px] font-bold px-1 py-0.2 rounded border uppercase tracking-wider shrink-0 select-none',
+                DOCUMENT_TYPE_COLORS[catDocType] || 'bg-slate-100 text-slate-700 border-slate-200'
+              )}
+            >
+              {DOCUMENT_TYPE_ABBREV[catDocType] || catDocType}
+            </span>
           ) : isLevel1 ? (
             <span
               className={cn(

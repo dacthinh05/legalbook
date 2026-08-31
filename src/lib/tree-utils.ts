@@ -35,6 +35,26 @@ export function isExplicitTypedCategory(cat: Category): boolean {
 }
 
 /**
+ * Extracts or resolves the DocumentType associated with a category node
+ * (e.g. '__type__thong_tu' -> 'thong_tu', 'Luật thuế GTGT' -> 'luat', etc.)
+ */
+export function getCategoryDocType(cat: Category): DocumentType | null {
+  if (cat.id && cat.id.includes('__type__')) {
+    const [, docType] = cat.id.split('__type__');
+    return (docType as DocumentType) || null;
+  }
+  const slug = (cat.slug || '').toLowerCase();
+  const name = (cat.name || '').toLowerCase();
+  if (slug.endsWith('-luat') || name.startsWith('luật') || name.startsWith('bộ luật')) return 'luat';
+  if (slug.endsWith('-nghi-dinh') || name.startsWith('nghị định')) return 'nghi_dinh';
+  if (slug.endsWith('-thong-tu') || name.startsWith('thông tư')) return 'thong_tu';
+  if (slug.endsWith('-cong-van') || name.startsWith('công văn')) return 'cong_van';
+  if (slug.endsWith('-quyet-dinh') || name.startsWith('quyết định')) return 'quyet_dinh';
+  if (slug.endsWith('-chuan-muc') || name.startsWith('chuẩn mực')) return 'chuan_muc';
+  if (slug.endsWith('-nghi-quyet') || name.startsWith('nghị quyết')) return 'nghi_quyet';
+  return null;
+}
+/**
  * Dynamically injects smart subcategories by document type for leaf categories
  * that contain multiple documents or mixed document types (e.g. Hóa đơn, Quản lý thuế, Đầu tư).
  */

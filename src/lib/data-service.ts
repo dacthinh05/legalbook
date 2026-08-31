@@ -12,6 +12,7 @@ import { createClient } from './supabase/client';
 import { 
   DEMO_CATEGORIES, 
   DEMO_DOCUMENTS, 
+  DEMO_RELATIONS,
   buildCategoryTree, 
   getDocumentById as getEmbeddedDocumentById, 
   getDocumentRelations as getEmbeddedDocumentRelations,
@@ -783,47 +784,138 @@ export async function getDocumentById(id: string): Promise<DataResult<LegalDocum
           source: 'supabase_live',
         };
       }
-
-      if (error && isStrictProd && isUUID) {
-        return {
-          data: null,
-          source: 'unavailable',
-          error: `Không tìm thấy văn bản trong CSDL: ${error.message}`,
-        };
-      }
     } catch (err: unknown) {
-      if (isStrictProd && isUUID) {
+      if (isStrictProd) {
         return {
           data: null,
           source: 'unavailable',
-          error: `Không thể kết nối CSDL khi tải văn bản: ${err instanceof Error ? err.message : String(err)}`,
+          error: `Không thể tìm văn bản: ${err instanceof Error ? err.message : String(err)}`,
         };
       }
     }
-  }
-
-  // Fallback to embedded authentic repository
-  const doc = getEmbeddedDocumentById(id) || DEMO_DOCUMENTS.find(
-    (d) => d.id === id || d.document_number === id || (d.slug && d.slug === id)
-  );
-
-  if (doc) {
-    return {
-      data: (doc as unknown as LegalDocument),
-      source: 'embedded_repository',
-    };
   }
 
   if (isStrictProd) {
     return {
       data: null,
       source: 'unavailable',
-      error: 'Văn bản không tồn tại trong CSDL.',
+      error: 'Văn bản không tồn tại trong CSDL chính thức.',
     };
   }
 
+  const doc = getEmbeddedDocumentById(id) || DEMO_DOCUMENTS.find(
+    (d) => d.id === id || d.document_number === id || (d.slug && d.slug === id)
+  );
   return {
-    data: null,
+    data: doc ? (doc as unknown as LegalDocument) : null,
+    source: 'embedded_repository',
+  };
+}
+export interface StatutoryChainNode {
+  document_id: string;
+  document_number: string;
+  title: string;
+  document_type: string;
+  effective_date: string | null;
+  status: string;
+  relation_type: string;
+  direction: 'self' | 'upstream' | 'downstream';
+  depth: number;
+  path: string[];
+}
+
+export async function getStatutoryKnowledgeChain(
+  docId: string,
+  maxDepth: number = 4
+): Promise<DataResult<StatutoryChainNode[]>> {
+  const isConfigured = isSupabaseConfigured();
+
+  if (isConfigured) {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc('get_document_statutory_chain', {
+        p_document_id: docId,
+        p_max_depth: maxDepth,
+      });
+
+      if (!error && data && data.length > 0) {
+        return {
+          data: data as StatutoryChainNode[],
+          source: 'supabase_live',
+        };
+      }
+    } catch (err: unknown) {
+      console.warn('Supabase statutory chain query fallback triggered:', err);
+    }
+  }
+
+  const allDocs = DEMO_DOCUMENTS as unknown as LegalDocument[];
+  const allRels = DEMO_RELATIONS as unknown as DocumentRelation[];
+  const rootDoc = allDocs.find((d) => d.id === docId);
+
+  if (!rootDoc) {
+    return { data: [], source: 'embedded_repository' };
+  }
+
+  const nodes: StatutoryChainNode[] = [
+    {
+      document_id: rootDoc.id,
+      document_number: rootDoc.document_number || '',
+      title: rootDoc.title,
+      document_type: rootDoc.document_type,
+      effective_date: rootDoc.effective_date,
+      status: rootDoc.status,
+      relation_type: 'root',
+      direction: 'self',
+      depth: 0,
+      path: [rootDoc.id],
+    },
+  ];
+
+  const visited = new Set<string>([rootDoc.id]);
+
+  const downstreamRels = allRels.filter((r) => r.target_document_id === rootDoc.id);
+  downstreamRels.forEach((r) => {
+    const child = allDocs.find((d) => d.id === r.source_document_id);
+    if (child && !visited.has(child.id)) {
+      visited.add(child.id);
+      nodes.push({
+        document_id: child.id,
+        document_number: child.document_number || '',
+        title: child.title,
+        document_type: child.document_type,
+        effective_date: child.effective_date,
+        status: child.status,
+        relation_type: r.relation_type,
+        direction: 'downstream',
+        depth: 1,
+        path: [rootDoc.id, child.id],
+      });
+    }
+  });
+
+  const upstreamRels = allRels.filter((r) => r.source_document_id === rootDoc.id);
+  upstreamRels.forEach((r) => {
+    const parent = allDocs.find((d) => d.id === r.target_document_id);
+    if (parent && !visited.has(parent.id)) {
+      visited.add(parent.id);
+      nodes.push({
+        document_id: parent.id,
+        document_number: parent.document_number || '',
+        title: parent.title,
+        document_type: parent.document_type,
+        effective_date: parent.effective_date,
+        status: parent.status,
+        relation_type: r.relation_type,
+        direction: 'upstream',
+        depth: 1,
+        path: [rootDoc.id, parent.id],
+      });
+    }
+  });
+
+  return {
+    data: nodes,
     source: 'embedded_repository',
   };
 }

@@ -36,6 +36,7 @@ import {
   MessageSquareText,
   Loader2,
   X,
+  Link2,
 } from 'lucide-react';
 import {
   cn,
@@ -75,20 +76,30 @@ import { ProvisionDiffModal } from './ProvisionDiffModal';
 import { LegalEffectOverlay } from './LegalEffectOverlay';
 import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
 import { DocumentSummaryView } from './DocumentSummaryView';
+import { CitationPreviewPopover, type CitationPreviewData } from './CitationPreviewPopover';
 import { performAutoOcrAndExtraction } from '@/lib/document-import/auto-ocr-service';
 import { getDocumentLegalEffects } from '@/lib/legal-effects/demo-effects';
 import { calculatePointInTimeStats } from '@/lib/legal-effects/timeline-engine';
-
 export type TabType = 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
+
+export interface NavigationHistoryItem {
+  docId: string;
+  docNumber?: string;
+  title: string;
+  targetNodeId?: string;
+  tab?: 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
+}
 
 interface DocumentReaderProps {
   document: LegalDocument;
   isBookmarked?: boolean;
   onToggleBookmark?: () => void;
-  onSelectRelatedDocument?: (id: string) => void;
+  onSelectRelatedDocument?: (id: string, navTarget?: { targetNodeId?: string; locationLabel?: string; query?: string; tab?: 'noidung' | 'banggoc' | 'quanhe' | 'thongtin' }) => void;
   onFullscreen?: () => void;
   isFullscreen?: boolean;
   onBack?: () => void;
+  previousDoc?: NavigationHistoryItem | null;
+  onNavigateBackInHistory?: () => void;
   initialSearchQuery?: string;
   targetNodeId?: string;
   initialTab?: TabType;
@@ -121,6 +132,8 @@ export function DocumentReader({
   onFullscreen,
   isFullscreen = false,
   onBack,
+  previousDoc,
+  onNavigateBackInHistory,
   initialSearchQuery,
   targetNodeId,
   initialTab = 'noidung',
@@ -159,6 +172,45 @@ export function DocumentReader({
   const showQuickViewPdf = quickViewDocId === doc.id;
   const [showAiSummaryModal, setShowAiSummaryModal] = useState(false);
   const [showCrossDocAnalysisModal, setShowCrossDocAnalysisModal] = useState(false);
+  const [hoverCitation, setHoverCitation] = useState<CitationPreviewData | null>(null);
+  const hoverCitationTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCitationMouseEnter = useCallback((e: React.MouseEvent) => {
+    const target = (e.target as HTMLElement).closest('.legal-citation-link') as HTMLElement | null;
+    if (!target) return;
+
+    if (hoverCitationTimerRef.current) clearTimeout(hoverCitationTimerRef.current);
+
+    const docId = target.getAttribute('data-doc-id');
+    const docNumber = target.getAttribute('data-doc-number') || '';
+    const provId = target.getAttribute('data-provision-id') || undefined;
+    const rawCitation = target.getAttribute('data-provision-citation');
+    const provCitation = rawCitation ? decodeURIComponent(rawCitation) : undefined;
+    const rawText = target.textContent || docNumber;
+
+    const targetDoc = (DEMO_DOCUMENTS as unknown as LegalDocument[]).find(
+      (d) => d.id === docId || d.document_number === docNumber
+    ) || null;
+
+    const rect = target.getBoundingClientRect();
+
+    setHoverCitation({
+      documentId: docId || '',
+      documentNumber: docNumber,
+      targetDocument: targetDoc,
+      targetProvisionId: provId,
+      provisionCitation: provCitation,
+      rawText,
+      anchorRect: rect,
+    });
+  }, []);
+
+  const handleCitationMouseLeave = useCallback(() => {
+    if (hoverCitationTimerRef.current) clearTimeout(hoverCitationTimerRef.current);
+    hoverCitationTimerRef.current = setTimeout(() => {
+      setHoverCitation(null);
+    }, 250);
+  }, []);
 
   // ── Refs ───────────────────────────────────────────────────────────────
 
@@ -890,9 +942,23 @@ export function DocumentReader({
       <header className="px-3.5 sm:px-5 py-1.5 sm:py-2 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
         {/* Dòng 1: Breadcrumb + Số hiệu (trái) + Trạng thái & Actions (phải) */}
         <div className="flex items-center justify-between gap-2.5 mb-1 min-w-0">
-          {/* Breadcrumb + Document Number */}
+          {/* Breadcrumb + Document Number + Quick Back Pill */}
           <div className="flex items-center gap-1.5 text-xs text-slate-600 min-w-0 truncate">
-            {onBack && (
+            {/* Quick History Back Button when navigated via hyperlink */}
+            {previousDoc && onNavigateBackInHistory ? (
+              <button
+                type="button"
+                onClick={onNavigateBackInHistory}
+                className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold text-blue-800 bg-blue-50/90 hover:bg-blue-100/90 border border-blue-300/80 rounded-md transition-all shadow-2xs hover:shadow-xs cursor-pointer shrink-0 animate-in fade-in slide-in-from-left-2 duration-150 group mr-1"
+                title={`Quay lại văn bản trước: ${previousDoc.docNumber || previousDoc.title} (Alt + ←)`}
+                aria-label={`Quay lại ${previousDoc.docNumber || previousDoc.title}`}
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-blue-700 group-hover:-translate-x-0.5 transition-transform shrink-0" />
+                <span className="truncate max-w-[130px] sm:max-w-[200px]">
+                  Quay lại: {previousDoc.docNumber || previousDoc.title}
+                </span>
+              </button>
+            ) : onBack ? (
               <button
                 onClick={onBack}
                 className="flex items-center gap-1 p-0.5 -ml-1 text-slate-600 hover:text-blue-900 hover:bg-slate-100 rounded transition-colors shrink-0 cursor-pointer font-medium"
@@ -903,7 +969,8 @@ export function DocumentReader({
                 <span className="hidden sm:inline text-xs font-semibold text-blue-900">Trang chủ</span>
                 <span className="text-slate-300 hidden sm:inline">/</span>
               </button>
-            )}
+            ) : null}
+
             <span className="text-slate-500 font-medium truncate">{topicName || 'Pháp luật'}</span>
             <span className="text-slate-300">/</span>
             <span className="text-slate-600 font-semibold truncate">{DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}</span>
@@ -1365,7 +1432,24 @@ export function DocumentReader({
               )}
             </button>
           )}
-
+          {activeTab === 'noidung' && (
+            <button
+              type="button"
+              onClick={() => togglePanel('backlinks')}
+              className={cn(
+                'flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md border text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer',
+                panelMode === 'backlinks'
+                  ? 'bg-purple-50 text-purple-900 border-purple-300 font-semibold'
+                  : 'bg-white text-slate-600 border-slate-200/90 hover:bg-slate-50 hover:text-slate-900'
+              )}
+              title="Xem các văn bản dẫn chiếu ngược và nhắc đến (Obsidian Backlinks)"
+              aria-label="Dẫn chiếu & Backlinks"
+              aria-pressed={panelMode === 'backlinks'}
+            >
+              <Link2 className="w-3.5 h-3.5 shrink-0 text-purple-600" />
+              <span className="hidden xl:inline">Dẫn chiếu</span>
+            </button>
+          )}
           {/* Undo / Redo Container (Only shown if operations exist) */}
           {(canUndoState || canRedoState) && (
             <div className="flex items-center gap-0.5 border border-slate-200 rounded p-0.5 bg-slate-50">
@@ -1772,11 +1856,20 @@ export function DocumentReader({
                         if (target) {
                           e.preventDefault();
                           const docId = target.getAttribute('data-doc-id');
+                          const provId = target.getAttribute('data-provision-id') || undefined;
+                          const rawCitation = target.getAttribute('data-provision-citation');
+                          const locationLabel = rawCitation ? decodeURIComponent(rawCitation) : undefined;
                           if (docId && onSelectRelatedDocument) {
-                            onSelectRelatedDocument(docId);
+                            setHoverCitation(null);
+                            onSelectRelatedDocument(docId, {
+                              targetNodeId: provId,
+                              locationLabel,
+                            });
                           }
                         }
                       }}
+                      onMouseEnter={handleCitationMouseEnter}
+                      onMouseLeave={handleCitationMouseLeave}
                       dangerouslySetInnerHTML={{ __html: renderedHtml || '' }}
                     />
                     {/* Highlight layer */}
@@ -2054,11 +2147,20 @@ export function DocumentReader({
                           if (target) {
                             e.preventDefault();
                             const docId = target.getAttribute('data-doc-id');
+                            const provId = target.getAttribute('data-provision-id') || undefined;
+                            const rawCitation = target.getAttribute('data-provision-citation');
+                            const locationLabel = rawCitation ? decodeURIComponent(rawCitation) : undefined;
                             if (docId && onSelectRelatedDocument) {
-                              onSelectRelatedDocument(docId);
+                              setHoverCitation(null);
+                              onSelectRelatedDocument(docId, {
+                                targetNodeId: provId,
+                                locationLabel,
+                              });
                             }
                           }
                         }}
+                        onMouseEnter={handleCitationMouseEnter}
+                        onMouseLeave={handleCitationMouseLeave}
                         dangerouslySetInnerHTML={{ __html: renderedHtml || '' }}
                       />
                     </div>
@@ -2266,6 +2368,9 @@ export function DocumentReader({
                   notesCount={totalAnnotationsCount}
                   hasFullText={hasFullText}
                   currentUserId={currentUserId}
+                  document={doc}
+                  allDocuments={DEMO_DOCUMENTS as unknown as LegalDocument[]}
+                  onSelectDocument={(id) => onSelectRelatedDocument?.(id)}
                 />
               )}
             </div>
@@ -2380,6 +2485,21 @@ export function DocumentReader({
         onCopy={handleCopySelection}
         onCopyLink={handleCopySelectionLink}
       />
+
+      {/* ── Live Citation Hover Preview Popover ── */}
+      {hoverCitation && (
+        <CitationPreviewPopover
+          data={hoverCitation}
+          onClose={() => setHoverCitation(null)}
+          onNavigate={(targetId, provId) => {
+            setHoverCitation(null);
+            if (onSelectRelatedDocument) {
+              onSelectRelatedDocument(targetId, { targetNodeId: provId });
+            }
+          }}
+          currentDocument={doc}
+        />
+      )}
     </div>
   );
 }

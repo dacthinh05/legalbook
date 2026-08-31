@@ -22,8 +22,8 @@ import type { LegalDocument, Category, DocumentType } from '@/types';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/utils';
 import { DEMO_CATEGORY_LINKS, DEMO_DOCUMENTS, DEMO_CATEGORIES, buildCategoryTree } from '@/lib/demo-data';
 import { getDescendantCategoryIds, injectVirtualSubcategories, VIRTUAL_DOC_TYPE_CONFIG } from '@/lib/tree-utils';
+import { computeNextNavigationTrail, handlePopStateTransition, type NavigationHistoryItem } from '@/lib/navigation-history';
 import { X, ChevronLeft, ChevronRight, FolderTree, ListFilter, Search, BookmarkCheck, AlertCircle } from 'lucide-react';
-
 const MIN_SIDEBAR = 230;
 const MAX_SIDEBAR = 320;
 const MIN_LIST = 320;
@@ -65,7 +65,8 @@ export default function MainPage() {
       setFocusToast(null);
     }, 2500);
   }, []);
-
+  // Navigation History Stack (supports Quick Back Pill & Breadcrumbs)
+  const [navHistory, setNavHistory] = useState<NavigationHistoryItem[]>([]);
   // Post-mount synchronization for URL query parameters (?doc=... or ?cat=... or ?auth_required=...)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -83,6 +84,34 @@ export default function MainPage() {
         if (catParam) setSelectedCategoryId(catParam);
       }, 0);
     }
+
+    // Synchronize HTML5 Browser Back / Forward buttons (Alt + Left Arrow, Mouse Back)
+    const handlePopState = (event: PopStateEvent) => {
+      const transition = handlePopStateTransition(
+        event.state,
+        window.location.search,
+        window.location.hash
+      );
+
+      if (transition) {
+        setNavHistory(transition.nextTrail);
+        setSelectedDocumentId(transition.nextDocId);
+        setSearchTarget(transition.nextSearchTarget);
+      } else {
+        setNavHistory([]);
+        setSelectedDocumentId(null);
+        setSearchTarget(null);
+      }
+
+      const currentParams = new URLSearchParams(window.location.search);
+      const currentCat = currentParams.get('cat');
+      if (currentCat) {
+        setSelectedCategoryId(currentCat);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [showFocusToast]);
 
   // User state
@@ -360,30 +389,65 @@ export default function MainPage() {
     setMobileSidebarOpen(false);
   };
 
-  const handleDocumentSelect = (
+  const handleDocumentSelect = useCallback((
     documentId: string,
     navTarget?: {
       targetNodeId?: string;
       locationLabel?: string;
       query?: string;
       tab?: 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
-    }
+    },
+    options?: { skipHistory?: boolean }
   ) => {
+    const nextTrail = options?.skipHistory
+      ? navHistory
+      : computeNextNavigationTrail(
+          selectedDocumentId,
+          documentId,
+          allDocList,
+          navHistory,
+          typeof window !== 'undefined' ? window.location.hash : undefined
+        );
+
+    if (!options?.skipHistory && nextTrail !== navHistory) {
+      setNavHistory(nextTrail);
+    }
+
     setSelectedDocumentId(documentId);
     setSearchTarget(navTarget || null);
-    if (typeof window !== 'undefined') {
-      if (navTarget?.targetNodeId) {
-        window.location.hash = navTarget.targetNodeId;
-      } else if (window.location.hash) {
-        window.history.replaceState(
-          null,
-          '',
-          window.location.pathname + window.location.search
-        );
-      }
-    }
-  };
 
+    if (typeof window !== 'undefined' && !options?.skipHistory) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('doc', documentId);
+      if (navTarget?.targetNodeId) {
+        url.hash = navTarget.targetNodeId;
+      } else {
+        url.hash = '';
+      }
+      window.history.pushState(
+        { docId: documentId, navTarget, historyTrail: nextTrail },
+        '',
+        url.toString()
+      );
+    }
+  }, [selectedDocumentId, allDocList, navHistory]);
+
+  const handleNavigateBackInHistory = useCallback(() => {
+    if (typeof window !== 'undefined' && window.history.state?.docId) {
+      window.history.back();
+    } else if (navHistory.length > 0) {
+      const lastItem = navHistory[navHistory.length - 1];
+      setNavHistory((prev) => prev.slice(0, -1));
+      handleDocumentSelect(
+        lastItem.docId,
+        {
+          targetNodeId: lastItem.targetNodeId,
+          tab: lastItem.tab,
+        },
+        { skipHistory: false }
+      );
+    }
+  }, [navHistory, handleDocumentSelect]);
   const handleDropDocumentOnCategory = useCallback((docId: string, targetCategoryId: string) => {
     const doc = allDocList.find((d) => d.id === docId);
     if (!doc) return;
@@ -414,11 +478,21 @@ export default function MainPage() {
     setSelectedDocumentId(null);
     setSelectedCategoryId(null);
     setSelectedDocType(null);
+    setSearchTarget(null);
+    setNavHistory([]);
     setSidebarOpen(true);
     setListOpen(true);
     setIsFocusMode(false);
     setMobileSidebarOpen(false);
-  }, [setSelectedCategoryId, setSelectedDocumentId, setSidebarOpen, setListOpen]);
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('doc');
+      url.searchParams.delete('cat');
+      url.hash = '';
+      window.history.replaceState(null, '', url.pathname);
+    }
+  }, [setSidebarOpen, setListOpen]);
 
 
   const handleToggleBookmark = (documentId: string) => {
@@ -447,8 +521,7 @@ export default function MainPage() {
       tab?: 'noidung' | 'banggoc' | 'quanhe' | 'thongtin';
     }
   ) => {
-    setSelectedDocumentId(documentId);
-    setSearchTarget(navTarget || null);
+    handleDocumentSelect(documentId, navTarget);
     setSearchOpen(false);
   };
 
@@ -475,6 +548,8 @@ export default function MainPage() {
             onSelectRelatedDocument={handleDocumentSelect}
             onFullscreen={() => setReaderFullscreen(false)}
             isFullscreen={true}
+            previousDoc={navHistory.length > 0 ? navHistory[navHistory.length - 1] : null}
+            onNavigateBackInHistory={handleNavigateBackInHistory}
             initialSearchQuery={searchTarget?.query}
             targetNodeId={searchTarget?.targetNodeId}
             initialTab={searchTarget?.tab}
@@ -674,12 +749,13 @@ export default function MainPage() {
             /* Document Reader when a document is selected */
             <DocumentReader
               document={selectedDocument as LegalDocument}
-              isBookmarked={bookmarkedDocuments.has(selectedDocument.id!)}
               onToggleBookmark={() => handleToggleBookmark(selectedDocument.id!)}
               onSelectRelatedDocument={handleDocumentSelect}
               onFullscreen={() => setReaderFullscreen(true)}
               isFullscreen={false}
-              onBack={() => setSelectedDocumentId(null)}
+              onBack={handleResetHome}
+              previousDoc={navHistory.length > 0 ? navHistory[navHistory.length - 1] : null}
+              onNavigateBackInHistory={handleNavigateBackInHistory}
               initialSearchQuery={searchTarget?.query}
               targetNodeId={searchTarget?.targetNodeId}
               initialTab={searchTarget?.tab}
@@ -749,10 +825,7 @@ export default function MainPage() {
 
         <button
           type="button"
-          onClick={() => {
-            setSelectedDocumentId(null);
-            setMobileSidebarOpen(false);
-          }}
+          onClick={handleResetHome}
           className={`flex flex-col items-center justify-center flex-1 py-1 text-[11px] font-medium transition-colors ${
             !selectedDocumentId ? 'text-blue-700 font-semibold' : 'text-slate-600 hover:text-slate-900 active:text-blue-600'
           }`}
@@ -774,10 +847,7 @@ export default function MainPage() {
 
         <button
           type="button"
-          onClick={() => {
-            setSelectedDocumentId(null);
-            setMobileSidebarOpen(false);
-          }}
+          onClick={handleResetHome}
           className={`flex flex-col items-center justify-center flex-1 py-1 text-[11px] font-medium transition-colors ${
             bookmarkedDocuments.size > 0 ? 'text-amber-700 font-semibold' : 'text-slate-600 hover:text-slate-900 active:text-blue-600'
           }`}

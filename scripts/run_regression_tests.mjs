@@ -4202,3 +4202,90 @@ describe('42. Advanced Cross-Document Comparison, Guidance Matrix & Export Engin
     assert.ok(popoverCode.includes('onOpenDiffModal'));
   });
 });
+
+describe('43. Navigation History Stack, Quick Back Pill & Multi-Hop Back/Forward (6 Criteria)', () => {
+  test('1. DocumentReader.tsx accepts previousDoc and onNavigateBackInHistory props', async () => {
+    const fs = await import('fs');
+    const readerCode = fs.readFileSync('src/components/reader/DocumentReader.tsx', 'utf8');
+    assert.ok(readerCode.includes('previousDoc'));
+    assert.ok(readerCode.includes('onNavigateBackInHistory'));
+    assert.ok(readerCode.includes('Quay lại:'));
+  });
+
+  test('2. page.tsx maintains navHistory stack and synchronizes historyTrail in history.state', async () => {
+    const fs = await import('fs');
+    const pageCode = fs.readFileSync('src/app/page.tsx', 'utf8');
+    assert.ok(pageCode.includes('navHistory'));
+    assert.ok(pageCode.includes('historyTrail'));
+    assert.ok(pageCode.includes('handleNavigateBackInHistory'));
+    assert.ok(pageCode.includes('popstate'));
+  });
+
+  test('3. computeNextNavigationTrail accurately computes multi-hop trail (A -> B -> C)', async () => {
+    const { computeNextNavigationTrail, formatQuickBackLabel } = await import('../src/lib/navigation-history.ts');
+    const mockDocs = [
+      { id: 'doc-A', document_number: '126/2020/NĐ-CP', title: 'Nghị định 126/2020/NĐ-CP' },
+      { id: 'doc-B', document_number: '38/2019/QH14', title: 'Luật Quản lý thuế số 38/2019/QH14' },
+      { id: 'doc-C', document_number: '88/2015/QH13', title: 'Luật Kế toán số 88/2015/QH13' },
+    ];
+
+    // User at Doc A, clicks link to Doc B
+    const trail1 = computeNextNavigationTrail('doc-A', 'doc-B', mockDocs, [], '#dieu-5');
+    assert.strictEqual(trail1.length, 1);
+    assert.strictEqual(trail1[0].docId, 'doc-A');
+    assert.strictEqual(trail1[0].docNumber, '126/2020/NĐ-CP');
+    assert.strictEqual(trail1[0].targetNodeId, 'dieu-5');
+    assert.strictEqual(formatQuickBackLabel(trail1[0]), '126/2020/NĐ-CP');
+
+    // User at Doc B, clicks link to Doc C
+    const trail2 = computeNextNavigationTrail('doc-B', 'doc-C', mockDocs, trail1, '#dieu-12');
+    assert.strictEqual(trail2.length, 2);
+    assert.strictEqual(trail2[1].docId, 'doc-B');
+    assert.strictEqual(trail2[1].docNumber, '38/2019/QH14');
+    assert.strictEqual(trail2[1].targetNodeId, 'dieu-12');
+    assert.strictEqual(formatQuickBackLabel(trail2[1]), '38/2019/QH14');
+
+    // Same doc selection does not duplicate trail
+    const trailSame = computeNextNavigationTrail('doc-C', 'doc-C', mockDocs, trail2);
+    assert.strictEqual(trailSame.length, 2);
+  });
+
+  test('4. handlePopStateTransition restores state, searchTarget, and trail without divergence', async () => {
+    const { handlePopStateTransition } = await import('../src/lib/navigation-history.ts');
+
+    // Popstate returning to B from C
+    const stateB = {
+      docId: 'doc-B',
+      navTarget: { targetNodeId: 'dieu-12' },
+      historyTrail: [{ docId: 'doc-A', docNumber: '126/2020/NĐ-CP', title: 'Nghị định 126', targetNodeId: 'dieu-5' }],
+    };
+
+    const transitionB = handlePopStateTransition(stateB, '?doc=doc-B', '#dieu-12');
+    assert.ok(transitionB);
+    assert.strictEqual(transitionB.nextDocId, 'doc-B');
+    assert.strictEqual(transitionB.nextSearchTarget.targetNodeId, 'dieu-12');
+    assert.strictEqual(transitionB.nextTrail.length, 1);
+    assert.strictEqual(transitionB.nextTrail[0].docId, 'doc-A');
+
+    // Popstate returning to initial entry
+    const transitionA = handlePopStateTransition(null, '?doc=doc-A', '#dieu-5');
+    assert.ok(transitionA);
+    assert.strictEqual(transitionA.nextDocId, 'doc-A');
+    assert.strictEqual(transitionA.nextSearchTarget.targetNodeId, 'dieu-5');
+    assert.strictEqual(transitionA.nextTrail.length, 0);
+  });
+
+  test('5. handleSearchSelect routes through handleDocumentSelect to preserve history', async () => {
+    const fs = await import('fs');
+    const pageCode = fs.readFileSync('src/app/page.tsx', 'utf8');
+    assert.match(pageCode, /handleSearchSelect\s*=\s*\([^)]*\)\s*=>\s*\{\s*handleDocumentSelect/);
+  });
+
+  test('6. Fullscreen reader propagates previousDoc and onNavigateBackInHistory', async () => {
+    const fs = await import('fs');
+    const pageCode = fs.readFileSync('src/app/page.tsx', 'utf8');
+    const fullscreenBlock = pageCode.slice(pageCode.indexOf('fullscreen-reader'), pageCode.indexOf('fullscreen-reader') + 1500);
+    assert.ok(fullscreenBlock.includes('previousDoc'));
+    assert.ok(fullscreenBlock.includes('onNavigateBackInHistory'));
+  });
+});

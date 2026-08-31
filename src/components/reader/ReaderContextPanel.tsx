@@ -24,11 +24,12 @@ import {
   Loader2,
   MessageSquare,
   Download,
+  Link2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { sanitizeNoteContent } from '@/lib/annotation-engine';
-import type { TocItem, ReaderPanelMode, DocumentAnnotation, AnnotationColor } from '@/types';
-
+import type { TocItem, ReaderPanelMode, DocumentAnnotation, AnnotationColor, LegalDocument } from '@/types';
+import { DocumentBacklinksPanel } from './DocumentBacklinksPanel';
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ReaderContextPanelProps {
@@ -53,8 +54,13 @@ interface ReaderContextPanelProps {
 
   // Current user id (to show edit controls only for own notes)
   currentUserId?: string;
-}
 
+  // Backlinks & Document context
+  document?: LegalDocument;
+  allDocuments?: LegalDocument[];
+  onSelectDocument?: (id: string, targetNodeId?: string) => void;
+  onOpenDiff?: (docA: LegalDocument, docB: LegalDocument) => void;
+}
 // ─── TOC Panel ────────────────────────────────────────────────────────────────
 
 interface TocPanelProps {
@@ -543,6 +549,10 @@ export function ReaderContextPanel({
   notesCount,
   hasFullText,
   currentUserId,
+  document: doc,
+  allDocuments,
+  onSelectDocument,
+  onOpenDiff,
 }: ReaderContextPanelProps) {
   // Keyboard: Esc closes panel
   useEffect(() => {
@@ -553,9 +563,8 @@ export function ReaderContextPanel({
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  const title = mode === 'toc' ? 'Mục lục' : 'Ghi chú';
-  const Icon = mode === 'toc' ? ListTree : StickyNote;
-
+  const title = mode === 'toc' ? 'Mục lục' : mode === 'backlinks' ? 'Dẫn chiếu & Backlinks' : 'Ghi chú';
+  const Icon = mode === 'toc' ? ListTree : mode === 'backlinks' ? Link2 : StickyNote;
   return (
     <aside
       className={cn(
@@ -577,7 +586,7 @@ export function ReaderContextPanel({
             {title}
           </h2>
           <span className="text-[10px] text-slate-400 font-mono">
-            ({mode === 'toc' ? tocCount : notesCount})
+            {mode === 'toc' ? `(${tocCount})` : mode === 'notes' ? `(${notesCount})` : ''}
           </span>
         </div>
         <button
@@ -595,6 +604,13 @@ export function ReaderContextPanel({
           items={tocItems}
           activeId={activeTocId}
           onItemClick={onTocItemClick}
+        />
+      ) : mode === 'backlinks' && doc ? (
+        <DocumentBacklinksPanel
+          document={doc}
+          allDocuments={allDocuments || []}
+          onSelectDocument={onSelectDocument || (() => {})}
+          onOpenDiff={onOpenDiff}
         />
       ) : (
         <NotesPanel

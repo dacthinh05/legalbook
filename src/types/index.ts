@@ -370,7 +370,7 @@ export interface TocItem {
 }
 
 // ─── Reader: Panel Mode ───────────────────────────────────────────────────────
-export type ReaderPanelMode = 'closed' | 'toc' | 'notes' | 'effects' | 'ai';
+export type ReaderPanelMode = 'closed' | 'toc' | 'notes' | 'effects' | 'ai' | 'backlinks';
 // ─── Reader: Legal Effects & Provisions ──────────────────────────────────────
 
 export type LegalEffectCategory = 'substantive_change' | 'application_support';

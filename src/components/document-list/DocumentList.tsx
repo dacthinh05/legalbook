@@ -289,7 +289,7 @@ export function DocumentList({
               document={doc}
               isSelected={selectedDocumentId === doc.id}
               isBookmarked={bookmarkedDocuments?.has(doc.id) || false}
-              hideTypeBadge={isSingleType}
+              hideTypeBadge={false}
               onSelect={() => onSelectDocument(doc.id)}
             />
           ))
