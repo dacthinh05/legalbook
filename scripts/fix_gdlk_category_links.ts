@@ -44,7 +44,7 @@ async function main() {
     '67/2025/QH15'
   ];
 
-  const linksToInsert: any[] = [];
+  const uniqueLinksMap = new Map<string, any>();
 
   for (const docNum of gdlkDocNumbers) {
     const doc = docs.find(d => d.document_number === docNum || d.document_number.includes(docNum));
@@ -53,50 +53,37 @@ async function main() {
       continue;
     }
 
+    const addLink = (catId: string) => {
+      const key = `${doc.id}_${catId}`;
+      if (!uniqueLinksMap.has(key)) {
+        uniqueLinksMap.set(key, {
+          id: crypto.randomUUID(),
+          document_id: doc.id,
+          category_id: catId,
+          is_primary: false
+        });
+      }
+    };
+
     // Link to GDLK & Chuyển giá (under Thuế) + Thuế root
-    linksToInsert.push({
-      id: crypto.randomUUID(),
-      document_id: doc.id,
-      category_id: gdlkThue.id,
-      is_primary: false
-    });
-    if (thueRoot) {
-      linksToInsert.push({
-        id: crypto.randomUUID(),
-        document_id: doc.id,
-        category_id: thueRoot.id,
-        is_primary: false
-      });
-    }
+    addLink(gdlkThue.id);
+    if (thueRoot) addLink(thueRoot.id);
 
     // Link to GDLK (under Doanh nghiệp) + Doanh nghiệp root
-    linksToInsert.push({
-      id: crypto.randomUUID(),
-      document_id: doc.id,
-  console.log(`\n💾 Đang nạp ${linksToInsert.length} liên kết GDLK vào Supabase...`);
-  const { error } = await supabase.from('document_category_links').upsert(linksToInsert, { onConflict: 'document_id,category_id' });
-
-  if (error) {
-    console.error('Lỗi nạp liên kết GDLK:', error);
-  } else {
-    console.log('🎉 [OK] ĐÃ NẠP THÀNH CÔNG TẤT CẢ LIÊN KẾT GIAO DỊCH LIÊN KẾT!');
-  }
-        category_id: dnRoot.id,
-        is_primary: false
-      });
-    }
+    addLink(gdlkDn.id);
+    if (dnRoot) addLink(dnRoot.id);
 
     console.log(`✅ [OK] Đã liên kết [${doc.document_number}] vào 2 danh mục Giao dịch liên kết`);
   }
 
+  const linksToInsert = Array.from(uniqueLinksMap.values());
   console.log(`\n💾 Đang nạp ${linksToInsert.length} liên kết GDLK vào Supabase...`);
-  const { error } = await supabase.from('document_category_links').upsert(linksToInsert, { onConflict: 'id' });
-
-  if (error) {
-    console.error('Lỗi nạp liên kết GDLK:', error);
-  } else {
-    console.log('🎉 [OK] ĐÃ NẠP THÀNH CÔNG TẤT CẢ LIÊN KẾT GIAO DỊCH LIÊN KẾT!');
+  
+  for (const link of linksToInsert) {
+    await supabase.from('document_category_links').upsert(link, { onConflict: 'document_id,category_id' });
   }
+
+  console.log('🎉 [OK] ĐÃ NẠP THÀNH CÔNG TẤT CẢ LIÊN KẾT GIAO DỊCH LIÊN KẾT!');
 }
 
 main().catch(console.error);
