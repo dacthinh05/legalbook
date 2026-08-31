@@ -950,12 +950,12 @@ export function DocumentReader({
                 type="button"
                 onClick={onNavigateBackInHistory}
                 className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold text-blue-800 bg-blue-50/90 hover:bg-blue-100/90 border border-blue-300/80 rounded-md transition-all shadow-2xs hover:shadow-xs cursor-pointer shrink-0 animate-in fade-in slide-in-from-left-2 duration-150 group mr-1"
-                title={`Quay lại văn bản trước: ${previousDoc.docNumber || previousDoc.title} (Alt + ←)`}
+                title={`Quay lại: ${previousDoc.docNumber || previousDoc.title} (Alt + ←)`}
                 aria-label={`Quay lại ${previousDoc.docNumber || previousDoc.title}`}
               >
                 <ArrowLeft className="w-3.5 h-3.5 text-blue-700 group-hover:-translate-x-0.5 transition-transform shrink-0" />
-                <span className="truncate max-w-[130px] sm:max-w-[200px]">
-                  Quay lại: {previousDoc.docNumber || previousDoc.title}
+                <span className="truncate max-w-[80px] xl:max-w-[140px]">
+                  {previousDoc.docNumber || 'Quay lại'}
                 </span>
               </button>
             ) : onBack ? (
@@ -1041,7 +1041,7 @@ export function DocumentReader({
             <button
               onClick={onToggleBookmark}
               className={cn(
-                'inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium border transition-colors cursor-pointer',
+                'inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border transition-colors cursor-pointer shrink-0',
                 isBookmarked
                   ? 'bg-amber-50 text-amber-800 border-amber-300 font-semibold shadow-2xs'
                   : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-50'
@@ -1050,14 +1050,15 @@ export function DocumentReader({
               aria-label={isBookmarked ? 'Bỏ lưu văn bản' : 'Lưu văn bản'}
             >
               <Bookmark className={cn('w-3.5 h-3.5', isBookmarked ? 'fill-amber-500 text-amber-600' : 'text-slate-400')} />
-              <span className="hidden sm:inline">{isBookmarked ? 'Đã lưu' : 'Lưu văn bản'}</span>
+              <span className="hidden xl:inline">{isBookmarked ? 'Đã lưu' : 'Lưu văn bản'}</span>
             </button>
+
             {/* Focus Mode action */}
             {onToggleFocusMode && (
               <button
                 onClick={onToggleFocusMode}
                 className={cn(
-                  'inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-medium transition-colors cursor-pointer hidden md:inline-flex',
+                  'inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-medium transition-colors cursor-pointer hidden md:inline-flex shrink-0',
                   isFocusMode
                     ? 'bg-blue-700 text-white border-blue-700 font-semibold'
                     : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-100'
@@ -1066,20 +1067,20 @@ export function DocumentReader({
                 aria-label={isFocusMode ? 'Thoát tập trung đọc' : 'Tập trung đọc'}
               >
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">{isFocusMode ? 'Thoát tập trung' : 'Tập trung'}</span>
+                <span className="hidden 2xl:inline">{isFocusMode ? 'Thoát tập trung' : 'Tập trung'}</span>
               </button>
             )}
 
-            {/* Print & High-Fidelity PDF Export Button (Nghị định 30/2020) */}
+            {/* Print & High-Fidelity PDF Export Button */}
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all cursor-pointer shadow-2xs group"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all cursor-pointer shadow-2xs group shrink-0"
               title="In văn bản hoặc Lưu dưới dạng file PDF (A4 Chuẩn NĐ 30/2020)"
               aria-label="In văn bản / Lưu PDF"
             >
-              <Printer className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
-              <span className="hidden sm:inline">Xuất PDF / In</span>
+              <Printer className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform shrink-0" />
+              <span className="hidden 2xl:inline">Xuất PDF / In</span>
             </button>
             {/* Overflow menu */}
             <div className="relative" ref={moreMenuRef}>
@@ -1323,7 +1324,7 @@ export function DocumentReader({
               title="Tìm kiếm trong văn bản (Ctrl+F)"
               className={cn(
                 'pl-6.5 py-1 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-md text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all shrink-0',
-                searchInputValue ? 'pr-16 w-32 sm:w-40 md:w-44 lg:w-52' : 'pr-2 w-20 sm:w-24 md:w-28 lg:w-32 focus:w-44'
+                searchInputValue ? 'pr-16 w-32 sm:w-36 md:w-40' : 'pr-2 w-20 sm:w-24 md:w-28 lg:w-32 focus:w-44'
               )}
             />
             {/* Match Navigation Controls */}
@@ -1383,7 +1384,7 @@ export function DocumentReader({
               type="button"
               onClick={() => togglePanel('ai')}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs',
+                'flex items-center gap-1 px-2 py-1 rounded-md border text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-2xs',
                 panelMode === 'ai'
                   ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                   : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200 hover:border-slate-300'
@@ -1393,7 +1394,75 @@ export function DocumentReader({
               aria-pressed={panelMode === 'ai'}
             >
               <MessageSquareText className={cn('w-3.5 h-3.5 shrink-0', panelMode === 'ai' ? 'text-white' : 'text-blue-700')} />
-              <span className="hidden md:inline">Hỏi đáp AI</span>
+              <span className="hidden lg:inline">Hỏi đáp AI</span>
+            </button>
+          )}
+
+          {/* TOC context panel toggle */}
+          {activeTab === 'noidung' && (
+            <button
+              onClick={() => togglePanel('toc')}
+              className={cn(
+                'flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md border text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer',
+                panelMode === 'toc'
+                  ? 'bg-slate-100 text-blue-900 border-slate-300 font-semibold'
+                  : 'bg-white text-slate-600 border-slate-200/90 hover:bg-slate-50 hover:text-slate-900'
+              )}
+              title="Mục lục điều khoản"
+              aria-label={`Mục lục ${tocItems.length > 0 ? `(${tocItems.length})` : ''}`}
+              aria-pressed={panelMode === 'toc'}
+            >
+              <ListTree className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden 2xl:inline">Mục lục</span>
+              {tocItems.length > 0 && (
+                <span className="text-[10px] font-mono text-slate-500">
+                  {tocItems.length}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Notes context panel toggle */}
+          {activeTab === 'noidung' && (
+            <button
+              onClick={() => togglePanel('notes')}
+              className={cn(
+                'flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md border text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer',
+                panelMode === 'notes'
+                  ? 'bg-slate-100 text-blue-900 border-slate-300 font-semibold'
+                  : 'bg-white text-slate-600 border-slate-200/90 hover:bg-slate-50 hover:text-slate-900'
+              )}
+              title="Ghi chú và highlight"
+              aria-label={`Ghi chú ${totalAnnotationsCount > 0 ? `(${totalAnnotationsCount})` : ''}`}
+              aria-pressed={panelMode === 'notes'}
+            >
+              <StickyNote className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden 2xl:inline">Ghi chú</span>
+              {totalAnnotationsCount > 0 && (
+                <span className="text-[10px] font-mono text-amber-600 font-bold">
+                  {totalAnnotationsCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Backlinks context panel toggle */}
+          {activeTab === 'noidung' && (
+            <button
+              type="button"
+              onClick={() => togglePanel('backlinks')}
+              className={cn(
+                'flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md border text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer',
+                panelMode === 'backlinks'
+                  ? 'bg-purple-50 text-purple-900 border-purple-300 font-semibold'
+                  : 'bg-white text-slate-600 border-slate-200/90 hover:bg-slate-50 hover:text-slate-900'
+              )}
+              title="Xem các văn bản dẫn chiếu ngược và nhắc đến (Obsidian Backlinks)"
+              aria-label="Dẫn chiếu & Backlinks"
+              aria-pressed={panelMode === 'backlinks'}
+            >
+              <Link2 className="w-3.5 h-3.5 shrink-0 text-purple-600" />
+              <span className="hidden 2xl:inline">Dẫn chiếu</span>
             </button>
           )}
 
