@@ -1073,3 +1073,18 @@ export async function searchDocumentsHybrid(
     source: 'embedded_repository',
   };
 }
+
+/**
+ * Headless On-Demand Document Resolver:
+ * Resolves legal document metadata & citations dynamically from knowledge network.
+ */
+export async function fetchDocumentOnDemand(lookupKey: string): Promise<LegalDocument | null> {
+  try {
+    const res = await fetch(`/api/documents/on-demand?q=${encodeURIComponent(lookupKey)}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.documents?.[0] || null;
+  } catch {
+    return null;
+  }
+}
