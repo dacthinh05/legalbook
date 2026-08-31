@@ -11,8 +11,11 @@ import {
   ChevronsUp,
   ChevronsDown,
   Bot,
+  Network,
+  ListTree,
 } from 'lucide-react';
 import { buildDocumentHierarchy, type HierarchyNode } from '@/lib/hierarchy';
+import { LegalKnowledgeGraph } from './LegalKnowledgeGraph';
 import {
   DOCUMENT_STATUS_LABELS,
   DOCUMENT_STATUS_COLORS,
@@ -36,11 +39,11 @@ export function LegalHierarchyTree({
 }: LegalHierarchyTreeProps) {
   const hierarchy = useMemo(() => buildDocumentHierarchy(doc.id), [doc.id]);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set([doc.id]));
+  const [viewMode, setViewMode] = useState<'tree' | 'graph'>('tree');
   const [compareTargetDoc, setCompareTargetDoc] = useState<LegalDocument | null>(null);
   const [aiAnalysisTargetDoc, setAiAnalysisTargetDoc] = useState<LegalDocument | null>(null);
   const [showAiAnalysisModal, setShowAiAnalysisModal] = useState(false);
   const [relationFilter, setRelationFilter] = useState<string>('all');
-
   // Count total nodes in tree
   const totalChildrenCount = useMemo(() => {
     let count = 0;
@@ -317,6 +320,30 @@ export function LegalHierarchyTree({
           </span>
         </div>
 
+        {/* View Mode Toggle: Tree vs Visual Graph */}
+        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+          <button
+            onClick={() => setViewMode('tree')}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+              viewMode === 'tree' ? 'bg-white text-blue-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Xem dạng Cây mục lục phân cấp"
+          >
+            <ListTree className="w-3.5 h-3.5" />
+            <span>Cây phân cấp</span>
+          </button>
+          <button
+            onClick={() => setViewMode('graph')}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+              viewMode === 'graph' ? 'bg-white text-purple-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Xem dạng Bản đồ mạng lưới tri thức 2D (Obsidian Graph View)"
+          >
+            <Network className="w-3.5 h-3.5 text-purple-600" />
+            <span>Bản đồ 2D</span>
+          </button>
+        </div>
+
         <div className="flex items-center gap-2 ml-auto">
           {/* Quick Filter */}
           <div className="relative">
@@ -355,10 +382,16 @@ export function LegalHierarchyTree({
         </div>
       </div>
 
-      {/* 2. Hierarchical Tree Canvas */}
-      <div className="space-y-3">
-        {hierarchy.hierarchyTree.map((rootNode) => renderNode(rootNode, 0))}
-      </div>
+      {/* 2. Content: Visual Graph or Hierarchical Tree */}
+      {viewMode === 'graph' ? (
+        <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs bg-slate-900">
+          <LegalKnowledgeGraph document={doc} onSelectDocument={onSelectDocument} />
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {hierarchy.hierarchyTree.map((rootNode) => renderNode(rootNode, 0))}
+        </div>
+      )}
     </div>
   );
 }
