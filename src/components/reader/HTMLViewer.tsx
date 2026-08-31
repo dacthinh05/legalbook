@@ -203,7 +203,7 @@ export function HTMLViewer({
           }
         }}
       >
-        <div className="document-page">
+        <div className="document-page" id="legal-printable-document">
           {/* Inline Transclusion Callout Blocks */}
           {transcludedSnippets.length > 0 && (
             <div className="mb-6 space-y-3">

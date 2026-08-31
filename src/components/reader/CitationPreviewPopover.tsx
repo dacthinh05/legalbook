@@ -80,6 +80,7 @@ export function CitationPreviewPopover({
   }, [data, onClose]);
 
   const targetDoc = data?.targetDocument;
+  const targetProvisionId = data?.targetProvisionId;
 
   // Extract targeted article or preamble from html_content
   const provisionExcerpt = useMemo(() => {
@@ -87,12 +88,12 @@ export function CitationPreviewPopover({
       return targetDoc?.summary_main || 'Nội dung văn bản đang được cập nhật.';
     }
 
-    if (data?.targetProvisionId) {
+    if (targetProvisionId) {
       const articles = extractStructuredArticles(targetDoc.html_content);
-      const provNumMatch = data.targetProvisionId.replace('dieu-', '');
+      const provNumMatch = targetProvisionId.replace('dieu-', '');
       const matched = articles.find(
         (a) =>
-          a.id === data.targetProvisionId ||
+          a.id === targetProvisionId ||
           (a.number !== undefined && a.number.toString() === provNumMatch) ||
           a.title.toLowerCase().includes(`điều ${provNumMatch}`)
       );
@@ -111,7 +112,7 @@ export function CitationPreviewPopover({
     }
 
     return targetDoc.title;
-  }, [targetDoc, data?.targetProvisionId]);
+  }, [targetDoc, targetProvisionId]);
 
   if (!data || !targetDoc) return null;
 

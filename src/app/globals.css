@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Surface & Backgrounds */
   --background: #f8fafc;
@@ -191,29 +207,30 @@ body.is-resizing * {
 .document-page {
   width: 100%;
   max-width: 860px;
-  margin: 0 auto;
+  margin: 16px auto 32px auto;
   background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  border-radius: 6px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-radius: 4px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.07), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
   overflow-x: hidden;
   overflow-wrap: break-word;
   word-break: break-word;
-  padding: 20px 16px 48px 16px;
+  padding: 24px 20px 56px 20px;
+  font-family: 'Be Vietnam Pro', 'Times New Roman', 'Merriweather', 'Noto Serif', Georgia, serif;
 }
 
 @media (min-width: 760px) {
   .document-page {
     width: calc(100% - 24px);
-    padding: 28px 36px 56px 36px;
+    padding: 36px 48px 64px 48px;
   }
 }
 
 @media (min-width: 1100px) {
   .document-page {
     width: min(100%, 860px);
-    padding: 32px 52px 64px 52px;
+    padding: 44px 64px 80px 64px;
   }
 }
 
@@ -224,12 +241,47 @@ body.is-resizing * {
   max-width: var(--reader-content-width, 820px);
   margin-left: auto;
   margin-right: auto;
-  color: #1e293b;
+  color: #1a202c;
+  font-family: 'Be Vietnam Pro', 'Times New Roman', 'Merriweather', 'Noto Serif', Georgia, serif;
   font-size: var(--reader-font-size, 16px);
-  line-height: var(--reader-line-height, 1.75);
+  line-height: var(--reader-line-height, 1.68);
+  text-align: justify;
+  text-justify: inter-word;
   box-sizing: border-box;
 }
 
+/* Standard Paragraph Indentation for Legal Documents */
+.document-content p,
+.document-full-body p {
+  margin-top: 0;
+  margin-bottom: 0.85em;
+  text-indent: 1.25em;
+  line-height: inherit;
+}
+
+/* Reset Indent for Headings, Letterhead, Tables & Signatures */
+.document-content h1,
+.document-content h2,
+.document-content h3,
+.document-content h4,
+.document-content .document-letterhead p,
+.document-content .legal-masthead p,
+.document-content .legal-doc-title-block p,
+.document-content .document-signatures p,
+.document-content table p,
+.document-content blockquote p,
+.document-full-body h1,
+.document-full-body h2,
+.document-full-body h3,
+.document-full-body h4,
+.document-full-body .document-letterhead p,
+.document-full-body .legal-masthead p,
+.document-full-body .legal-doc-title-block p,
+.document-full-body .document-signatures p,
+.document-full-body table p,
+.document-full-body blockquote p {
+  text-indent: 0 !important;
+}
 /* ============================================================
    ADMINISTRATIVE LETTERHEAD (NGHỊ ĐỊNH 30/2020/NĐ-CP)
    2-Column Desktop Grid for National Motto & Issuing Agency
@@ -974,4 +1026,82 @@ mark.legal-effect-guides:hover {
   background: #eff6ff !important;
   color: #1d4ed8 !important;
   box-shadow: inset 2px 0 0 #2563eb !important;
+}
+
+/* ============================================================
+   PRINT MEDIA STYLESHEET (NGHỊ ĐỊNH 30/2020/NĐ-CP PRINT SPEC)
+   High-Fidelity Vector A4 PDF Generation
+   ============================================================ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 20mm 15mm 20mm 25mm; /* Chuẩn thể thức: Trên 20, Dưới 20, Phải 15, Trái 25mm */
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 13.5pt !important;
+    line-height: 1.45 !important;
+    font-family: 'Be Vietnam Pro', 'Times New Roman', 'Noto Serif', serif !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide all web navigation and interactive controls */
+  header,
+  aside,
+  nav,
+  button,
+  .reader-toolbar,
+  .resize-handle-container,
+  .reader-context-panel,
+  .floating-toolbar,
+  .app-header,
+  .citation-preview-popover,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Expand printable container to 100% paper width */
+  .reader-canvas,
+  .reader-viewport,
+  .document-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .document-content,
+  .document-full-body {
+    width: 100% !important;
+    max-width: 100% !important;
+    color: #000000 !important;
+    font-size: 13.5pt !important;
+    line-height: 1.45 !important;
+  }
+
+  /* Page break rules */
+  h1, h2, h3,
+  .document-letterhead,
+  .legal-masthead,
+  .document-signatures,
+  table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1, h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  a {
+    color: #000000 !important;
+    text-decoration: none !important;
+  }
 }

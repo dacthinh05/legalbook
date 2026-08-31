@@ -1070,6 +1070,17 @@ export function DocumentReader({
               </button>
             )}
 
+            {/* Print & High-Fidelity PDF Export Button (Nghị định 30/2020) */}
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all cursor-pointer shadow-2xs group"
+              title="In văn bản hoặc Lưu dưới dạng file PDF (A4 Chuẩn NĐ 30/2020)"
+              aria-label="In văn bản / Lưu PDF"
+            >
+              <Printer className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
+              <span className="hidden sm:inline">Xuất PDF / In</span>
+            </button>
             {/* Overflow menu */}
             <div className="relative" ref={moreMenuRef}>
               <button

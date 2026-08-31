@@ -27,10 +27,7 @@ import {
   getTvplSourceUrl,
   formatShortTitle,
 } from './utils';
-
-/**
- * Pre-indexed structural section inside a legal document (e.g. Điều 19, Khoản 2, Chương III).
- */
+import { getCandidateDocNumbersForSituation } from './search/audit-situation-dictionary';
 export interface IndexedSection {
   id: string;
   label: string;
@@ -606,13 +603,20 @@ export function scoreIndexedDocument(
     }
   }
 
-  // 4. Summary match
+  // 4. Practical Audit Situation Mapping Boost
+  if (indexed.documentNumber) {
+    const candidateNums = getCandidateDocNumbersForSituation(rawQuery);
+    if (candidateNums.some((num) => indexed.documentNumber && normalizeLegalNumber(indexed.documentNumber) === normalizeLegalNumber(num))) {
+      score += 1500;
+    }
+  }
+
+  // 5. Summary match
   if (indexed.lowerSummary.includes(lowerQuery)) {
     score += 350;
   } else if (indexed.toneFreeSummary.includes(toneFreeQuery)) {
     score += 250;
   }
-
   // 5. Plain text content & Clause body match
   if (indexed.lowerPlainText.includes(lowerQuery)) {
     score += 180;
