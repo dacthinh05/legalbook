@@ -92,6 +92,7 @@ export interface NavigationHistoryItem {
 
 interface DocumentReaderProps {
   document: LegalDocument;
+  allDocuments?: LegalDocument[];
   isBookmarked?: boolean;
   onToggleBookmark?: () => void;
   onSelectRelatedDocument?: (id: string, navTarget?: { targetNodeId?: string; locationLabel?: string; query?: string; tab?: 'noidung' | 'banggoc' | 'quanhe' | 'thongtin' }) => void;
@@ -126,6 +127,7 @@ const LINE_HEIGHT_PRESETS = [
 
 export function DocumentReader({
   document: doc,
+  allDocuments = [],
   isBookmarked = false,
   onToggleBookmark,
   onSelectRelatedDocument,
@@ -187,11 +189,10 @@ export function DocumentReader({
     const rawCitation = target.getAttribute('data-provision-citation');
     const provCitation = rawCitation ? decodeURIComponent(rawCitation) : undefined;
     const rawText = target.textContent || docNumber;
-
-    const targetDoc = (DEMO_DOCUMENTS as unknown as LegalDocument[]).find(
+    const docCorpus = allDocuments && allDocuments.length > 0 ? allDocuments : (DEMO_DOCUMENTS as unknown as LegalDocument[]);
+    const targetDoc = docCorpus.find(
       (d) => d.id === docId || d.document_number === docNumber
     ) || null;
-
     const rect = target.getBoundingClientRect();
 
     setHoverCitation({
@@ -450,12 +451,12 @@ export function DocumentReader({
   // ── Rendered HTML with 2-Column Administrative Letterhead & Styling ─────
   // ── Rendered HTML with 2-Column Administrative Letterhead & Styling & Smart Citations ─────
   const renderedHtml = useMemo(() => {
-    if (!effectiveHtml) return null;
     const formatted = formatLegalHtmlContent(effectiveHtml, doc);
-    const withCitations = linkLegalCitations(formatted, DEMO_DOCUMENTS as unknown as LegalDocument[]).html;
+    const docCorpus = allDocuments && allDocuments.length > 0 ? allDocuments : (DEMO_DOCUMENTS as unknown as LegalDocument[]);
+    const withCitations = linkLegalCitations(formatted, docCorpus).html;
     const { html } = highlightHtml(withCitations, debouncedSearchQuery);
     return html;
-  }, [effectiveHtml, doc, debouncedSearchQuery]);
+  }, [effectiveHtml, doc, debouncedSearchQuery, allDocuments]);
   // Track and highlight active search match in DOM
   useEffect(() => {
     if (!contentRef.current || !debouncedSearchQuery) {

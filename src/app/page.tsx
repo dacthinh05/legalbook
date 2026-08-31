@@ -543,6 +543,7 @@ export default function MainPage() {
         <div className="flex-1 overflow-hidden">
           <DocumentReader
             document={selectedDocument as LegalDocument}
+            allDocuments={allDocList}
             isBookmarked={bookmarkedDocuments.has(selectedDocument.id!)}
             onToggleBookmark={() => handleToggleBookmark(selectedDocument.id!)}
             onSelectRelatedDocument={handleDocumentSelect}
@@ -749,8 +750,9 @@ export default function MainPage() {
             /* Document Reader when a document is selected */
             <DocumentReader
               document={selectedDocument as LegalDocument}
+              allDocuments={allDocList}
+              isBookmarked={bookmarkedDocuments.has(selectedDocument.id!)}
               onToggleBookmark={() => handleToggleBookmark(selectedDocument.id!)}
-              onSelectRelatedDocument={handleDocumentSelect}
               onFullscreen={() => setReaderFullscreen(true)}
               isFullscreen={false}
               onBack={handleResetHome}
