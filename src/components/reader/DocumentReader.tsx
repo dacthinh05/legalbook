@@ -204,8 +204,7 @@ export function DocumentReader({
       rawText,
       anchorRect: rect,
     });
-  }, []);
-
+  }, [allDocuments]);
   const handleCitationMouseLeave = useCallback(() => {
     if (hoverCitationTimerRef.current) clearTimeout(hoverCitationTimerRef.current);
     hoverCitationTimerRef.current = setTimeout(() => {

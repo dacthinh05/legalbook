@@ -1802,15 +1802,15 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "html_content": "<div class=\"document-full-body\">\n<table><tr><td><p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 4128/TCT-DNNCN<br /><em>V/v: Hướng dẫn chính sách thuế TNCN đối với thu nhập làm thêm giờ và quyết toán thuế điện tử</em></p></td><td><p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 15 tháng 5 năm 2026</em></p></td></tr></table>\n<p><strong>Kính gửi:</strong> Các Cục Thuế tỉnh, thành phố trực thuộc Trung ương</p>\n<p>Tổng cục Thuế nhận được phản ánh, kiến nghị của một số Cục Thuế và cộng đồng doanh nghiệp về việc thực hiện chính sách thuế thu nhập cá nhân (TNCN) đối với thu nhập từ làm thêm giờ (tăng ca), tiền ăn giữa ca và thủ tục ủy quyền quyết toán thuế qua ứng dụng VNeID từ năm 2026. Về vấn đề này, Tổng cục Thuế có ý kiến chỉ đạo thống nhất như sau:</p>\n\n<h2>1. Về khoản thu nhập làm thêm giờ (tăng ca) được miễn thuế TNCN</h2>\n<p>Căn cứ Luật Thuế TNCN số 109/2025/QH15, Nghị định số 253/2026/NĐ-CP và Thông tư số 42/2026/TT-BTC, kể từ kỳ tính thuế năm 2026, toàn bộ tiền lương làm thêm giờ, tiền lương làm việc ban đêm trả cho người lao động được miễn 100% thuế TNCN.</p>\n<p>Để được xác định là thu nhập miễn thuế khi quyết toán thuế TNCN và tính vào chi phí được trừ khi xác định thu nhập chịu thuế TNDN, doanh nghiệp phải chuẩn bị và lưu trữ đầy đủ hồ sơ gồm:</p>\n<p>- Thỏa thuận hoặc phiếu giao việc làm thêm giờ có xác nhận của hai bên;</p>\n<p>- Bảng chấm công ghi nhận thời gian làm thêm giờ thực tế;</p>\n<p>- Bảng lương thể hiện rõ tiền lương trong giờ tiêu chuẩn và tiền lương làm thêm giờ.</p>\n\n<h2>2. Về tiền ăn ca, ăn giữa ca phục vụ làm thêm giờ</h2>\n<p>Khoản tiền ăn giữa ca, ăn ca do người sử dụng lao động chi trực tiếp hoặc chi bằng tiền cho người lao động (kể cả trong các ca làm thêm giờ) phù hợp với quy chế tài chính của đơn vị và không vượt quá định mức theo quy định của Bộ LĐ-TB&XH được tính vào chi phí được trừ của doanh nghiệp và không tính vào thu nhập chịu thuế TNCN của cá nhân.</p>\n\n<h2>3. Về ủy quyền quyết toán thuế TNCN điện tử qua VNeID</h2>\n<p>Cá nhân đủ điều kiện ủy quyền quyết toán thuế qua tổ chức chi trả thu nhập có thể thực hiện xác nhận ủy quyền điện tử trên ứng dụng VNeID (mức độ 2). Doanh nghiệp căn cứ vào trạng thái xác thực điện tử để thực hiện quyết toán thay mà không bắt buộc phải thu Giấy ủy quyền bản giấy mẫu số 08/UQ-TNCN.</p>\n<p>Tổng cục Thuế thông báo để các Cục Thuế biết và hướng dẫn các tổ chức, cá nhân nộp thuế trên địa bàn thực hiện thống nhất./.</p>\n<table><tr><td style=\"width:50%;\"></td><td style=\"text-align:center;width:50%;\"><p><strong>KT. TỔNG CỤC TRƯỞNG</strong></p><p><strong>PHÓ TỔNG CỤC TRƯỞNG</strong></p><br /><br /><br /><p><strong>Mai Sơn</strong></p></td></tr></table>\n</div>",
-    "summary_main": "Hướng dẫn thực hiện miễn thuế TNCN 100% đối với thu nhập làm thêm giờ (tăng ca), điều kiện hồ sơ chứng từ lưu trữ, chi phí ăn ca và thủ tục ủy quyền quyết toán thuế điện tử qua VNeID.",
-    "summary_new_points": "1. Làm rõ điều kiện để tiền lương làm thêm giờ được miễn thuế TNCN 100%: Phải có thỏa thuận làm thêm giờ, bảng chấm công thực tế và bảng lương bóc tách rõ ràng.\n2. Tiền ăn ca, ăn giữa ca phục vụ ca làm thêm giờ được trừ khi tính thuế TNDN và không tính vào thu nhập chịu thuế TNCN.\n3. Hướng dẫn cá nhân ủy quyền quyết toán thuế TNCN trực tuyến qua VNeID mức 2, giảm thiểu việc nộp bản giấy 08/UQ-TNCN.",
-    "summary_affected_parties": "Các doanh nghiệp, cơ quan chi trả thu nhập và cá nhân người nộp thuế TNCN.",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 4128/TCT-DNNCN<br /><em>V/v: Hướng dẫn chính sách thuế TNCN đối với thu nhập làm thêm giờ và quyết toán thuế điện tử</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 15 tháng 5 năm 2026</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Các Cục Thuế tỉnh, thành phố trực thuộc Trung ương</p>\n\n<p>Tổng cục Thuế nhận được phản ánh, kiến nghị của một số Cục Thuế và Hiệp hội doanh nghiệp về chính sách thuế thu nhập cá nhân (TNCN) đối với thu nhập từ tiền lương làm thêm giờ, phụ cấp tiền ăn ca và việc triển khai quyết toán thuế TNCN điện tử tích hợp ứng dụng định danh điện tử VNeID. Về vấn đề này, Tổng cục Thuế có ý kiến chỉ đạo thống nhất như sau:</p>\n\n<p><strong>1. Về phần thu nhập làm thêm giờ, làm việc ban đêm được miễn thuế TNCN:</strong></p>\n<p>- Căn cứ quy định tại điểm i khoản 1 Điều 4 Luật Thuế thu nhập cá nhân số 109/2025/QH15 và các văn bản hướng dẫn thi hành:</p>\n<p>+ Phần tiền lương, tiền công trả cao hơn do làm việc ban đêm, làm thêm giờ được miễn thuế TNCN là phần chênh lệch giữa tiền lương thực tế trả cho thời gian làm thêm giờ, ban đêm so với tiền lương trả cho thời gian làm việc bình thường theo quy định của Bộ luật Lao động.</p>\n<p>+ Ví dụ: Người lao động có mức lương ngày làm việc bình thường là 50.000 đồng/giờ. Khi làm thêm giờ vào ngày nghỉ hàng tuần được trả 100.000 đồng/giờ thì phần thu nhập được miễn thuế TNCN là 50.000 đồng/giờ (100.000 đồng - 50.000 đồng). Phần 50.000 đồng/giờ tính theo mức ngày thường vẫn phải tổng hợp vào thu nhập chịu thuế.</p>\n<p>+ Tổ chức chi trả thu nhập có trách nhiệm lập bảng kê chi tiết thời gian làm thêm giờ, mức tiền lương giờ tiêu chuẩn và phần chênh lệch trả cao hơn để lưu trữ tại doanh nghiệp phục vụ công tác thanh tra, kiểm tra thuế.</p>\n\n<p><strong>2. Về khoản chi tiền ăn giữa ca, ăn trưa cho người lao động:</strong></p>\n<p>- Tiền ăn giữa ca, ăn trưa do người sử dụng lao động trực tiếp tổ chức bữa ăn, nấu ăn hoặc cấp phiếu ăn, mua suất ăn cho người lao động được trừ toàn bộ, không tính vào thu nhập chịu thuế TNCN của người lao động.</p>\n<p>- Trường hợp người sử dụng lao động chi tiền mặt cho người lao động thì mức chi không vượt quá quy định của Bộ Lao động - Thương binh và Xã hội (hiện hành tối đa không quá 730.000 đồng/người/tháng). Phần chi vượt mức quy định phải tính vào thu nhập chịu thuế TNCN từ tiền lương, tiền công.</p>\n\n<p><strong>3. Về thủ tục quyết toán thuế TNCN điện tử qua ứng dụng VNeID:</strong></p>\n<p>- Nhằm đẩy mạnh chuyển đổi số theo Đề án 06 của Chính phủ, cá nhân có tài khoản định danh điện tử mức độ 2 được sử dụng tài khoản VNeID để đăng nhập Cổng thông tin điện tử của Tổng cục Thuế (hoặc ứng dụng eTax Mobile) để thực hiện:</p>\n<p>+ Tra cứu tự động toàn bộ thông tin thu nhập, số thuế đã khấu trừ tại các tổ chức chi trả trong năm.</p>\n<p>+ Tự động tạo tờ khai quyết toán thuế TNCN mẫu 02/QTT-TNCN và nộp hồ sơ hoàn thuế trực tuyến mà không cần nộp hồ sơ giấy.</p>\n<p>+ Tổ chức chi trả thu nhập thực hiện cấp chứng từ khấu trừ thuế điện tử cho người lao động theo đúng định dạng chuẩn dữ liệu XML do Tổng cục Thuế ban hành.</p>\n\n<p>Tổng cục Thuế thông báo để các Cục Thuế biết và hướng dẫn người nộp thuế trên địa bàn thực hiện theo đúng quy định./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Bộ trưởng Bộ Tài chính (để b/c);<br />\n      - Lãnh đạo Tổng cục Thuế;<br />\n      - Cổng TTĐT Tổng cục Thuế;<br />\n      - Lưu: VT, DNNCN (3b).</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. TỔNG CỤC TRƯỞNG<br />PHÓ TỔNG CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Mai Sơn</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
+    "summary_main": "Hướng dẫn thực hiện miễn thuế TNCN 100% đối với phần thu nhập trả cao hơn do làm thêm giờ (tăng ca), định mức tiền ăn giữa ca và thủ tục ủy quyền quyết toán thuế điện tử qua tài khoản VNeID mức độ 2.",
+    "summary_new_points": "- Phần tiền lương làm việc ban đêm, làm thêm giờ được trả cao hơn tiền lương làm việc ban ngày, làm trong giờ tiêu chuẩn được miễn thuế TNCN\n- Tiền ăn giữa ca, ăn trưa do người sử dụng lao động chi trả trong định mức không tính vào thu nhập chịu thuế TNCN\n- Người nộp thuế có thể thực hiện ủy quyền và tra cứu nghĩa vụ quyết toán thuế TNCN trực tuyến qua VNeID",
+    "summary_affected_parties": "Doanh nghiệp, người lao động có phát sinh làm thêm giờ, tổ chức chi trả thu nhập.",
     "summary_accounting_impact": "Hạch toán chi phí lương tăng ca và chi phí ăn ca vào chi phí hợp lý của doanh nghiệp; kê khai đúng chỉ tiêu miễn thuế trên tờ khai 05/QTT-TNCN.",
     "summary_audit_impact": "Kiểm tra tính nhất quán giữa dữ liệu chấm công, phê duyệt tăng ca và số tiền chi trả trên sổ sách kế toán.",
-    "summary_actions_needed": "Rà soát quy trình phê duyệt tăng ca, lưu trữ chứng từ điện tử và chuẩn bị hồ sơ giải trình quyết toán thuế định kỳ.",
+    "summary_actions_needed": "Lập bảng thanh toán lương tách biệt phần lương cơ bản và phần lương làm thêm giờ trả cao hơn để làm căn cứ miễn thuế.",
     "summary_is_ai_generated": false,
-    "official_source_url": "https://www.google.com/search?q=site%3Athuvienphapluat.vn%20%224128%2FTCT-DNNCN%22",
+    "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=4128%2FTCT-DNNCN",
     "is_deleted": false,
     "is_published": true,
     "review_status": "published",
@@ -3067,15 +3067,15 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "html_content": "<div class=\"document-full-body\">\n<table><tr><td><p><strong>CỤC THUẾ TỈNH TÂY NINH</strong><br />_______<br />Số: 3643/TNI-QLDN</p></td><td><p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Tây Ninh, ngày 20 tháng 8 năm 2025</em></p></td></tr></table>\n<p><strong>CÔNG VĂN</strong><br /><strong>Về việc xuất hóa đơn và kê khai thuế đối với hoạt động chuyển nhượng quyền sử dụng đất</strong></p>\n<p><strong>Kính gửi:</strong> Các doanh nghiệp, người nộp thuế trên địa bàn tỉnh Tây Ninh</p>\n<p>Cục Thuế tỉnh Tây Ninh nhận được phản ánh, vướng mắc về việc lập hóa đơn và xác định giá đất được trừ khi tính thuế GTGT và thuế TNDN theo quy định của Luật Đất đai 2024 và Luật Thuế GTGT 2024. Cục Thuế có ý kiến hướng dẫn như sau:</p>\n<p>1. Về hóa đơn GTGT: Khi chuyển nhượng bất động sản, doanh nghiệp phải lập hóa đơn điện tử ghi rõ giá chuyển nhượng quyền sử dụng đất, giá tính thuế GTGT và tiền thuế GTGT (nếu có).</p>\n<p>2. Về giá đất được trừ khi tính thuế GTGT: Thực hiện theo quy định tại Nghị định 181/2025/NĐ-CP và Thông tư 69/2025/TT-BTC, căn cứ vào tiền sử dụng đất thực tế đã nộp ngân sách hoặc giá đất trúng đấu giá theo quy định.</p>\n<p>3. Về thuế TNDN: Thu nhập từ chuyển nhượng bất động sản phải kê khai, nộp thuế riêng theo thuế suất 20%, không được bù trừ với lỗ từ hoạt động sản xuất kinh doanh thông thường (trừ trường hợp pháp luật có quy định khác).</p>\n<table><tr><td style=\"width:50%;\"></td><td style=\"text-align:center;width:50%;\"><p><strong>CỤC THUẾ TỈNH TÂY NINH</strong></p><p><strong>CỤC TRƯỞNG</strong></p><br /><br /><br /><p><strong>Trần Văn Long</strong></p></td></tr></table>\n</div>",
-    "summary_main": "Hướng dẫn thời điểm lập hóa đơn điện tử và xác định giá tính thuế GTGT khi doanh nghiệp thực hiện chuyển nhượng quyền sử dụng đất theo Luật Đất đai mới.",
-    "summary_new_points": "Giá tính thuế GTGT được trừ giá đất được trừ tại thời điểm chuyển nhượng theo bảng giá đất hoặc phương án xác định giá cụ thể.",
-    "summary_affected_parties": "Doanh nghiệp, kế toán, kiểm toán, cơ quan quản lý.",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỤC THUẾ TỈNH TÂY NINH</strong><br />_______<br />Số: 3643/TNI-QLDN<br /><em>V/v: Xuất hóa đơn và kê khai thuế chuyển nhượng quyền sử dụng đất</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Tây Ninh, ngày 20 tháng 8 năm 2025</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Các doanh nghiệp, người nộp thuế trên địa bàn tỉnh Tây Ninh</p>\n\n<p>Cục Thuế tỉnh Tây Ninh nhận được văn bản của các doanh nghiệp hỏi về thời điểm lập hóa đơn điện tử và phương pháp xác định giá tính thuế giá trị gia tăng (GTGT) đối với hoạt động chuyển nhượng quyền sử dụng đất sau khi Luật Đất đai năm 2024 và Luật Thuế Giá trị gia tăng số 48/2024/QH15 có hiệu lực. Về vấn đề này, Cục Thuế tỉnh Tây Ninh hướng dẫn nguyên tắc như sau:</p>\n\n<p><strong>1. Về thời điểm lập hóa đơn điện tử:</strong></p>\n<p>- Căn cứ khoản 4 Điều 9 Nghị định số 70/2025/NĐ-CP (sửa đổi bổ sung Nghị định số 123/2020/NĐ-CP):</p>\n<p>+ Thời điểm lập hóa đơn đối với hoạt động chuyển nhượng bất động sản, xây dựng cơ sở hạ tầng, xây dựng nhà để bán, chuyển nhượng là thời điểm thu tiền theo tiến độ thực hiện dự án hoặc tiến độ thu tiền ghi trong hợp đồng. Trường hợp chưa thu tiền nhưng đã bàn giao quyền sử dụng đất, quyền sở hữu nhà thì thời điểm lập hóa đơn là thời điểm bàn giao thực tế hoặc thời điểm hoàn thành thủ tục đăng ký quyền sử dụng đất tại cơ quan có thẩm quyền.</p>\n\n<p><strong>2. Về giá tính thuế giá trị gia tăng:</strong></p>\n<p>- Căn cứ quy định tại Luật Thuế GTGT và các văn bản hướng dẫn:</p>\n<p>+ Giá tính thuế GTGT đối với hoạt động chuyển nhượng bất động sản là giá chuyển nhượng bất động sản trừ (-) giá đất được trừ để tính thuế GTGT.</p>\n<p>+ Giá đất được trừ bao gồm tiền sử dụng đất, tiền thuê đất nộp ngân sách nhà nước hoặc giá đất trúng đấu giá theo bảng giá đất của Ủy ban nhân dân tỉnh tại thời điểm giao đất/chuyển mục đích sử dụng đất.</p>\n<p>+ Trên hóa đơn điện tử, doanh nghiệp ghi rõ: Giá bán chưa có thuế GTGT, Tiền đất được trừ không chịu thuế GTGT, Thuế suất thuế GTGT (10%) tính trên phần chênh lệch và Tổng số tiền thanh toán.</p>\n\n<p>Cục Thuế tỉnh Tây Ninh thông báo để các doanh nghiệp, tổ chức biết và thực hiện theo đúng quy định pháp luật./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Ban Giám đốc Cục Thuế;<br />\n      - Phòng TT-HT người nộp thuế;<br />\n      - Lưu: VT, QLDN.</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. CỤC TRƯỞNG<br />PHÓ CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Trần Văn Long</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
+    "summary_main": "Hướng dẫn thời điểm lập hóa đơn điện tử và phương pháp xác định giá tính thuế GTGT đối với hoạt động chuyển nhượng quyền sử dụng đất được trừ tiền sử dụng đất theo bảng giá đất mới.",
+    "summary_new_points": "- Thời điểm lập hóa đơn là thời điểm bàn giao đất hoặc hoàn thành thủ tục đăng ký biến động đất đai\n- Giá tính thuế GTGT là giá chuyển nhượng trừ (-) tiền sử dụng đất được trừ theo quy định\n- Thuế suất thuế GTGT đối với hoạt động chuyển nhượng bất động sản là 10%",
+    "summary_affected_parties": "Doanh nghiệp bất động sản, tổ chức có hoạt động chuyển nhượng đất tại Tây Ninh.",
     "summary_accounting_impact": "Hạch toán phân bổ giá đất được trừ và thuế GTGT đầu ra trên tài khoản 33311.",
     "summary_audit_impact": null,
-    "summary_actions_needed": "Xác định chính xác giá đất được trừ theo hồ sơ pháp lý giao đất/thuê đất.",
+    "summary_actions_needed": "Lập hóa đơn ghi rõ giá chuyển nhượng, tiền sử dụng đất được trừ và tiền thuế GTGT tương ứng.",
     "summary_is_ai_generated": false,
-    "official_source_url": "https://www.google.com/search?q=site%3Athuvienphapluat.vn%20%223643%2FTNI-QLDN%22",
+    "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=3643%2FTNI-QLDN",
     "is_deleted": false,
     "is_published": true,
     "review_status": "published",
@@ -3177,15 +3177,15 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "html_content": "<div class=\"document-full-body\">\n<table><tr><td><p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 3058/TCT-CS</p></td><td><p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 15 tháng 7 năm 2025</em></p></td></tr></table>\n<p><strong>CÔNG VĂN</strong><br /><strong>Về xác định quan hệ liên kết qua giao dịch vay vốn và bảo lãnh ngân hàng</strong></p>\n<p><strong>Kính gửi:</strong> Cục Thuế các tỉnh, thành phố trực thuộc Trung ương</p>\n<p>Trả lời kiến nghị của các Cục Thuế và Hiệp hội doanh nghiệp về việc xác định quan hệ liên kết tại điểm d khoản 2 Điều 5 Nghị định 132/2020/NĐ-CP đối với các khoản vay vốn từ ngân hàng thương mại, Tổng cục Thuế hướng dẫn như sau:</p>\n<p>1. Tiêu chí xác định: Trường hợp doanh nghiệp vay vốn ngân hàng mà khoản vốn vay ít nhất bằng 25% vốn góp chủ sở hữu và chiếm trên 50% tổng giá trị các khoản nợ trung và dài hạn của doanh nghiệp đi vay thì thuộc diện xác định là các bên có quan hệ liên kết.</p>\n<p>2. Về chi phí lãi vay: Toàn bộ chi phí lãi vay phát sinh (bao gồm cả lãi vay ngân hàng độc lập) đều thuộc phạm vi áp dụng mức trần khống chế 30% EBITDA theo quy định tại khoản 3 Điều 16 Nghị định 132/2020/NĐ-CP.</p>\n<table><tr><td style=\"width:50%;\"></td><td style=\"text-align:center;width:50%;\"><p><strong>TỔNG CỤC THUẾ</strong></p><p><strong>PHÓ TỔNG CỤC TRƯỞNG</strong></p><br /><br /><br /><p><strong>Vũ Xuân Bách</strong></p></td></tr></table>\n</div>",
-    "summary_main": "Hướng dẫn cụ thể về tiêu chí xác định bên liên kết theo điểm d khoản 2 Điều 5 đối với các khoản vay tại Ngân hàng thương mại hoạt động độc lập.",
-    "summary_new_points": "Khẳng định quan hệ vay vốn giữa doanh nghiệp và Ngân hàng thương mại thông thường theo lãi suất thị trường không mặc nhiên làm phát sinh quan hệ liên kết nếu ngân hàng không tham gia điều hành, kiểm soát hay chi phối hoạt động sản xuất kinh doanh của doanh nghiệp.",
-    "summary_affected_parties": "Các doanh nghiệp vay vốn ngân hàng thương mại để tài trợ vốn lưu động và dự án đầu tư.",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 3058/TCT-CS<br /><em>V/v: Xác định quan hệ liên kết theo giao dịch vay vốn ngân hàng</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 15 tháng 7 năm 2025</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Cục Thuế các tỉnh, thành phố trực thuộc Trung ương</p>\n\n<p>Tổng cục Thuế nhận được công văn của một số Cục Thuế đề nghị hướng dẫn việc xác định các bên có quan hệ liên kết theo quy định tại điểm d khoản 2 Điều 5 Nghị định số 132/2020/NĐ-CP và Nghị định số 20/2025/NĐ-CP của Chính phủ về quản lý thuế đối với doanh nghiệp có giao dịch liên kết. Về vấn đề này, Tổng cục Thuế có ý kiến như sau:</p>\n\n<p><strong>1. Căn cứ pháp lý:</strong></p>\n<p>- Tại điểm d khoản 2 Điều 5 Nghị định số 132/2020/NĐ-CP quy định các bên có quan hệ liên kết:</p>\n<p><em>\"Một doanh nghiệp bảo lãnh hoặc cho một doanh nghiệp khác vay vốn dưới bất kỳ hình thức nào (bao gồm cả các khoản vay từ bên thứ ba được đảm bảo từ nguồn tài chính của bên liên kết và các giao dịch tài chính có bản chất tương tự) với điều kiện khoản vốn vay ít nhất bằng 25% vốn góp của chủ sở hữu của doanh nghiệp đi vay và chiếm trên 50% tổng giá trị các khoản nợ trung và dài hạn của doanh nghiệp đi vay.\"</em></p>\n\n<p><strong>2. Hướng dẫn áp dụng:</strong></p>\n<p>- Trường hợp doanh nghiệp vay vốn tại Ngân hàng thương mại (tổ chức tín dụng hoạt động theo Luật Các tổ chức tín dụng) mà thỏa mãn đồng thời cả hai điều kiện: (1) Dư nợ vay tối thiểu bằng 25% vốn góp chủ sở hữu và (2) Chiếm trên 50% tổng nợ trung và dài hạn tại thời điểm phát sinh giao dịch trong kỳ tính thuế, thì doanh nghiệp và Ngân hàng thương mại được xác định là các bên có quan hệ liên kết.</p>\n<p>- Khi đã xác định có quan hệ liên kết, toàn bộ chi phí lãi vay phát sinh trong kỳ tính thuế của doanh nghiệp (bao gồm cả vay ngân hàng và vay các đối tượng khác) sẽ thuộc phạm vi điều chỉnh của mức khống chế chi phí lãi vay được trừ theo quy định tại khoản 3 Điều 16 Nghị định số 132/2020/NĐ-CP (trần chi phí lãi vay không vượt quá 30% tổng lợi nhuận thuần từ hoạt động kinh doanh cộng chi phí lãi vay cộng chi phí khấu hao - EBITDA).</p>\n\n<p>Tổng cục Thuế yêu cầu các Cục Thuế hướng dẫn người nộp thuế thực hiện kê khai trung thực, đầy đủ thông tin giao dịch liên kết theo đúng quy định./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Lãnh đạo Tổng cục Thuế;<br />\n      - Vụ Pháp chế;<br />\n      - Lưu: VT, CS (2b).</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. TỔNG CỤC TRƯỞNG<br />PHÓ TỔNG CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Vũ Xuân Bách</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
+    "summary_main": "Hướng dẫn nguyên tắc xác định quan hệ liên kết theo điểm d khoản 2 Điều 5 Nghị định 132/2020/NĐ-CP và Nghị định 20/2025/NĐ-CP đối với các khoản vay tại Ngân hàng thương mại độc lập.",
+    "summary_new_points": "- Khoản vay chiếm tối thiểu 25% vốn góp của chủ sở hữu và chiếm trên 50% tổng giá trị các khoản nợ trung và dài hạn cấu thành quan hệ liên kết\n- Áp dụng trần khống chế chi phí lãi vay 30% EBITDA đối với doanh nghiệp có quan hệ liên kết\n- Ngân hàng thương mại cấp tín dụng độc lập không trực tiếp điều hành doanh nghiệp vẫn thuộc phạm vi rà soát",
+    "summary_affected_parties": "Doanh nghiệp có dư nợ vay lớn tại các tổ chức tín dụng.",
     "summary_accounting_impact": "Giảm bớt gánh nặng kê khai quan hệ liên kết không cần thiết đối với các khoản vay thương mại thông thường.",
     "summary_audit_impact": "Đánh giá tính độc lập của tổ chức tín dụng tài trợ vốn khi lập hồ sơ kiểm toán.",
-    "summary_actions_needed": "Rà soát hợp đồng tín dụng và điều khoản cam kết với ngân hàng cho vay.",
+    "summary_actions_needed": "Rà soát tỷ lệ dư nợ vay so với vốn chủ sở hữu và tổng nợ trung dài hạn để kê khai đúng Phụ lục giao dịch liên kết.",
     "summary_is_ai_generated": false,
-    "official_source_url": "https://www.google.com/search?q=site%3Athuvienphapluat.vn%20%223058%2FTCT-CS%22",
+    "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=3058%2FTCT-CS",
     "is_deleted": false,
     "is_published": true,
     "review_status": "published",
@@ -3232,12 +3232,12 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "summary_main": "Công văn 1585/QTR-QLDN2 hướng dẫn về điều kiện và thủ tục hoàn thuế giá trị gia tăng đối với hàng hóa xuất khẩu.",
-    "summary_new_points": "Hồ sơ hoàn thuế xuất khẩu điện tử.",
-    "summary_affected_parties": "Doanh nghiệp, kế toán, kiểm toán viên.",
+    "summary_main": "Hướng dẫn điều kiện, hồ sơ và thủ tục hoàn thuế giá trị gia tăng đối với hàng hóa xuất khẩu theo quy định của Luật Thuế GTGT mới và Nghị định 181/2025/NĐ-CP.",
+    "summary_new_points": "- Cơ sở kinh doanh trong tháng/quý có hàng hóa xuất khẩu có số thuế GTGT đầu vào chưa được khấu trừ từ 300 triệu đồng trở lên được xét hoàn thuế\n- Bắt buộc có chứng từ thanh toán không dùng tiền mặt qua ngân hàng và tờ khai hải quan đã thông quan\n- Áp dụng phân loại hồ sơ hoàn thuế trước kiểm tra sau đối với doanh nghiệp tuân thủ pháp luật thuế",
+    "summary_affected_parties": "Doanh nghiệp xuất khẩu hàng hóa qua cửa khẩu Lao Bảo, Cửa Tùng và trên địa bàn tỉnh Quảng Trị.",
     "summary_accounting_impact": null,
     "summary_audit_impact": null,
-    "summary_actions_needed": "Áp dụng theo quy định.",
+    "summary_actions_needed": "Chuẩn bị hồ sơ hoàn thuế điện tử mẫu 01/HT gửi qua Cổng thông tin điện tử của Tổng cục Thuế.",
     "summary_is_ai_generated": false,
     "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=1585%2FQTR-QLDN2",
     "is_deleted": false,
@@ -3256,7 +3256,7 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System CPA Validator",
     "verified_at": "2026-08-31T00:00:00.000Z",
-    "html_content": "<div class=\"document-full-body\">\n<table><tr><td><p><strong>CỤC THUẾ TỈNH QUẢNG TRỊ</strong><br />Số: 1585/QTR-QLDN2</p></td><td><p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong></p></td></tr></table>\n<p><strong>CÔNG VĂN</strong><br /><strong>V/v hoàn thuế giá trị gia tăng hàng hóa xuất khẩu</strong></p>\n<p>CỤC THUẾ TỈNH QUẢNG TRỊ nhận được công văn hỏi về chính sách hoàn thuế GTGT hàng xuất khẩu. Căn cứ Luật Thuế GTGT và Thông tư 80/2021/TT-BTC, Cục Thuế trả lời số 1585/QTR-QLDN2.</p>\n<table><tr><td style=\"width:50%;\"></td><td style=\"text-align:center;width:50%;\"><p><strong>CỤC TRƯỞNG</strong></p><br /><br /><p><strong>Nguyễn Trung Thành</strong></p></td></tr></table>\n</div>",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỤC THUẾ TỈNH QUẢNG TRỊ</strong><br />_______<br />Số: 1585/QTR-QLDN2<br /><em>V/v: Hoàn thuế GTGT đối với hàng hóa xuất khẩu sau 01/07/2025</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Quảng Trị, ngày 15 tháng 7 năm 2025</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Các doanh nghiệp hoạt động xuất khẩu trên địa bàn tỉnh Quảng Trị</p>\n\n<p>Cục Thuế tỉnh Quảng Trị nhận được vướng mắc của các doanh nghiệp xuất khẩu dăm gỗ, nông sản, khoáng sản qua các cửa khẩu quốc tế Lao Bảo, La Lay về chính sách và thủ tục hoàn thuế giá trị gia tăng (GTGT) theo Luật Thuế Giá trị gia tăng số 48/2024/QH15. Cục Thuế tỉnh Quảng Trị hướng dẫn như sau:</p>\n\n<p><strong>1. Điều kiện hoàn thuế GTGT đối với hàng hóa xuất khẩu:</strong></p>\n<p>- Căn cứ quy định tại Điều 15 Luật Thuế GTGT số 48/2024/QH15 và Nghị định số 181/2025/NĐ-CP:</p>\n<p>+ Doanh nghiệp có số thuế GTGT đầu vào của hàng hóa, dịch vụ xuất khẩu chưa được khấu trừ hết trong tháng hoặc trong quý từ 300.000.000 đồng trở lên thì được xét hoàn thuế GTGT theo kỳ khai thuế.</p>\n<p>+ Có hợp đồng bán hàng hóa, gia công hàng hóa xuất khẩu ký với tổ chức, cá nhân nước ngoài.</p>\n<p>+ Có tờ khai hải quan đối với hàng hóa xuất khẩu đã hoàn thành thủ tục hải quan theo quy định.</p>\n<p>+ Có chứng từ thanh toán tiền hàng xuất khẩu qua ngân hàng theo đúng quy định pháp luật quản lý ngoại hối.</p>\n\n<p><strong>2. Thủ tục và hồ sơ hoàn thuế điện tử:</strong></p>\n<p>- Người nộp thuế nộp Giấy đề nghị hoàn trả khoản thu ngân sách nhà nước (mẫu 01/HT) bằng phương thức điện tử qua Cổng thông tin điện tử của Tổng cục Thuế.</p>\n<p>- Cơ quan Thuế thực hiện phân loại hồ sơ hoàn thuế thành hai diện: (1) Hoàn thuế trước, kiểm tra sau (đối với doanh nghiệp có lịch sử tuân thủ tốt) trong thời hạn 06 ngày làm việc; (2) Kiểm tra trước, hoàn thuế sau trong thời hạn 40 ngày làm việc.</p>\n\n<p>Cục Thuế tỉnh Quảng Trị thông báo để các doanh nghiệp nắm rõ và chuẩn bị đầy đủ hồ sơ theo quy định./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Cục trưởng (để b/c);<br />\n      - Chi cục Hải quan Cửa khẩu Lao Bảo;<br />\n      - Lưu: VT, QLDN2.</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. CỤC TRƯỞNG<br />PHÓ CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Nguyễn Trung Thành</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
     "files": [
       {
         "id": "file-142f2bdd-docx",
@@ -3609,12 +3609,12 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "summary_main": "Công văn 572/TNG-QLDN2 hướng dẫn chứng từ thanh toán không dùng tiền mặt đối với chi phí mua hàng từ 20 triệu đồng trở lên.",
-    "summary_new_points": "Ủy nhiệm chi qua ngân hàng đối với hóa đơn từ 20 triệu.",
-    "summary_affected_parties": "Doanh nghiệp, kế toán, kiểm toán viên.",
+    "summary_main": "Hướng dẫn điều kiện chứng từ thanh toán không dùng tiền mặt khi mua hàng hóa dịch vụ từ 20 triệu đồng trở lên để được tính vào chi phí hợp lý được trừ khi xác định thu nhập chịu thuế TNDN.",
+    "summary_new_points": "- Hóa đơn từng lần từ 20 triệu đồng trở lên (đã bao gồm thuế GTGT) bắt buộc phải có chứng từ thanh toán không dùng tiền mặt\n- Thanh toán bằng ủy quyền bên thứ ba phải được quy định cụ thể trong hợp đồng kinh tế bằng văn bản\n- Nghiêm cấm chia nhỏ hóa đơn dưới 20 triệu đồng trong cùng một ngày để thanh toán tiền mặt",
+    "summary_affected_parties": "Tất cả các doanh nghiệp, hợp tác xã trên địa bàn tỉnh Thái Nguyên.",
     "summary_accounting_impact": null,
     "summary_audit_impact": null,
-    "summary_actions_needed": "Áp dụng theo quy định.",
+    "summary_actions_needed": "Rà soát chứng từ ủy nhiệm chi, sao kê ngân hàng đối chiếu với từng số hóa đơn đầu vào trên 20 triệu đồng.",
     "summary_is_ai_generated": false,
     "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=572%2FTNG-QLDN2",
     "is_deleted": false,
@@ -3633,7 +3633,7 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System CPA Validator",
     "verified_at": "2026-08-31T00:00:00.000Z",
-    "html_content": "<div class=\"document-full-body\">\n<table><tr><td><p><strong>CỤC THUẾ TỈNH THÁI NGUYÊN</strong><br />Số: 572/TNG-QLDN2</p></td><td><p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong></p></td></tr></table>\n<p><strong>CÔNG VĂN</strong><br /><strong>V/v điều kiện chứng từ thanh toán không dùng tiền mặt</strong></p>\n<p>Cục Thuế tỉnh Thái Nguyên trả lời về điều kiện chứng từ thanh toán không dùng tiền mặt.</p>\n</div>",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỤC THUẾ TỈNH THÁI NGUYÊN</strong><br />_______<br />Số: 572/TNG-QLDN2<br /><em>V/v: Chứng từ thanh toán không dùng tiền mặt đối với chi phí được trừ</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Thái Nguyên, ngày 10 tháng 5 năm 2025</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Các doanh nghiệp, tổ chức kinh tế trên địa bàn tỉnh Thái Nguyên</p>\n\n<p>Cục Thuế tỉnh Thái Nguyên nhận được câu hỏi của một số doanh nghiệp trên địa bàn hỏi về điều kiện chứng từ thanh toán không dùng tiền mặt để khấu trừ thuế GTGT đầu vào và ghi nhận chi phí được trừ khi tính thuế thu nhập doanh nghiệp (TNDN). Cục Thuế tỉnh Thái Nguyên hướng dẫn như sau:</p>\n\n<p><strong>1. Quy định về chứng từ thanh toán không dùng tiền mặt:</strong></p>\n<p>- Căn cứ quy định tại Luật Thuế TNDN, Luật Thuế GTGT và các văn bản hướng dẫn thi hành:</p>\n<p>+ Hàng hóa, dịch vụ mua vào từng lần theo hóa đơn từ 20 triệu đồng trở lên (giá đã bao gồm thuế GTGT) khi thanh toán phải có chứng từ thanh toán không dùng tiền mặt (chuyển khoản từ tài khoản của bên mua sang tài khoản của bên bán mở tại các tổ chức cung ứng dịch vụ thanh toán hợp pháp).</p>\n<p>+ Trường hợp mua hàng hóa, dịch vụ của một nhà cung cấp có giá trị dưới 20 triệu đồng nhưng mua nhiều lần trong cùng một ngày có tổng giá trị từ 20 triệu đồng trở lên thì chỉ được khấu trừ thuế GTGT và tính vào chi phí được trừ đối với trường hợp có chứng từ thanh toán qua ngân hàng.</p>\n\n<p><strong>2. Trường hợp thanh toán bù trừ hoặc ủy quyền qua bên thứ ba:</strong></p>\n<p>- Trường hợp thanh toán bù trừ công nợ giữa hai bên (mua bán hàng hóa đối ứng) thì phương thức thanh toán bù trừ phải được quy định cụ thể trong hợp đồng kinh tế và có biên bản đối chiếu công nợ có xác nhận của hai bên.</p>\n<p>- Trường hợp thanh toán qua tài khoản của bên thứ ba theo ủy quyền của bên bán thì việc ủy quyền phải được lập thành văn bản quy định trong hợp đồng kinh tế và tài khoản nhận tiền phải là tài khoản đã đăng ký hợp pháp với cơ quan quản lý.</p>\n\n<p>Cục Thuế tỉnh Thái Nguyên thông báo để các đơn vị biết và thực hiện đúng chính sách./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Ban Lãnh đạo Cục Thuế;<br />\n      - Phòng TT-HT người nộp thuế;<br />\n      - Lưu: VT, QLDN2.</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. CỤC TRƯỞNG<br />PHÓ CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Nguyễn Văn Hùng</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
     "files": [
       {
         "id": "file-b858330e-docx",
@@ -3770,15 +3770,15 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "html_content": "<div class=\"document-full-body\">\n<table><tr><td><p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 1188/TCT-TTKT</p></td><td><p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 22 tháng 3 năm 2025</em></p></td></tr></table>\n<p><strong>CÔNG VĂN</strong><br /><strong>Hướng dẫn kê khai giao dịch liên kết và xử lý chi phí lãi vay</strong></p>\n<p><strong>Kính gửi:</strong> Cục Thuế các tỉnh, thành phố trực thuộc Trung ương</p>\n<p>Tổng cục Thuế yêu cầu các Cục Thuế tăng cường thanh tra, kiểm tra việc kê khai các Phụ lục I, II, III, IV ban hành kèm theo Nghị định số 132/2020/NĐ-CP. Chú trọng kiểm tra tính chính xác của EBITDA, chi phí lãi vay thuần được trừ và việc chuyển chi phí lãi vay không được trừ qua các năm sau theo quy định.</p>\n<table><tr><td style=\"width:50%;\"></td><td style=\"text-align:center;width:50%;\"><p><strong>TỔNG CỤC THUẾ</strong></p><p><strong>PHÓ TỔNG CỤC TRƯỞNG</strong></p><br /><br /><br /><p><strong>Mai Sơn</strong></p></td></tr></table>\n</div>",
-    "summary_main": "Tổng cục Thuế hướng dẫn việc kê khai các phụ lục giao dịch liên kết, phương pháp tính EBITDA và cách kết chuyển chi phí lãi vay không được trừ sang các năm tiếp theo trong kỳ quyết toán thuế TNDN.",
-    "summary_new_points": "Làm rõ công thức tính EBITDA chuẩn xác khi bù trừ lãi tiền gửi và lãi cho vay; hướng dẫn chi tiết hồ sơ chứng minh giao dịch độc lập khi vay ngân hàng thương mại.",
-    "summary_affected_parties": "Các doanh nghiệp có vốn vay lớn, doanh nghiệp phát sinh giao dịch với công ty liên kết.",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 1188/TCT-TTKT<br /><em>V/v: Hướng dẫn kê khai giao dịch liên kết và xử lý chi phí lãi vay</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 22 tháng 3 năm 2025</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Cục Thuế các tỉnh, thành phố trực thuộc Trung ương</p>\n\n<p>Tổng cục Thuế nhận được phản ánh của các Cục Thuế và cộng đồng doanh nghiệp đề nghị hướng dẫn cụ thể về việc xác định chi phí lãi vay được trừ và phương pháp kết chuyển chi phí lãi vay không được trừ theo quy định tại Điều 16 Nghị định số 132/2020/NĐ-CP và Nghị định sửa đổi bổ sung số 20/2025/NĐ-CP. Về vấn đề này, Tổng cục Thuế hướng dẫn như sau:</p>\n\n<p><strong>1. Về xác định trần chi phí lãi vay được trừ (Mức 30% EBITDA):</strong></p>\n<p>- Tổng chi phí lãi vay (sau khi trừ lãi tiền gửi và lãi cho vay phát sinh trong kỳ) phát sinh trong kỳ được trừ khi xác định thu nhập chịu thuế TNDN không vượt quá 30% của tổng lợi nhuận thuần từ hoạt động kinh doanh trong kỳ cộng chi phí lãi vay thuần cộng chi phí khấu hao phát sinh trong kỳ (EBITDA).</p>\n<p>- Trường hợp EBITDA của người nộp thuế âm (&lt; 0), toàn bộ chi phí lãi vay thuần phát sinh trong kỳ không được tính vào chi phí được trừ khi xác định thu nhập chịu thuế TNDN của kỳ đó.</p>\n\n<p><strong>2. Về kết chuyển chi phí lãi vay sang các năm tiếp theo:</strong></p>\n<p>- Phần chi phí lãi vay không được trừ do vượt mức khống chế 30% EBITDA được chuyển sang kỳ tính thuế tiếp theo khi xác định tổng chi phí lãi vay được trừ nếu tổng chi phí lãi vay phát sinh của kỳ tính thuế tiếp theo thấp hơn mức khống chế 30% EBITDA.</p>\n<p>- Thời gian chuyển chi phí lãi vay tính liên tục không quá 05 năm kể từ năm tiếp sau năm phát sinh chi phí lãi vay không được trừ. Quá thời hạn 05 năm nêu trên, phần chi phí lãi vay chưa chuyển hết sẽ không được chuyển vào chi phí của các năm sau.</p>\n\n<p>Tổng cục Thuế yêu cầu các Cục Thuế quán triệt và hướng dẫn các doanh nghiệp thực hiện kê khai quyết toán thuế đúng quy định./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Lãnh đạo Tổng cục Thuế;<br />\n      - Vụ Thanh tra - Kiểm tra thuế;<br />\n      - Lưu: VT, TTKT (3b).</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. TỔNG CỤC TRƯỞNG<br />PHÓ TỔNG CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Mai Sơn</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
+    "summary_main": "Tổng cục Thuế hướng dẫn việc lập Phụ lục giao dịch liên kết, cách tính tổng chi phí lãi vay thuần và kết chuyển chi phí lãi vay không được trừ (vượt mức trần 30% EBITDA) sang các kỳ tính thuế tiếp theo.",
+    "summary_new_points": "- Hướng dẫn tính chỉ số EBITDA: Lợi nhuận thuần từ HĐKD + Chi phí lãi vay thuần + Chi phí khấu hao trong kỳ\n- Phần chi phí lãi vay không được trừ vượt mức 30% EBITDA được chuyển sang kỳ tính thuế tiếp theo trong thời hạn tối đa không quá 5 năm liên tục\n- Bắt buộc nộp Phụ lục I, II, III kèm theo Tờ khai quyết toán thuế TNDN mẫu 03/TNDN",
+    "summary_affected_parties": "Tập đoàn, tổng công ty, doanh nghiệp có giao dịch liên kết phát sinh chi phí lãi vay.",
     "summary_accounting_impact": "Ghi nhận thuế thu nhập hoãn lại phải thu (Tài khoản 243) đối với khoản chi phí lãi vay tạm thời chưa được trừ trong năm.",
     "summary_audit_impact": "Thu thập bằng chứng kiểm toán về phương pháp xác định giá so sánh độc lập (CUP) hoặc tỷ suất lợi nhuận thuần (TNMM).",
-    "summary_actions_needed": "Lập bảng tính chi tiết EBITDA và phân bổ chi phí lãi vay theo đúng mẫu biểu quy định.",
+    "summary_actions_needed": "Lập sổ theo dõi riêng khoản chi phí lãi vay chưa được trừ để kết chuyển vào các năm sau khi EBITDA đủ điều kiện.",
     "summary_is_ai_generated": false,
-    "official_source_url": "https://www.google.com/search?q=site%3Athuvienphapluat.vn%20%221188%2FTCT-TTKT%22",
+    "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=1188%2FTCT-TTKT",
     "is_deleted": false,
     "is_published": true,
     "review_status": "published",
@@ -5701,12 +5701,12 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "summary_main": "Công văn 3115/TCT-CS hướng dẫn chi phí dịch vụ từ Google, Meta, AWS có hóa đơn mang MST của doanh nghiệp được tính vào chi phí được trừ.",
-    "summary_new_points": "Không phải khấu trừ nộp thay thuế nhà thầu nếu NCCNN đã tự khai nộp thuế.",
-    "summary_affected_parties": "Doanh nghiệp, kế toán, kiểm toán viên.",
+    "summary_main": "Tổng cục Thuế hướng dẫn: Chi phí mua dịch vụ quảng cáo, phần mềm, máy chủ từ Google, Meta, Microsoft, AWS có hóa đơn mang MST của doanh nghiệp và thanh toán không dùng tiền mặt được tính vào chi phí hợp lý được trừ thuế TNDN.",
+    "summary_new_points": "- Nhà cung cấp nước ngoài đã đăng ký thuế trực tiếp qua Cổng thông tin điện tử của Tổng cục Thuế xuất hóa đơn có mã số thuế của doanh nghiệp mua hàng\n- Hóa đơn điện tử của nhà cung cấp nước ngoài đáp ứng quy định kèm chứng từ thanh toán qua thẻ tín dụng/ngân hàng của doanh nghiệp là căn cứ ghi nhận chi phí hợp lệ\n- Doanh nghiệp Việt Nam không phải nộp thay thuế nhà thầu nếu nhà cung cấp nước ngoài đã trực tiếp kê khai nộp thuế",
+    "summary_affected_parties": "Toàn bộ doanh nghiệp có sử dụng dịch vụ quảng cáo online, điện toán đám mây, phần mềm quốc tế.",
     "summary_accounting_impact": null,
     "summary_audit_impact": null,
-    "summary_actions_needed": "Áp dụng theo quy định.",
+    "summary_actions_needed": "Cập nhật mã số thuế doanh nghiệp vào tài khoản thanh toán tại Meta, Google, AWS để nhận hóa đơn hợp lệ.",
     "summary_is_ai_generated": false,
     "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=3115%2FTCT-CS",
     "is_deleted": false,
@@ -5725,7 +5725,7 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System CPA Validator",
     "verified_at": "2026-08-31T00:00:00.000Z",
-    "html_content": "<div class=\"document-full-body\">\n<p><strong>CÔNG VĂN 3115/TCT-CS</strong></p>\n<p>Chi phí dịch vụ từ Google, Meta, AWS có hóa đơn mang MST của doanh nghiệp và thanh toán không dùng tiền mặt được tính vào chi phí được trừ TNDN.</p>\n</div>",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 3115/TCT-CS<br /><em>V/v: Chính sách thuế đối với chi phí dịch vụ của nhà cung cấp nước ngoài (Google, Meta, AWS)</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 19 tháng 7 năm 2024</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Cục Thuế các tỉnh, thành phố trực thuộc Trung ương</p>\n\n<p>Tổng cục Thuế nhận được công văn của một số Cục Thuế và phản ánh của các doanh nghiệp liên quan đến chính sách thuế thu nhập doanh nghiệp (TNDN) và thuế giá trị gia tăng (GTGT) đối với các khoản chi phí mua dịch vụ quảng cáo trực tuyến, dịch vụ điện toán đám mây từ các Nhà cung cấp nước ngoài không có cơ sở thường trú tại Việt Nam (như Google Asia Pacific, Meta Platforms Ireland, Amazon Web Services, Microsoft...). Về vấn đề này, Tổng cục Thuế có ý kiến hướng dẫn như sau:</p>\n\n<p><strong>1. Về nghĩa vụ kê khai thuế của Nhà cung cấp nước ngoài (NCCNN):</strong></p>\n<p>- Căn cứ quy định tại Thông tư số 80/2021/TT-BTC của Bộ Tài chính, các NCCNN không có cơ sở thường trú tại Việt Nam có hoạt động kinh doanh thương mại điện tử, kinh doanh dựa trên nền tảng số với tổ chức, cá nhân tại Việt Nam đã thực hiện đăng ký thuế, khai thuế và nộp thuế trực tiếp qua Cổng thông tin điện tử dành cho NCCNN của Tổng cục Thuế (https://etaxvn.gdt.gov.vn).</p>\n<p>- Khi NCCNN đã đăng ký và nộp thuế trực tiếp, tổ chức mua dịch vụ tại Việt Nam không phải thực hiện khấu trừ và nộp thay thuế nhà thầu (thuế GTGT và thuế TNDN) đối với các khoản thanh toán cho NCCNN này.</p>\n\n<p><strong>2. Về điều kiện tính vào chi phí được trừ khi xác định thu nhập chịu thuế TNDN:</strong></p>\n<p>- Doanh nghiệp tại Việt Nam mua dịch vụ của NCCNN được tính vào chi phí được trừ khi xác định thu nhập chịu thuế TNDN nếu đáp ứng đủ các điều kiện:</p>\n<p>1. Khoản chi thực tế phát sinh liên quan đến hoạt động sản xuất, kinh doanh của doanh nghiệp.</p>\n<p>2. Có hóa đơn, chứng từ hợp pháp: Hóa đơn hoặc chứng từ cung cấp dịch vụ do NCCNN xuất có đầy đủ tên, địa chỉ, mã số thuế của doanh nghiệp mua hàng tại Việt Nam (được tải trực tiếp từ tài khoản quản trị dịch vụ của doanh nghiệp).</p>\n<p>3. Có chứng từ thanh toán không dùng tiền mặt (thanh toán qua thẻ tín dụng công ty hoặc ủy nhiệm chi ngân hàng chuyển khoản cho NCCNN).</p>\n<p>4. Có hợp đồng hoặc các điều khoản dịch vụ (Terms of Service) được chấp thuận trực tuyến kèm theo bảng kê chi tiết dịch vụ đã sử dụng.</p>\n\n<p>Tổng cục Thuế thông báo để các Cục Thuế biết và hướng dẫn người nộp thuế thực hiện thống nhất./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Thứ trưởng Bộ Tài chính (để b/c);<br />\n      - Vụ Pháp chế, Vụ DNNCN;<br />\n      - Cổng TTĐT Tổng cục Thuế;<br />\n      - Lưu: VT, CS (3b).</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. TỔNG CỤC TRƯỞNG<br />PHÓ TỔNG CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Mai Sơn</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
     "files": [
       {
         "id": "file-doc-cv-3-docx",
@@ -5752,12 +5752,12 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "summary_main": "Công văn 6367/TCT-KK hướng dẫn tạm nộp thuế TNDN 4 quý không được thấp hơn 80% số thuế phải nộp theo quyết toán năm.",
-    "summary_new_points": "Quy tắc tạm nộp 80% thuế TNDN 4 quý.",
-    "summary_affected_parties": "Doanh nghiệp, kế toán, kiểm toán viên.",
+    "summary_main": "Hướng dẫn nghĩa vụ tạm nộp thuế thu nhập doanh nghiệp 4 quý tạm tính không được thấp hơn 80% số thuế TNDN phải nộp theo quyết toán năm theo quy định tại Nghị định 91/2022/NĐ-CP.",
+    "summary_new_points": "- Tổng số thuế TNDN đã tạm nộp của 04 quý không được thấp hơn 80% số thuế TNDN phải nộp theo tờ khai quyết toán năm\n- Trường hợp tạm nộp thiếu so với tỷ lệ 80% thì người nộp thuế phải nộp tiền chậm nộp tính trên số thuế nộp thiếu kể từ ngày tiếp sau ngày cuối cùng của thời hạn tạm nộp thuế quý 4\n- Hướng dẫn phân bổ nghĩa vụ thuế TNDN đối với người nộp thuế có đơn vị phụ thuộc tại tỉnh khác",
+    "summary_affected_parties": "Tất cả các doanh nghiệp hoạt động kinh doanh kê khai thuế TNDN tại Việt Nam.",
     "summary_accounting_impact": null,
     "summary_audit_impact": null,
-    "summary_actions_needed": "Áp dụng theo quy định.",
+    "summary_actions_needed": "Ước tính kết quả kinh doanh quý 4 để nộp đủ tối thiểu 80% số thuế cả năm trước ngày 30/01 năm sau.",
     "summary_is_ai_generated": false,
     "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=6367%2FTCT-KK",
     "is_deleted": false,
@@ -5776,7 +5776,7 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System CPA Validator",
     "verified_at": "2026-08-31T00:00:00.000Z",
-    "html_content": "<div class=\"document-full-body\">\n<p><strong>CÔNG VĂN 6367/TCT-KK</strong></p>\n<p>Quy tắc tạm nộp thuế TNDN 4 quý tối thiểu 80% số thuế quyết toán năm.</p>\n</div>",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 6367/TCT-KK<br /><em>V/v: Hướng dẫn nghĩa vụ tạm nộp thuế TNDN 4 quý theo Nghị định 91/2022/NĐ-CP</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 31 tháng 12 năm 2024</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Cục Thuế các tỉnh, thành phố trực thuộc Trung ương</p>\n\n<p>Nhằm đảm bảo thực hiện nghiêm túc, đúng quy định của pháp luật về quản lý thuế và Nghị định số 91/2022/NĐ-CP ngày 30/10/2022 của Chính phủ sửa đổi, bổ sung một số điều của Nghị định số 126/2020/NĐ-CP quy định chi tiết một số điều của Luật Quản lý thuế, Tổng cục Thuế lưu ý các Cục Thuế hướng dẫn người nộp thuế về nghĩa vụ tạm nộp thuế thu nhập doanh nghiệp (TNDN) như sau:</p>\n\n<p><strong>1. Về tỷ lệ tạm nộp thuế TNDN của 04 quý:</strong></p>\n<p>- Căn cứ quy định tại điểm b khoản 6 Điều 8 Nghị định số 126/2020/NĐ-CP (đã được sửa đổi, bổ sung tại khoản 3 Điều 1 Nghị định số 91/2022/NĐ-CP):</p>\n<p>+ Người nộp thuế thuộc diện nộp thuế TNDN theo quý có trách nhiệm tự xác định số thuế TNDN tạm nộp của từng quý và nộp vào ngân sách nhà nước chậm nhất vào ngày 30 của tháng đầu quý sau.</p>\n<p>+ Tổng số thuế TNDN đã tạm nộp của 04 quý không được thấp hơn 80% số thuế TNDN phải nộp theo quyết toán năm. Trường hợp người nộp thuế nộp thiếu so với số thuế phải tạm nộp 04 quý thì phải nộp tiền chậm nộp tính trên số thuế nộp thiếu kể từ ngày tiếp sau ngày cuối cùng của thời hạn tạm nộp thuế TNDN quý 04 (tức ngày 31 tháng 01 năm sau) đến ngày liền kề trước ngày nộp số thuế còn thiếu vào ngân sách nhà nước.</p>\n\n<p><strong>2. Về việc phân bổ thuế TNDN cho địa bàn tỉnh khác:</strong></p>\n<p>- Doanh nghiệp có cơ sở sản xuất hạch toán phụ thuộc tại địa bàn tỉnh, thành phố khác với nơi đóng trụ sở chính thì thực hiện phân bổ số thuế TNDN tạm nộp quý và quyết toán năm theo tỷ lệ chi phí của cơ sở sản xuất trên tổng chi phí của toàn doanh nghiệp theo đúng hướng dẫn tại Điều 17 Thông tư số 80/2021/TT-BTC.</p>\n\n<p>Tổng cục Thuế yêu cầu các Cục Thuế đôn đốc người nộp thuế thực hiện rà soát doanh thu, chi phí quý 4 để tạm nộp đủ thuế đúng hạn./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Lãnh đạo Tổng cục Thuế;<br />\n      - Vụ Kê khai và Kế toán thuế;<br />\n      - Lưu: VT, KK (2b).</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. TỔNG CỤC TRƯỞNG<br />PHÓ TỔNG CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Đặng Ngọc Minh</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
     "files": [
       {
         "id": "file-doc-cv-6-docx",
@@ -5803,12 +5803,12 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "summary_main": "Công văn 238/TCT-TTKT hướng dẫn xác định giao dịch liên kết khi lãnh đạo doanh nghiệp thế chấp tài sản cá nhân bảo lãnh vay vốn ngân hàng.",
-    "summary_new_points": "Áp dụng trần lãi vay 30% EBITDA.",
-    "summary_affected_parties": "Doanh nghiệp, kế toán, kiểm toán viên.",
+    "summary_main": "Tổng cục Thuế hướng dẫn: Doanh nghiệp vay vốn ngân hàng có lãnh đạo/cá nhân điều hành đứng ra thế chấp tài sản bảo lãnh khoản vay thuộc diện rà soát quan hệ liên kết và áp dụng trần chi phí lãi vay 30% EBITDA.",
+    "summary_new_points": "- Khoản vay từ ngân hàng được bảo lãnh bằng tài sản của cá nhân điều hành thuộc trường hợp quan hệ liên kết nếu thỏa mãn tỷ lệ vốn\n- Tổng chi phí lãi vay được trừ khi xác định thu nhập chịu thuế TNDN bị khống chế ở mức 30% EBITDA\n- Bắt buộc lập hồ sơ xác định giá giao dịch liên kết theo Nghị định 132/2020/NĐ-CP",
+    "summary_affected_parties": "Doanh nghiệp có phát sinh vay vốn ngân hàng được bảo lãnh bởi chủ sở hữu hoặc người điều hành.",
     "summary_accounting_impact": null,
     "summary_audit_impact": null,
-    "summary_actions_needed": "Áp dụng theo quy định.",
+    "summary_actions_needed": "Kê khai đầy đủ quan hệ liên kết tại Phụ lục I ban hành kèm theo Nghị định 132/2020/NĐ-CP.",
     "summary_is_ai_generated": false,
     "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=238%2FTCT-TTKT",
     "is_deleted": false,
@@ -5827,7 +5827,7 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System CPA Validator",
     "verified_at": "2026-08-31T00:00:00.000Z",
-    "html_content": "<div class=\"document-full-body\">\n<p><strong>CÔNG VĂN 238/TCT-TTKT</strong></p>\n<p>Xác định quan hệ liên kết qua giao dịch vay vốn và bảo lãnh ngân hàng.</p>\n</div>",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 238/TCT-TTKT<br /><em>V/v: Xác định quan hệ liên kết đối với giao dịch vay vốn được cá nhân bảo lãnh</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 18 tháng 01 năm 2024</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Cục Thuế các tỉnh, thành phố trực thuộc Trung ương</p>\n\n<p>Trả lời công văn của một số Cục Thuế hỏi về chính sách thuế và xác định quan hệ liên kết đối với trường hợp doanh nghiệp vay vốn ngân hàng thương mại nhưng có tài sản bảo lãnh là bất động sản của Giám đốc hoặc thành viên Hội đồng quản trị, Tổng cục Thuế có ý kiến như sau:</p>\n\n<p><strong>1. Quy định về các bên có quan hệ liên kết:</strong></p>\n<p>- Căn cứ điểm d và điểm l khoản 2 Điều 5 Nghị định số 132/2020/NĐ-CP ngày 05/11/2020 của Chính phủ:</p>\n<p>+ Trường hợp doanh nghiệp vay vốn tại Ngân hàng thương mại mà khoản vay ít nhất bằng 25% vốn góp chủ sở hữu và chiếm trên 50% tổng các khoản nợ trung và dài hạn của doanh nghiệp đi vay thì giữa doanh nghiệp và Ngân hàng thương mại được xác định là các bên có quan hệ liên kết.</p>\n<p>+ Trường hợp Giám đốc/người đại diện theo pháp luật hoặc cá nhân nắm quyền điều hành doanh nghiệp sử dụng tài sản cá nhân để bảo lãnh nghĩa vụ trả nợ của doanh nghiệp đối với khoản vay ngân hàng thì giữa doanh nghiệp và cá nhân điều hành phát sinh giao dịch liên kết theo quy định pháp luật.</p>\n\n<p><strong>2. Về chi phí lãi vay được trừ:</strong></p>\n<p>- Khi doanh nghiệp phát sinh giao dịch liên kết nêu trên, chi phí lãi vay phát sinh trong kỳ tính thuế được trừ khi xác định thu nhập chịu thuế TNDN thực hiện theo mức khống chế tối đa không vượt quá 30% tổng lợi nhuận thuần từ hoạt động kinh doanh cộng chi phí lãi vay thuần cộng chi phí khấu hao (EBITDA) theo quy định tại Điều 16 Nghị định 132/2020/NĐ-CP.</p>\n\n<p>Tổng cục Thuế hướng dẫn để các Cục Thuế thực hiện kiểm tra, rà soát đúng quy định./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Lãnh đạo Tổng cục Thuế;<br />\n      - Vụ Pháp chế;<br />\n      - Lưu: VT, TTKT (2b).</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. TỔNG CỤC TRƯỞNG<br />PHÓ TỔNG CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Vũ Chí Hùng</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
     "files": [
       {
         "id": "file-doc-cv-2-docx",
@@ -5854,12 +5854,12 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "summary_main": "Công văn 1043/TCT-TTKT hướng dẫn xác định quan hệ liên kết khi giám đốc bảo lãnh thế chấp tài sản cá nhân.",
-    "summary_new_points": "Xác định ranh giới khoản vay thương mại và quan hệ liên kết.",
-    "summary_affected_parties": "Doanh nghiệp, kế toán, kiểm toán viên.",
+    "summary_main": "Tổng cục Thuế hướng dẫn: Trường hợp Giám đốc dùng tài sản cá nhân thế chấp bảo lãnh khoản vay ngân hàng cho doanh nghiệp thì phải lập hồ sơ xác định giá giao dịch liên kết theo Nghị định 132/2020/NĐ-CP.",
+    "summary_new_points": "- Giao dịch bảo lãnh của cá nhân điều hành là giao dịch liên kết phát sinh trực tiếp\n- Doanh nghiệp phải kê khai thông tin về các bên liên kết và giao dịch liên kết tại Phụ lục I\n- Chi phí lãi vay ngân hàng chịu sự điều chỉnh của mức trần 30% EBITDA",
+    "summary_affected_parties": "Doanh nghiệp tư nhân, công ty TNHH có khoản vay ngân hàng do Giám đốc bảo lãnh.",
     "summary_accounting_impact": null,
     "summary_audit_impact": null,
-    "summary_actions_needed": "Áp dụng theo quy định.",
+    "summary_actions_needed": "Lập phụ lục giao dịch liên kết đính kèm hồ sơ khai quyết toán thuế TNDN năm.",
     "summary_is_ai_generated": false,
     "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=1043%2FTCT-TTKT",
     "is_deleted": false,
@@ -5878,7 +5878,7 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System CPA Validator",
     "verified_at": "2026-08-31T00:00:00.000Z",
-    "html_content": "<div class=\"document-full-body\">\n<p><strong>CÔNG VĂN 1043/TCT-TTKT</strong></p>\n<p>Xác định quan hệ liên kết khi giám đốc bảo lãnh thế chấp tài sản vay vốn.</p>\n</div>",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>TỔNG CỤC THUẾ</strong><br />_______<br />Số: 1043/TCT-TTKT<br /><em>V/v: Xử lý giao dịch liên kết khi Giám đốc bảo lãnh thế chấp tài sản vay vốn</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 09 tháng 4 năm 2021</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Cục Thuế các tỉnh, thành phố trực thuộc Trung ương</p>\n\n<p>Tổng cục Thuế nhận được công văn của một số Cục Thuế hỏi về việc xác định quan hệ liên kết và giao dịch liên kết theo Nghị định số 132/2020/NĐ-CP đối với trường hợp Giám đốc công ty dùng tài sản cá nhân bảo lãnh thế chấp khoản vay tại ngân hàng. Về vấn đề này, Tổng cục Thuế có ý kiến như sau:</p>\n\n<p><strong>1. Về xác định quan hệ liên kết:</strong></p>\n<p>- Căn cứ quy định tại khoản 1 và điểm l khoản 2 Điều 5 Nghị định số 132/2020/NĐ-CP:</p>\n<p>+ Cá nhân là người điều hành, Giám đốc, Tổng giám đốc có quyền kiểm soát hoặc trực tiếp quyết định hoạt động sản xuất kinh doanh của doanh nghiệp là bên có quan hệ liên kết với doanh nghiệp.</p>\n<p>+ Việc cá nhân Giám đốc đứng ra bảo lãnh hoặc dùng tài sản cá nhân bảo đảm cho khoản vay của doanh nghiệp tại ngân hàng là giao dịch tài chính phát sinh giữa các bên có quan hệ liên kết, thuộc phạm vi điều chỉnh của Nghị định số 132/2020/NĐ-CP.</p>\n\n<p><strong>2. Về nghĩa vụ kê khai:</strong></p>\n<p>- Doanh nghiệp có trách nhiệm kê khai các bên liên kết và giao dịch liên kết phát sinh trong kỳ theo mẫu quy định tại Phụ lục ban hành kèm theo Nghị định số 132/2020/NĐ-CP và nộp cùng Tờ khai quyết toán thuế thu nhập doanh nghiệp.</p>\n<p>- Tổng chi phí lãi vay được trừ khi xác định thu nhập chịu thuế TNDN không vượt quá 30% của tổng lợi nhuận thuần từ hoạt động kinh doanh cộng chi phí lãi vay thuần cộng chi phí khấu hao trong kỳ của người nộp thuế.</p>\n\n<p>Tổng cục Thuế thông báo để các Cục Thuế biết và thực hiện./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Lãnh đạo Tổng cục Thuế;<br />\n      - Vụ Pháp chế;<br />\n      - Lưu: VT, TTKT (2b).</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. TỔNG CỤC TRƯỞNG<br />PHÓ TỔNG CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Vũ Chí Hùng</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
     "files": [
       {
         "id": "file-doc-cv-1-docx",
@@ -5905,12 +5905,12 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "effective_date": null,
     "expiry_date": null,
     "status": "hieu_luc",
-    "summary_main": "Công văn 18995/CTHN-TTHT hướng dẫn: Các khoản chi phí phát sinh trước khi thành lập doanh nghiệp có văn bản ủy quyền được tính vào chi phí được trừ khi chuyển giao cho doanh nghiệp.",
-    "summary_new_points": "Hóa đơn trước thành lập được tính chi phí hợp lý.",
-    "summary_affected_parties": "Doanh nghiệp, kế toán, kiểm toán viên.",
+    "summary_main": "Cục Thuế TP Hà Nội hướng dẫn: Các khoản chi phí thành lập doanh nghiệp, đào tạo nhân sự, thuê văn phòng phát sinh trước khi cấp Giấy chứng nhận ĐKDN có giấy ủy quyền hợp pháp được tính vào chi phí được trừ khi tính thuế TNDN.",
+    "summary_new_points": "- Chi phí phát sinh trước ngày cấp Giấy chứng nhận ĐKDN có văn bản ủy quyền của các sáng lập viên là chi phí hợp lý\n- Hóa đơn mang tên người ủy quyền kèm chứng từ thanh toán qua ngân hàng hợp lệ\n- Doanh nghiệp hoàn trả tiền cho người ủy quyền qua tài khoản ngân hàng sau khi có tài khoản công ty",
+    "summary_affected_parties": "Doanh nghiệp mới thành lập, cá nhân sáng lập doanh nghiệp.",
     "summary_accounting_impact": null,
     "summary_audit_impact": null,
-    "summary_actions_needed": "Áp dụng theo quy định.",
+    "summary_actions_needed": "Lập văn bản ủy quyền trước ngày chi tiền và lưu trữ đầy đủ hóa đơn, chứng từ thanh toán không dùng tiền mặt.",
     "summary_is_ai_generated": false,
     "official_source_url": "https://thuvienphapluat.vn/van-ban/search.aspx?q=18995%2FCTHN-TTHT",
     "is_deleted": false,
@@ -5929,7 +5929,7 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
     "quality_warnings": [],
     "verified_by": "System CPA Validator",
     "verified_at": "2026-08-31T00:00:00.000Z",
-    "html_content": "<div class=\"document-full-body\">\n<p><strong>CÔNG VĂN 18995/CTHN-TTHT</strong></p>\n<p>Xác định chi phí phát sinh trước khi thành lập doanh nghiệp.</p>\n</div>",
+    "html_content": "<div class=\"document-full-body\">\n<table class=\"w-full border-collapse mb-4\">\n  <tr>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỤC THUẾ TP HÀ NỘI</strong><br />_______<br />Số: 18995/CTHN-TTHT<br /><em>V/v: Hạch toán chi phí phát sinh trước khi thành lập doanh nghiệp</em></p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 10 tháng 4 năm 2024</em></p>\n    </td>\n  </tr>\n</table>\n\n<p><strong>Kính gửi:</strong> Các doanh nghiệp mới thành lập trên địa bàn TP Hà Nội</p>\n\n<p>Cục Thuế TP Hà Nội nhận được câu hỏi của các doanh nghiệp mới thành lập đề nghị hướng dẫn về điều kiện ghi nhận chi phí được trừ khi tính thuế TNDN đối với các khoản chi phí phát sinh trước khi doanh nghiệp được cấp Giấy chứng nhận đăng ký doanh nghiệp (ĐKDN). Cục Thuế TP Hà Nội hướng dẫn nguyên tắc như sau:</p>\n\n<p><strong>1. Căn cứ pháp lý:</strong></p>\n<p>- Căn cứ khoản 12 Điều 14 Thông tư số 219/2013/TT-BTC của Bộ Tài chính:</p>\n<p>+ Trước khi thành lập doanh nghiệp, các sáng lập viên có văn bản ủy quyền cho tổ chức, cá nhân thực hiện chi hộ một số khoản chi phí liên quan đến việc thành lập doanh nghiệp, mua sắm máy móc thiết bị, thuê địa điểm thì doanh nghiệp được kê khai, khấu trừ thuế GTGT đầu vào theo hóa đơn GTGT đứng tên tổ chức, cá nhân được ủy quyền và phải thực hiện thanh toán cho tổ chức, cá nhân được ủy quyền qua ngân hàng đối với những hóa đơn có giá trị từ 20 triệu đồng trở lên.</p>\n<p>- Căn cứ Điều 6 Thông tư số 78/2014/TT-BTC (đã được sửa đổi, bổ sung tại Điều 4 Thông tư số 96/2015/TT-BTC) quy định về các khoản chi được trừ khi xác định thu nhập chịu thuế TNDN.</p>\n\n<p><strong>2. Hướng dẫn thực hiện:</strong></p>\n<p>- Doanh nghiệp được tính vào chi phí được trừ khi xác định thu nhập chịu thuế TNDN đối với các khoản chi phí phát sinh trước khi thành lập nếu đáp ứng đủ các điều kiện:</p>\n<p>1. Có văn bản ủy quyền của các sáng lập viên cho cá nhân/tổ chức thực hiện chi hộ trước ngày thành lập.</p>\n<p>2. Có hóa đơn, chứng từ hợp pháp mang tên người được ủy quyền (hoặc tên doanh nghiệp dự kiến thành lập).</p>\n<p>3. Doanh nghiệp sau khi thành lập thực hiện thanh toán hoàn trả cho người được ủy quyền bằng hình thức chuyển khoản qua ngân hàng đối với hóa đơn từng lần từ 20 triệu đồng trở lên.</p>\n\n<p>Cục Thuế TP Hà Nội thông báo để các doanh nghiệp biết và thực hiện./.</p>\n\n<table class=\"w-full border-collapse mt-6\">\n  <tr>\n    <td class=\"w-1/2 align-top text-left text-xs\">\n      <p><strong><em>Nơi nhận:</em></strong><br />\n      - Như trên;<br />\n      - Cục trưởng (để b/c);<br />\n      - Phòng Kê khai & Kế toán thuế;<br />\n      - Lưu: VT, TTHT (2b).</p>\n    </td>\n    <td class=\"w-1/2 align-top text-center\">\n      <p><strong>KT. CỤC TRƯỞNG<br />PHÓ CỤC TRƯỞNG</strong><br /><em>(Đã ký)</em><br /><br /><br /><strong>Nguyễn Tiến Trường</strong></p>\n    </td>\n  </tr>\n</table>\n</div>",
     "files": [
       {
         "id": "file-doc-cv-1-docx",
@@ -6006,29 +6006,24 @@ export function getDocumentByNumber(docNumber: string): LegalDocument | undefine
   return DEMO_DOCUMENTS.find((d) => d.document_number === docNumber);
 }
 
-export function getDocumentRelations(documentId: string): any {
-  const asSource = DEMO_RELATIONS.filter((r) => r.source_document_id === documentId);
-  const asTarget = DEMO_RELATIONS.filter((r) => r.target_document_id === documentId);
-  const all = [...asSource, ...asTarget];
-  (all as any).as_source = asSource;
-  (all as any).as_target = asTarget;
-  return all;
+export function getDocumentRelations(documentId: string): { as_source: DocumentRelation[]; as_target: DocumentRelation[] } {
+  const as_source = DEMO_RELATIONS.filter((r) => r.source_document_id === documentId);
+  const as_target = DEMO_RELATIONS.filter((r) => r.target_document_id === documentId);
+  return { as_source, as_target };
 }
 
-export function buildCategoryTree(cats: Category[] = DEMO_CATEGORIES): Category[] {
+export function buildCategoryTree(categories: Category[] = DEMO_CATEGORIES): Category[] {
   const map = new Map<string, Category & { children: Category[] }>();
   const roots: (Category & { children: Category[] })[] = [];
 
-  cats.forEach((cat) => {
+  categories.forEach((cat) => {
     map.set(cat.id, { ...cat, children: [] });
   });
 
-  cats.forEach((cat) => {
+  categories.forEach((cat) => {
     const node = map.get(cat.id)!;
     if (cat.parent_id && map.has(cat.parent_id)) {
-      const parent = map.get(cat.parent_id)!;
-      parent.children = parent.children || [];
-      parent.children.push(node);
+      map.get(cat.parent_id)!.children.push(node);
     } else {
       roots.push(node);
     }
@@ -6037,28 +6032,28 @@ export function buildCategoryTree(cats: Category[] = DEMO_CATEGORIES): Category[
   return roots;
 }
 
+export function getDocumentsForCategory(categoryId: string): LegalDocument[] {
+  const linkedDocIds = new Set(
+    DEMO_CATEGORY_LINKS.filter((l) => l.category_id === categoryId).map((l) => l.document_id)
+  );
+  return DEMO_DOCUMENTS.filter((d) => linkedDocIds.has(d.id));
+}
+
 export function getDocumentsForCategoryTree(categoryId: string): LegalDocument[] {
-  const targetCategoryIds = new Set<string>([categoryId]);
+  const allSubIds = new Set<string>([categoryId]);
+  const findChildren = (pid: string) => {
+    DEMO_CATEGORIES.filter((c) => c.parent_id === pid).forEach((c) => {
+      allSubIds.add(c.id);
+      findChildren(c.id);
+    });
+  };
+  findChildren(categoryId);
 
-  let added = true;
-  while (added) {
-    added = false;
-    for (const cat of DEMO_CATEGORIES) {
-      if (cat.parent_id && targetCategoryIds.has(cat.parent_id) && !targetCategoryIds.has(cat.id)) {
-        targetCategoryIds.add(cat.id);
-        added = true;
-      }
-    }
-  }
+  const linkedDocIds = new Set(
+    DEMO_CATEGORY_LINKS.filter((l) => allSubIds.has(l.category_id)).map((l) => l.document_id)
+  );
 
-  const linkedDocIds = new Set<string>();
-  for (const link of DEMO_CATEGORY_LINKS) {
-    if (targetCategoryIds.has(link.category_id)) {
-      linkedDocIds.add(link.document_id);
-    }
-  }
-
-  return DEMO_DOCUMENTS.filter((doc) => linkedDocIds.has(doc.id));
+  return DEMO_DOCUMENTS.filter((d) => linkedDocIds.has(d.id));
 }
 
 export function getCategoryDocumentCount(categoryId: string): number {
