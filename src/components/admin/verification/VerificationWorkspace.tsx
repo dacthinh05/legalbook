@@ -661,3 +661,4 @@ export function VerificationWorkspace() {
     </div>
   );
 }
+export default VerificationWorkspace;

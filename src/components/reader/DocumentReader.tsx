@@ -1912,10 +1912,10 @@ export function DocumentReader({
           {/* ── TAB: BẢN GỐC (DOCX / PDF / TỆP GỐC) ── */}
           {activeTab === 'banggoc' && (() => {
             const allFiles = doc.files ?? [];
-            const pdfFiles = allFiles.filter((f) => f.file_type === 'pdf');
-            const docxFiles = allFiles.filter((f) => f.file_type === 'docx');
+            const pdfFiles = allFiles.filter((f) => f.file_type === 'pdf' && f.file_url && !f.file_url.includes('thuvienphapluat'));
+            const docxFiles = allFiles.filter((f) => f.file_type === 'docx' || (f.file_type as string) === 'doc');
             const hasPdf = pdfFiles.length > 0;
-            const hasDocx = docxFiles.length > 0;
+            const hasDocx = docxFiles.length > 0 || Boolean(doc.html_content && doc.html_content.length > 50);
             const currentDocx = docxFiles[0];
             const currentPdf = pdfFiles[selectedPdfFileIndex] || pdfFiles[0];
             const primaryPdfUrl = currentPdf?.file_url;
@@ -1928,7 +1928,6 @@ export function DocumentReader({
                 ? '#view=Fit'
                 : `#zoom=${pdfZoomMode}`;
             const finalPdfUrl = primaryPdfUrl ? `${primaryPdfUrl}${pdfHashParam}` : '';
-
             return (
               <div className="flex-1 flex flex-col h-full w-full bg-slate-100 overflow-hidden">
                 {/* Top Control Header */}
@@ -2115,35 +2114,47 @@ export function DocumentReader({
                     )}
                   </div>
                 ) : hasDocx ? (
-                  /* ── Official Word (.docx) Document Viewer Layout ── */
+                  /* ── Official Word / Standard Document Viewer Canvas ── */
                   <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-100 flex flex-col items-center">
                     <div className="w-full max-w-4xl bg-white border border-slate-300 rounded-sm shadow-md p-6 sm:p-10 lg:p-12 mb-8">
                       {/* Word Document Banner Header */}
-                      <div className="mb-6 p-4 bg-emerald-50/80 border border-emerald-200 rounded-lg flex items-center justify-between gap-3 flex-wrap">
+                      <div className="mb-6 p-4 bg-emerald-50/90 border border-emerald-200 rounded-lg flex items-center justify-between gap-3 flex-wrap">
                         <div className="flex items-center gap-2.5">
-                          <div className="p-2 bg-emerald-600 text-white rounded-md">
+                          <div className="p-2 bg-emerald-600 text-white rounded-md shadow-xs">
                             <FileText className="w-5 h-5" />
                           </div>
                           <div>
                             <h3 className="font-bold text-xs sm:text-sm text-emerald-950">
-                              Bản gốc Word (.docx) — {doc.document_number}
+                              Bản gốc văn bản chính thức — {doc.document_number}
                             </h3>
                             <p className="text-[11px] text-emerald-800 mt-0.5">
-                              Văn bản chính thức chuẩn thể thức Nghị định 30/2020/NĐ-CP (Bộ Tài chính / Cơ quan ban hành).
+                              Chuẩn thể thức Nghị định 30/2020/NĐ-CP · Đối chiếu trực tiếp từ {doc.issuing_body || 'Cơ quan ban hành'}.
                             </p>
                           </div>
                         </div>
 
-                        {primaryDocxUrl && (
-                          <a
-                            href={primaryDocxUrl}
-                            download={currentDocx?.original_filename || `${doc.document_number}.docx`}
-                            className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                        <div className="flex items-center gap-2">
+                          {primaryDocxUrl && (
+                            <a
+                              href={primaryDocxUrl}
+                              download={currentDocx?.original_filename || `${doc.document_number}.docx`}
+                              className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                              title="Tải tệp .docx gốc"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              <span>Tải Word (.docx)</span>
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => window.print()}
+                            className="px-3.5 py-1.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                            title="In hoặc lưu bản PDF A4 chuẩn thể thức"
                           >
-                            <Download className="w-4 h-4" />
-                            <span>Tải tệp .docx gốc</span>
-                          </a>
-                        )}
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>In / Lưu PDF</span>
+                          </button>
+                        </div>
                       </div>
 
                       {/* Authentic Document Content Presentation */}
@@ -2172,73 +2183,31 @@ export function DocumentReader({
                       />
                     </div>
                   </div>
-                ) : showQuickViewPdf && tvplUrl ? (
-                  /* ── Quick-view inline: embed TVPL via Google Docs Viewer ── */
-                  <div className="flex-1 w-full h-full min-h-[550px] relative overflow-hidden bg-slate-200">
-                    <div className="absolute top-0 left-0 right-0 z-10 bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 text-amber-800">
-                        <FileWarning className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <span className="font-medium">Đang xem qua liên kết Thư Viện Pháp Luật — chưa lưu trữ nội bộ</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={tvplUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2.5 py-1 bg-white border border-amber-300 text-amber-800 rounded text-[11px] font-medium flex items-center gap-1 hover:bg-amber-50 transition-colors"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          Mở tab riêng
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => setQuickViewDocId(null)}
-                          className="px-2.5 py-1 bg-white border border-slate-200 text-slate-600 rounded text-[11px] font-medium hover:bg-slate-50 transition-colors"
-                        >
-                          Đóng
-                        </button>
-                      </div>
-                    </div>
-                    <iframe
-                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(tvplUrl)}&embedded=true`}
-                      className="w-full h-full border-0 absolute inset-0 pt-10"
-                      title="Bản gốc văn bản pháp luật"
-                      allow="fullscreen"
-                      onError={() => {
-                        /* fallback handled below */
-                      }}
-                    />
-                  </div>
                 ) : (
-                  <div className="flex-1 p-6 overflow-y-auto">
-                    <div className="max-w-3xl mx-auto border border-slate-200 rounded-xl p-8 bg-white shadow-xs text-center space-y-4">
-                      <FileWarning className="w-10 h-10 text-amber-500 mx-auto" />
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900">Chưa có tệp PDF gốc lưu trữ cho văn bản này</h3>
-                        <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                          Bạn có thể xem nhanh bản gốc ngay trong ứng dụng, hoặc mở trực tiếp trên Thư Viện Pháp Luật.
+                  /* ── No local file: Clean Direct Source Card (No broken iframe) ── */
+                  <div className="flex-1 p-6 overflow-y-auto flex items-center justify-center">
+                    <div className="max-w-xl w-full border border-slate-200 rounded-2xl p-8 bg-white shadow-md text-center space-y-4">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-base font-bold text-slate-900">Văn bản gốc Thư Viện Pháp Luật</h3>
+                        <p className="text-xs text-slate-500 max-w-md mx-auto">
+                          Văn bản {doc.document_number} được đồng bộ trực tiếp từ nguồn chính thức. Bạn có thể mở trực tiếp trang nguồn trên tab mới.
                         </p>
                       </div>
-                      <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
+                      <div className="flex items-center justify-center gap-3 pt-2">
                         {tvplUrl && (
-                          <button
-                            type="button"
-                            onClick={() => setQuickViewDocId(doc.id)}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                          <a
+                            href={tvplUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Tải nhanh &amp; Xem bản gốc</span>
-                          </button>
+                            <ExternalLink className="w-4 h-4" />
+                            <span>Mở nguồn gốc Thư Viện Pháp Luật ↗</span>
+                          </a>
                         )}
-                        <a
-                          href={tvplUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Mở trên Thư Viện Pháp Luật</span>
-                        </a>
                       </div>
                     </div>
                   </div>
