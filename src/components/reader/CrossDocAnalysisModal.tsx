@@ -2,9 +2,12 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  Sparkles,
   Search,
   CheckCircle2,
+  Bot,
+  MessageSquareText,
+  Compass,
+  LucideIcon,
   AlertTriangle,
   FileText,
   X,
@@ -66,7 +69,7 @@ const OBJECTIVE_OPTIONS: Array<{
   id: AnalysisObjective;
   label: string;
   description: string;
-  icon: typeof Sparkles;
+  icon: LucideIcon;
 }> = [
   {
     id: 'overview',
@@ -305,8 +308,8 @@ export function CrossDocAnalysisModal({
         {/* ── 1. Top Header Bar ── */}
         <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md">
-              <Sparkles className="w-5 h-5" />
+            <div className="p-2 bg-blue-700 text-white rounded-xl shadow-xs">
+              <GitCompare className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -505,7 +508,7 @@ export function CrossDocAnalysisModal({
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-amber-500" />
+                      <Compass className="w-3 h-3 text-slate-500" />
                       <span>Gợi ý liên quan theo tín hiệu</span>
                     </span>
                     <span className="text-[10.5px] text-slate-400 font-medium">Ưu tiên từ 1-8</span>
@@ -641,15 +644,14 @@ export function CrossDocAnalysisModal({
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4 text-amber-300" />
-                    <span>Phân tích bằng AI ({allSelectedDocuments.length} văn bản)</span>
+                    <FileText className="w-4 h-4 text-white" />
+                    <span>Phân tích liên văn bản ({allSelectedDocuments.length} văn bản)</span>
                   </>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Right Column: Structured Results (8 cols) */}
           <div className="lg:col-span-8 flex flex-col bg-white overflow-hidden h-full">
             {activeSessionView === 'history' ? (
               /* History Sessions View */
@@ -716,8 +718,8 @@ export function CrossDocAnalysisModal({
               /* Analyzing Loading Screen */
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-xl animate-pulse">
-                    <Sparkles className="w-8 h-8 text-white" />
+                  <div className="w-14 h-14 rounded-2xl bg-blue-700 flex items-center justify-center shadow-lg">
+                    <Bot className="w-7 h-7 text-white" />
                   </div>
                   <div className="absolute -bottom-1 -right-1 p-1 bg-amber-400 rounded-full">
                     <Loader2 className="w-4 h-4 text-slate-950 animate-spin" />
@@ -799,11 +801,11 @@ export function CrossDocAnalysisModal({
                       className={cn(
                         'px-3 py-1 rounded-md text-[11.5px] transition-all cursor-pointer flex items-center gap-1.5',
                         activeTab === 'qa'
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-2xs font-bold'
+                          ? 'bg-blue-700 text-white shadow-2xs font-bold'
                           : 'text-slate-600 hover:text-slate-900'
                       )}
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <MessageSquareText className="w-3.5 h-3.5" />
                       <span>Hỏi đáp</span>
                     </button>
                   </div>
@@ -1123,8 +1125,8 @@ export function CrossDocAnalysisModal({
                     <div className="space-y-4 animate-in fade-in duration-100 flex flex-col h-full">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                         <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-amber-500" />
-                          <span>HỎI ĐÁP AI TRỰC TIẾP TRÊN CÁC VĂN BẢN ĐÃ CHỌN</span>
+                          <MessageSquareText className="w-4 h-4 text-blue-600" />
+                          <span>HỎI ĐÁP TRỰC TIẾP TRÊN CÁC VĂN BẢN ĐÃ CHỌN</span>
                         </h4>
                         <span className="text-[11px] text-slate-400">
                           Gắn liền với ngữ cảnh {allSelectedDocuments.length} văn bản
@@ -1135,7 +1137,7 @@ export function CrossDocAnalysisModal({
                       <div className="flex-1 space-y-3 overflow-y-auto pr-1 min-h-[220px]">
                         {/* Initial summary prompt suggestion */}
                         <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-950 space-y-2">
-                          <span className="font-bold block">💡 Gợi ý câu hỏi đào sâu:</span>
+                          <span className="font-bold block">Gợi ý câu hỏi đào sâu:</span>
                           <div className="flex flex-wrap gap-1.5">
                             {analysisResult.suggestedFollowUps?.map((fUp, fIdx) => (
                               <button

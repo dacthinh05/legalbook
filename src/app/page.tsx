@@ -22,7 +22,7 @@ import type { LegalDocument, Category, DocumentType } from '@/types';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/utils';
 import { DEMO_CATEGORY_LINKS } from '@/lib/demo-data';
 import { getDescendantCategoryIds, injectVirtualSubcategories, VIRTUAL_DOC_TYPE_CONFIG } from '@/lib/tree-utils';
-import { X, ChevronLeft, ChevronRight, FolderTree, ListFilter, Search, BookmarkCheck } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, FolderTree, ListFilter, Search, BookmarkCheck, AlertCircle } from 'lucide-react';
 
 const MIN_SIDEBAR = 230;
 const MAX_SIDEBAR = 320;
@@ -623,7 +623,10 @@ export default function MainPage() {
         }`}>
           {dataError && (
             <div className="p-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-xs flex items-center justify-between shrink-0">
-              <span>⚠️ {dataError}</span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{dataError}</span>
+              </span>
               <button onClick={() => setDataError(null)} className="text-amber-700 hover:text-amber-950 font-bold ml-2">×</button>
             </div>
           )}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { X, Sparkles } from 'lucide-react';
+import { X, FileText } from 'lucide-react';
 import type { LegalDocument } from '@/types';
 import { DocumentSummaryView } from './DocumentSummaryView';
 
@@ -45,7 +45,7 @@ export function AiSummaryModal({
         {/* Compact Modal Header (Height <= 60px) */}
         <div className="px-5 py-3 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="w-4 h-4 text-blue-700 shrink-0" />
+            <FileText className="w-4 h-4 text-blue-700 shrink-0" />
             <h2 id="summary-modal-title" className="font-bold text-sm text-slate-900 truncate">
               Tổng quan pháp lý · {doc.document_number || doc.title}
             </h2>

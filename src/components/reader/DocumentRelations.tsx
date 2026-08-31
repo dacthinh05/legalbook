@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, GitFork, ArrowUpRight, ArrowDownLeft, Columns2, GitCompare, Sparkles } from 'lucide-react';
+import { X, GitFork, ArrowUpRight, ArrowDownLeft, Columns2, GitCompare, FileText, Bot } from 'lucide-react';
 import { getDocumentRelations, getDocumentById } from '@/lib/demo-data';
 import { RELATION_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, getEffectiveStatus } from '@/lib/utils';
 import { LegalDiffViewer } from './LegalDiffViewer';
 import { CrossDocAnalysisModal } from './CrossDocAnalysisModal';
-import type { LegalDocument, RelationType } from '@/types';
-
+import type { LegalDocument, RelationType, DocumentRelation } from '@/types';
 interface DocumentRelationsProps {
   document: LegalDocument;
   onSelectDocument: (id: string, targetNodeId?: string) => void;
@@ -20,8 +19,8 @@ export function DocumentRelations({
   onClose,
 }: DocumentRelationsProps) {
   const relations = getDocumentRelations(doc.id);
-  const targets = relations.as_source;
-  const sources = relations.as_target;
+  const targets: DocumentRelation[] = relations.as_source || [];
+  const sources: DocumentRelation[] = relations.as_target || [];
   const hasAnyRelations = targets.length > 0 || sources.length > 0;
 
   const [compareDoc, setCompareDoc] = useState<{ doc: LegalDocument; relationType?: string } | null>(null);
@@ -87,10 +86,10 @@ export function DocumentRelations({
             <button
               type="button"
               onClick={() => handleOpenAiAnalysis()}
-              className="px-2 py-1 rounded bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[11px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1 rounded bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer"
               title="Phân tích với văn bản khác bằng AI"
             >
-              <Sparkles className="w-3 h-3 text-amber-300" />
+              <GitCompare className="w-3 h-3 text-white" />
               <span>Phân tích liên văn bản</span>
             </button>
             <button
@@ -112,9 +111,9 @@ export function DocumentRelations({
               <button
                 type="button"
                 onClick={() => handleOpenAiAnalysis()}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <FileText className="w-3.5 h-3.5 text-white" />
                 <span>Tìm và phân tích văn bản liên quan</span>
               </button>
             </div>
@@ -282,9 +281,8 @@ function RelationCard({
                 onAiAnalyze();
               }}
               className="px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-              title="Phân tích liên văn bản bằng AI"
             >
-              <Sparkles className="w-2.5 h-2.5 text-blue-600" />
+              <Bot className="w-2.5 h-2.5 text-blue-600" />
               <span>Phân tích AI</span>
             </button>
           )}

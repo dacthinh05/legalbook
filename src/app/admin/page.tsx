@@ -23,6 +23,7 @@ export default function AdminDocumentsPage() {
   };
 
   const loadData = useCallback(async () => {
+    setIsLoading(true);
     try {
       const res = await getDocuments(null);
       if (res.source === 'unavailable') {
@@ -34,6 +35,8 @@ export default function AdminDocumentsPage() {
       setDocuments(res.data || []);
     } catch (err) {
       console.warn('Background admin data sync warning:', err);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -258,65 +261,100 @@ export default function AdminDocumentsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filteredDocs.map((doc) => {
-              const isChecked = selectedIds.has(doc.id);
-              return (
-                <tr key={doc.id} className={`hover:bg-blue-50/40 transition-colors ${isChecked ? 'bg-blue-50/60' : ''}`}>
+            {isLoading && documents.length === 0 ? (
+              Array.from({ length: 6 }).map((_, idx) => (
+                <tr key={`skel-${idx}`} className="animate-pulse">
                   <td className="p-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => handleToggleSelectOne(doc.id)}
-                      className="w-4 h-4 rounded text-blue-600 cursor-pointer"
-                    />
+                    <div className="w-4 h-4 bg-slate-200 rounded mx-auto" />
                   </td>
-                  <td className="p-3 font-mono font-semibold text-blue-900 whitespace-nowrap">
-                    {doc.document_number || '---'}
+                  <td className="p-3">
+                    <div className="w-24 h-4 bg-slate-200 rounded" />
                   </td>
-                  <td className="p-3 font-medium text-gray-800 max-w-md">
-                    <div className="line-clamp-2 leading-snug">{doc.title}</div>
-                    {doc.issuing_body && (
-                      <span className="text-[10px] text-slate-400 block mt-0.5">{doc.issuing_body}</span>
-                    )}
+                  <td className="p-3">
+                    <div className="w-64 h-4 bg-slate-200 rounded mb-1" />
+                    <div className="w-32 h-3 bg-slate-100 rounded" />
                   </td>
-                  <td className="p-3 whitespace-nowrap">
-                    {DOCUMENT_TYPE_LABELS[doc.document_type || 'khac']}
+                  <td className="p-3">
+                    <div className="w-16 h-4 bg-slate-200 rounded" />
                   </td>
-                  <td className="p-3 text-gray-500 whitespace-nowrap">
-                    {formatDate(doc.issued_date)}
+                  <td className="p-3">
+                    <div className="w-20 h-4 bg-slate-200 rounded" />
                   </td>
-                  <td className="p-3 whitespace-nowrap">
-                    {(() => {
-                      const effStatus = getEffectiveStatus(doc);
-                      return (
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${DOCUMENT_STATUS_COLORS[effStatus]}`}>
-                          {DOCUMENT_STATUS_LABELS[effStatus]}
-                        </span>
-                      );
-                    })()}
+                  <td className="p-3">
+                    <div className="w-20 h-5 bg-slate-200 rounded-full" />
                   </td>
-                  <td className="p-3 text-right space-x-1 whitespace-nowrap">
-                    <button
-                      onClick={() => {
-                        setIsCreating(false);
-                        setEditingDoc(doc);
-                      }}
-                      className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors cursor-pointer"
-                      title="Chỉnh sửa văn bản"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSingle(doc.id, doc.document_number || undefined)}
-                      className="p-1.5 hover:bg-red-100 text-red-600 rounded transition-colors cursor-pointer"
-                      title="Xóa vĩnh viễn văn bản này"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                  <td className="p-3 text-right">
+                    <div className="w-12 h-4 bg-slate-200 rounded ml-auto" />
                   </td>
                 </tr>
-              );
-            })}
+              ))
+            ) : filteredDocs.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-slate-400">
+                  {searchTerm ? 'Không tìm thấy văn bản phù hợp với từ khóa.' : 'Chưa có văn bản nào trong cơ sở dữ liệu.'}
+                </td>
+              </tr>
+            ) : (
+              filteredDocs.map((doc) => {
+                const isChecked = selectedIds.has(doc.id);
+                return (
+                  <tr key={doc.id} className={`hover:bg-blue-50/40 transition-colors ${isChecked ? 'bg-blue-50/60' : ''}`}>
+                    <td className="p-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleToggleSelectOne(doc.id)}
+                        className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                      />
+                    </td>
+                    <td className="p-3 font-mono font-semibold text-blue-900 whitespace-nowrap">
+                      {doc.document_number || '---'}
+                    </td>
+                    <td className="p-3 font-medium text-gray-800 max-w-md">
+                      <div className="line-clamp-2 leading-snug">{doc.title}</div>
+                      {doc.issuing_body && (
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{doc.issuing_body}</span>
+                      )}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {DOCUMENT_TYPE_LABELS[doc.document_type || 'khac']}
+                    </td>
+                    <td className="p-3 text-gray-500 whitespace-nowrap">
+                      {formatDate(doc.issued_date)}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {(() => {
+                        const effStatus = getEffectiveStatus(doc);
+                        return (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${DOCUMENT_STATUS_COLORS[effStatus]}`}>
+                            {DOCUMENT_STATUS_LABELS[effStatus]}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td className="p-3 text-right space-x-1 whitespace-nowrap">
+                      <button
+                        onClick={() => {
+                          setIsCreating(false);
+                          setEditingDoc(doc);
+                        }}
+                        className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors cursor-pointer"
+                        title="Chỉnh sửa văn bản"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSingle(doc.id, doc.document_number || undefined)}
+                        className="p-1.5 hover:bg-red-100 text-red-600 rounded transition-colors cursor-pointer"
+                        title="Xóa vĩnh viễn văn bản này"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

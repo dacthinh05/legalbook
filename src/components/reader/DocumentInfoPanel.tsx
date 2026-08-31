@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Sparkles, ExternalLink, Building, ShieldAlert, Landmark } from 'lucide-react';
+import { X, FileText, ExternalLink, Building, ShieldAlert, Landmark } from 'lucide-react';
 import { cn, DOCUMENT_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, getEffectiveStatus, formatDate, getMultiSourceLookupUrls } from '@/lib/utils';
 import type { LegalDocument } from '@/types';
 
@@ -123,7 +123,7 @@ export function DocumentInfoPanel({ document: doc, onClose }: DocumentInfoPanelP
         <div className="border-t border-gray-100 pt-4">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-gray-900 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <FileText className="w-3.5 h-3.5 text-blue-600" />
               Tóm tắt & Phân tích nghiệp vụ
             </h4>
             {doc.summary_is_ai_generated && (

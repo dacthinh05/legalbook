@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, Send, Link2, Sparkles } from 'lucide-react';
+import { X, Upload, Send, Link2, Loader2 } from 'lucide-react';
 import type { LegalDocument } from '@/types';
 
 interface AddOfficialDispatchModalProps {
@@ -164,7 +164,7 @@ export function AddOfficialDispatchModal({
               </p>
               {isAiExtracting && (
                 <div className="flex items-center justify-center gap-1.5 text-blue-600 font-semibold mt-2 text-[11px]">
-                  <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   Đang phân tích và trích xuất dữ liệu...
                 </div>
               )}

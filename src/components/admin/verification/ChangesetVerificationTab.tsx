@@ -10,7 +10,6 @@ import {
   Edit3,
   Calendar,
   FileText,
-  Sparkles,
 } from 'lucide-react';
 import type { ChangesetDiffItem } from '@/lib/verification/types';
 

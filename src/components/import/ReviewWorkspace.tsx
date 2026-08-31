@@ -7,7 +7,7 @@ import {
   CheckCircle2,
   RotateCw,
   ArrowLeft,
-  Sparkles,
+  GitCompare,
   Link2,
   Copy,
   Save,
@@ -230,7 +230,7 @@ export function ReviewWorkspace({
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Sparkles className="w-3 h-3 text-blue-600" />
+                <GitCompare className="w-3 h-3 text-blue-600" />
                 <span>So sánh thay đổi ({changesList.length})</span>
               </button>
               <button

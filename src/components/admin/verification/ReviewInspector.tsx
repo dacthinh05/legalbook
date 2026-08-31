@@ -15,7 +15,6 @@ import {
   ExternalLink,
   ChevronRight,
   ChevronLeft,
-  Sparkles,
   Info,
   Calendar,
   Save,

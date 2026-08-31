@@ -12,7 +12,6 @@ import {
   ExternalLink,
   Copy,
   Download,
-  Sparkles,
 } from 'lucide-react';
 import { ImportedDocument, ExtractionStatus } from '@/lib/document-import/types';
 import { downloadLegalDocxFile } from '@/lib/document-import/docx-exporter';
@@ -141,7 +140,7 @@ export function BatchQueueList({
               {isProcessingBatch ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Sparkles className="w-3.5 h-3.5" />
+                <FileText className="w-3.5 h-3.5" />
               )}
               <span>Xử lý tất cả ({pendingCount})</span>
             </button>

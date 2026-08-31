@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDocumentById, getDocuments } from '@/lib/data-service';
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
 import { queryLegalAssistant, generateLocalDocumentSummary, type LegalCitation, type LegalAiResponse } from '@/lib/ai/legal-rag';
 import { cleanHtmlToText } from '@/lib/sanitize.server';
@@ -81,14 +82,27 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as ChatRequestBody;
     const { question, documentId, docAId, docBId, mode = 'ask' } = body;
+    // 1. Resolve Document Context (Live DB with fallback)
+    let targetDoc: LegalDocument | null = null;
+    let docA: LegalDocument | null = null;
+    let docB: LegalDocument | null = null;
 
-    const allDocs = DEMO_DOCUMENTS as unknown as LegalDocument[];
+    if (documentId) {
+      const res = await getDocumentById(documentId);
+      targetDoc = res.data;
+    }
+    if (docAId) {
+      const res = await getDocumentById(docAId);
+      docA = res.data;
+    }
+    if (docBId) {
+      const res = await getDocumentById(docBId);
+      docB = res.data;
+    }
 
-    // 1. Resolve Document Context
-    const targetDoc = documentId ? allDocs.find((d) => d.id === documentId) : null;
-    const docA = docAId ? allDocs.find((d) => d.id === docAId) : null;
-    const docB = docBId ? allDocs.find((d) => d.id === docBId) : null;
-
+    // Fallback/corpus lookup for multi-document cross analysis or local fallback
+    const allDocsRes = await getDocuments(null);
+    const allDocs = (allDocsRes.data && allDocsRes.data.length > 0) ? allDocsRes.data : (DEMO_DOCUMENTS as unknown as LegalDocument[]);
     // Build RAG System Instruction
     const systemInstruction = `Bạn là Trợ lý Pháp lý & Thuế Kế toán AI cao cấp của LegalBook.
 Nhiệm vụ của bạn:

@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Sparkles,
   X,
   Send,
   BookOpen,
   ArrowRight,
   ShieldCheck,
   ChevronRight,
+  Bot,
+  Loader2,
 } from 'lucide-react';
 import { queryLegalAssistant, type LegalAiResponse } from '@/lib/ai/legal-rag';
 import { MarkdownRenderer, renderInlineMarkdown } from '@/components/common/MarkdownRenderer';
@@ -86,7 +87,7 @@ export function LegalAiAssistant({
         <div className="p-4 sm:p-5 border-b border-slate-200 bg-gradient-to-r from-blue-900 to-indigo-900 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300">
-              <Sparkles className="w-4 h-4" />
+              <Bot className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -230,7 +231,7 @@ export function LegalAiAssistant({
 
           {isLoading && (
             <div className="p-8 text-center space-y-2 text-blue-700">
-              <Sparkles className="w-6 h-6 animate-spin mx-auto text-blue-600" />
+              <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-600" />
               <div className="text-xs font-semibold text-slate-700">Đang đối chiếu điều khoản văn bản...</div>
             </div>
           )}

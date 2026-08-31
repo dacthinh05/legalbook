@@ -12,21 +12,21 @@ import {
   getEffectiveStatus,
   isNewDocument
 } from '@/lib/utils';
-import { 
-  Sparkles, 
-  Clock, 
-  Calendar, 
-  FileText, 
-  Scale, 
-  Layers, 
-  ArrowRight, 
-  CheckCircle2, 
-  AlertCircle, 
-  Building2, 
+import {
+  Clock,
+  Calendar,
+  FileText,
+  BookOpen,
+  Scale,
+  Layers,
+  ArrowRight,
+  CheckCircle2,
+  AlertCircle,
+  Building2,
   ChevronRight,
   ShieldCheck,
   Zap,
-  Info
+  Info,
 } from 'lucide-react';
 
 interface TopicOverviewProps {
@@ -120,7 +120,7 @@ function HighlightCard({
               </span>
             ) : isRecent ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold bg-blue-600 text-white shadow-xs">
-                <Sparkles className="w-3 h-3" />
+                <FileText className="w-3 h-3" />
                 Mới cập nhật
               </span>
             ) : null}
@@ -387,7 +387,7 @@ export function TopicOverview({
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex-1 min-w-[280px]">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 text-[11.5px] font-semibold mb-2.5 border border-blue-200/60">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <BookOpen className="w-3.5 h-3.5 text-blue-600" />
                 <span>Hệ thống cơ sở dữ liệu pháp luật điện tử</span>
               </div>
               <h1 className="text-[26px] md:text-[30px] font-extrabold text-slate-900 leading-tight tracking-tight mb-2">
@@ -442,7 +442,7 @@ export function TopicOverview({
 
             <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3.5 flex flex-col justify-between">
               <div className="text-[12px] font-semibold text-blue-900 flex items-center gap-1.5 mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <Clock className="w-3.5 h-3.5 text-blue-600" />
                 Mới trong 30 ngày
               </div>
               <div className="flex items-baseline gap-1.5">

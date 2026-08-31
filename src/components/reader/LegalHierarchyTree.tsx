@@ -10,7 +10,7 @@ import {
   Columns2,
   ChevronsUp,
   ChevronsDown,
-  Sparkles,
+  Bot,
 } from 'lucide-react';
 import { buildDocumentHierarchy, type HierarchyNode } from '@/lib/hierarchy';
 import {
@@ -201,6 +201,7 @@ export function LegalHierarchyTree({
                       )}
                     </button>
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setAiAnalysisTargetDoc(node.document);
@@ -209,7 +210,7 @@ export function LegalHierarchyTree({
                       className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                       title={`Phân tích liên văn bản bằng AI với ${node.document.document_number}`}
                     >
-                      <Sparkles className="w-3 h-3 text-blue-600" />
+                      <Bot className="w-3 h-3 text-blue-600" />
                       <span>Phân tích AI</span>
                     </button>
                   </div>

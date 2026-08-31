@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { NormalizationChange } from '@/lib/document-import/types';
-import { Check, X, HelpCircle, Sparkles } from 'lucide-react';
-
+import { Check, X, HelpCircle, GitCompare } from 'lucide-react';
 interface DiffViewerProps {
   originalText: string;
   normalizedText: string;
@@ -84,7 +83,7 @@ export function DiffViewer({
       {/* Diff Toolbar */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+          <GitCompare className="w-3.5 h-3.5 text-blue-600" />
           <span className="font-bold text-slate-800">
             So sánh thay đổi ({changes.length} điểm đã chuẩn hóa)
           </span>

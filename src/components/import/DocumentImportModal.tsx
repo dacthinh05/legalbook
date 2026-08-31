@@ -6,7 +6,6 @@ import {
   Upload,
   FileText,
   Globe,
-  Sparkles,
   CheckCircle2,
   Loader2,
 } from 'lucide-react';
@@ -463,7 +462,7 @@ export function DocumentImportModal({
                     disabled={!pastedText.trim() || isProcessingPaste}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors"
                   >
-                    {isProcessingPaste ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {isProcessingPaste ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                     <span>Phân tích và kiểm duyệt nội dung</span>
                   </button>
                 </div>

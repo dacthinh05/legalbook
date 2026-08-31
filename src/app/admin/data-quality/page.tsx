@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   ShieldCheck, 
   AlertTriangle, 
@@ -12,11 +12,39 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
+import { getDocuments } from '@/lib/data-service';
 import { ContentQualityValidator, type ContentQualityResult } from '@/lib/quality/content-validator';
 import type { LegalDocument } from '@/types';
 
+let cachedAuditedDemoDocs: Array<{ doc: Partial<LegalDocument>; quality: ContentQualityResult }> | null = null;
+
+function getAuditedDocs(docs: Partial<LegalDocument>[]) {
+  if (docs === DEMO_DOCUMENTS && cachedAuditedDemoDocs) {
+    return cachedAuditedDemoDocs;
+  }
+  const result = docs.map((doc) => ({
+    doc,
+    quality: ContentQualityValidator.validate({
+      htmlContent: doc.html_content,
+      title: doc.title,
+      documentNumber: doc.document_number,
+      documentType: doc.document_type,
+      summaryMain: doc.summary_main,
+      summaryNewPoints: doc.summary_new_points,
+      hasAttachedFiles: Boolean(doc.files && doc.files.length > 0),
+    }),
+  }));
+  if (docs === DEMO_DOCUMENTS) {
+    cachedAuditedDemoDocs = result;
+  }
+  return result;
+}
+
 export default function DataQualityAdminPage() {
-  const [documents] = useState<Partial<LegalDocument>[]>(DEMO_DOCUMENTS);
+  // Fail-closed: Khởi tạo mảng rỗng, chỉ đổ dữ liệu khi loadData lấy được từ CSDL (Supabase live hoặc demo mode)
+  const [documents, setDocuments] = useState<Partial<LegalDocument>[]>([]);
+  const [dataError, setDataError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMode, setFilterMode] = useState<
     'all' | 'missing_content' | 'fake_placeholder' | 'needs_ocr' | 'partial' | 'verified' | 'unverified'
@@ -26,25 +54,28 @@ export default function DataQualityAdminPage() {
     quality: ContentQualityResult;
   } | null>(null);
 
-  // Validate all documents with ContentQualityValidator
-  const auditedList = useMemo(() => {
-    return documents.map((doc) => {
-      const quality = ContentQualityValidator.validate({
-        htmlContent: doc.html_content,
-        title: doc.title,
-        documentNumber: doc.document_number,
-        documentType: doc.document_type,
-        summaryMain: doc.summary_main,
-        summaryNewPoints: doc.summary_new_points,
-        hasAttachedFiles: Boolean(doc.files && doc.files.length > 0),
+  useEffect(() => {
+    setIsLoading(true);
+    getDocuments(null)
+      .then((res) => {
+        if (res.source === 'unavailable') {
+          setDocuments([]);
+          setDataError(res.error || 'CSDL văn bản chính thức không khả dụng.');
+          return;
+        }
+        setDataError(null);
+        setDocuments(res.data || []);
+      })
+      .catch((err) => {
+        console.warn('Data quality sync warning:', err);
+        setDataError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-
-      return {
-        doc,
-        quality,
-      };
-    });
-  }, [documents]);
+  }, []);
+  // Validate all documents with ContentQualityValidator (memoized with top-level cache)
+  const auditedList = useMemo(() => getAuditedDocs(documents), [documents]);
 
   // Aggregate Metrics
   const metrics = useMemo(() => {
@@ -155,6 +186,14 @@ export default function DataQualityAdminPage() {
 
   return (
     <div className="space-y-6 select-text">
+      {/* Hard error banner: CSDL không khả dụng (fail-closed, production strict) */}
+      {dataError && (
+        <div className="p-3.5 rounded-xl border bg-red-50 border-red-200 text-red-900 text-xs font-semibold flex items-center gap-2.5 shadow-xs">
+          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+          <span>{dataError}</span>
+        </div>
+      )}
+
       {/* Top Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-gray-200">
         <div>
@@ -315,10 +354,24 @@ export default function DataQualityAdminPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filteredList.length === 0 ? (
+            {isLoading && documents.length === 0 ? (
+              Array.from({ length: 5 }).map((_, idx) => (
+                <tr key={`skel-${idx}`} className="animate-pulse">
+                  <td className="p-3"><div className="w-24 h-4 bg-slate-200 rounded" /></td>
+                  <td className="p-3"><div className="w-48 h-4 bg-slate-200 rounded" /></td>
+                  <td className="p-3"><div className="w-20 h-4 bg-slate-200 rounded" /></td>
+                  <td className="p-3 text-center"><div className="w-12 h-4 bg-slate-200 rounded mx-auto" /></td>
+                  <td className="p-3 text-center"><div className="w-12 h-4 bg-slate-200 rounded mx-auto" /></td>
+                  <td className="p-3"><div className="w-24 h-5 bg-slate-200 rounded-full" /></td>
+                  <td className="p-3"><div className="w-12 h-4 bg-slate-200 rounded" /></td>
+                  <td className="p-3"><div className="w-32 h-4 bg-slate-200 rounded" /></td>
+                  <td className="p-3 text-right"><div className="w-8 h-4 bg-slate-200 rounded ml-auto" /></td>
+                </tr>
+              ))
+            ) : filteredList.length === 0 ? (
               <tr>
                 <td colSpan={9} className="p-8 text-center text-gray-400">
-                  Không tìm thấy văn bản nào thỏa mãn điều kiện lọc.
+                  {dataError ? dataError : 'Không tìm thấy văn bản nào thỏa mãn điều kiện lọc.'}
                 </td>
               </tr>
             ) : (
@@ -369,7 +422,7 @@ export default function DataQualityAdminPage() {
                       </span>
                     ) : quality.isFakeOrPlaceholder ? (
                       <span className="px-2 py-0.5 rounded text-[10.5px] font-semibold bg-amber-50 text-amber-900 border border-amber-300">
-                        ⚠️ Nghi ngờ tóm tắt thế chỗ
+                        Nghi ngờ tóm tắt thế chỗ
                       </span>
                     ) : quality.status === 'partial' ? (
                       <span className="px-2 py-0.5 rounded text-[10.5px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">

@@ -16,7 +16,6 @@ import {
   SlidersHorizontal,
   ExternalLink,
   FileText,
-  Sparkles,
   History,
   AlertCircle,
   HelpCircle,
@@ -821,7 +820,7 @@ export function SearchModal({
               {/* Quick suggestions */}
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  <Search className="w-3.5 h-3.5 text-blue-600" />
                   <span>Gợi ý tra cứu nhanh</span>
                 </h4>
                 <div className="flex items-center gap-2 flex-wrap">

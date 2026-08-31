@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   Upload,
-  Sparkles,
   CheckCircle2,
   FileText,
   Globe,
