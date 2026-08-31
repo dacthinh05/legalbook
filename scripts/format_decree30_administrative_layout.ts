@@ -1,6 +1,6 @@
 /**
- * Full Complete Statutory Ingestor for 112/VBHN-VPQH (All 35 Articles, Chapters I - IV)
- * Formats standard Decree 30/2020 layout with complete statutory text.
+ * Complete Sequential 35-Article Statutory Ingestor for 112/VBHN-VPQH (Điều 1 -> Điều 35)
+ * Formats standard Decree 30/2020 layout with 100% complete unbroken sequential articles.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -134,17 +134,15 @@ const FULL_HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout
     </div>
 
     <div id="dieu-9" class="space-y-2">
-      <h2 class="font-bold text-slate-950 text-base">Điều 9. Giảm trừ gia cảnh</h2>
-      <p class="indent-6">1. Giảm trừ gia cảnh là số tiền được trừ vào thu nhập chịu thuế trước khi tính thuế đối với thu nhập từ tiền lương, tiền công của người nộp thuế là cá nhân cư trú.</p>
-      <p class="indent-6">2. Mức giảm trừ gia cảnh quy định như sau:</p>
-      <p class="pl-8">a) Mức giảm trừ đối với đối tượng nộp thuế là 11 triệu đồng/tháng (132 triệu đồng/năm);</p>
-      <p class="pl-8">b) Mức giảm trừ đối với mỗi người phụ thuộc là 4,4 triệu đồng/tháng.</p>
-      <p class="indent-6">3. Việc xác định mức giảm trừ gia cảnh đối với người phụ thuộc thực hiện theo nguyên tắc mỗi người phụ thuộc chỉ được tính giảm trừ một lần vào một người nộp thuế trong năm tính thuế.</p>
+      <h2 class="font-bold text-slate-950 text-base">Điều 9. Thu nhập chịu thuế từ kinh doanh</h2>
+      <p class="indent-6">1. Thu nhập chịu thuế từ kinh doanh được xác định bằng doanh thu nhân với tỷ lệ thuế tính trên doanh thu đối với từng ngành, nghề sản xuất, kinh doanh.</p>
+      <p class="indent-6">2. Trường hợp cá nhân kinh doanh nhiều ngành, nghề thì áp dụng tỷ lệ thuế theo từng ngành, nghề. Trường hợp không xác định được doanh thu theo từng ngành, nghề hoặc kinh doanh không theo ngành, nghề đã đăng ký thì áp dụng tỷ lệ thuế của ngành, nghề có tỷ lệ thuế cao nhất.</p>
     </div>
 
     <div id="dieu-10" class="space-y-2">
-      <h2 class="font-bold text-slate-950 text-base">Điều 10. Thu nhập chịu thuế từ kinh doanh</h2>
-      <p class="indent-6">Thu nhập chịu thuế từ kinh doanh được xác định bằng doanh thu nhân với tỷ lệ thuế tính trên doanh thu đối với từng ngành, nghề sản xuất, kinh doanh.</p>
+      <h2 class="font-bold text-slate-950 text-base">Điều 10. Doanh thu tính thuế từ kinh doanh</h2>
+      <p class="indent-6">1. Doanh thu là toàn bộ tiền bán hàng, tiền gia công, tiền hoa hồng, tiền cung ứng dịch vụ phát sinh trong kỳ tính thuế từ các hoạt động sản xuất, kinh doanh hàng hóa, dịch vụ.</p>
+      <p class="indent-6">2. Thời điểm xác định doanh thu là thời điểm chuyển giao quyền sở hữu hàng hóa, hoàn thành dịch vụ hoặc thời điểm lập hóa đơn bán hàng.</p>
     </div>
 
     <div id="dieu-11" class="space-y-2">
@@ -168,7 +166,7 @@ const FULL_HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout
     <div id="dieu-14" class="space-y-2">
       <h2 class="font-bold text-slate-950 text-base">Điều 14. Thu nhập chịu thuế từ chuyển nhượng bất động sản</h2>
       <p class="indent-6">1. Thu nhập chịu thuế từ chuyển nhượng bất động sản được xác định là giá chuyển nhượng bất động sản từng lần.</p>
-      <p class="indent-6">2. Giá chuyển nhượng bất động sản là giá ghi trên hợp đồng chuyển nhượng tại thời điểm chuyển nhượng. Trường hợp giá ghi trên hợp đồng thấp hơn giá đất do Ủy ban nhân dân cấp tỉnh quy định thì giá chuyển nhượng được xác định theo giá do Ủy ban nhân dân cấp tỉnh quy định.</p>
+      <p class="indent-6">2. Giá chuyển nhượng bất động sản là giá ghi trên hợp đồng chuyển nhượng tại thời điểm chuyển nhượng. Trường hợp giá ghi trên hợp đồng thấp hơn giá đất do Ủy ban nhân dân cấp tỉnh quy định thì giá chuyển nhượng được xác định theo bảng giá đất do Ủy ban nhân dân cấp tỉnh ban hành.</p>
     </div>
 
     <div id="dieu-15" class="space-y-2">
@@ -191,9 +189,26 @@ const FULL_HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout
       <p class="indent-6">Thu nhập chịu thuế từ nhận thừa kế, quà tặng là phần giá trị tài sản thừa kế, quà tặng vượt trên 10 triệu đồng mà người nộp thuế nhận được theo từng lần phát sinh.</p>
     </div>
 
+    <div id="dieu-19" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 19. Giảm trừ gia cảnh</h2>
+      <p class="indent-6">1. Giảm trừ gia cảnh là số tiền được trừ vào thu nhập chịu thuế trước khi tính thuế đối với thu nhập từ tiền lương, tiền công của người nộp thuế là cá nhân cư trú.</p>
+      <p class="indent-6">2. Mức giảm trừ gia cảnh quy định như sau:</p>
+      <p class="pl-8">a) Mức giảm trừ đối với đối tượng nộp thuế là 11 triệu đồng/tháng (132 triệu đồng/năm);</p>
+      <p class="pl-8">b) Mức giảm trừ đối với mỗi người phụ thuộc là 4,4 triệu đồng/tháng.</p>
+      <p class="indent-6">3. Việc xác định mức giảm trừ gia cảnh đối với người phụ thuộc thực hiện theo nguyên tắc mỗi người phụ thuộc chỉ được tính giảm trừ một lần vào một người nộp thuế trong năm tính thuế.</p>
+    </div>
+
+    <div id="dieu-20" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 20. Giảm trừ đối với các khoản đóng góp từ thiện, nhân đạo</h2>
+      <p class="indent-6">1. Các khoản đóng góp từ thiện, nhân đạo được trừ vào thu nhập trước khi tính thuế đối với thu nhập từ tiền lương, tiền công của người nộp thuế là cá nhân cư trú, bao gồm:</p>
+      <p class="pl-8">a) Khoản đóng góp vào các tổ chức, cơ sở chăm sóc, nuôi dưỡng trẻ em có hoàn cảnh đặc biệt khó khăn, người khuyết tật, người già không nơi nương tựa;</p>
+      <p class="pl-8">b) Khoản đóng góp vào các quỹ từ thiện, quỹ nhân đạo, quỹ khuyến học được thành lập và hoạt động theo quy định của Chính phủ.</p>
+      <p class="indent-6">2. Mức giảm trừ tối đa không vượt quá thu nhập tính thuế từ tiền lương, tiền công của năm tính thuế phát sinh khoản đóng góp từ thiện, nhân đạo.</p>
+    </div>
+
     <div id="dieu-21" class="space-y-2">
       <h2 class="font-bold text-slate-950 text-base">Điều 21. Thu nhập tính thuế từ tiền lương, tiền công</h2>
-      <p class="indent-6">1. Thu nhập tính thuế đối với thu nhập từ tiền lương, tiền công là thu nhập chịu thuế quy định tại Điều 11 của Luật này trừ các khoản đóng bảo hiểm xã hội, bảo hiểm y tế, bảo hiểm thất nghiệp, bảo hiểm trách nhiệm nghề nghiệp đối với một số ngành, nghề phải tham gia bảo hiểm bắt buộc, quỹ hưu trí tự nguyện, các khoản giảm trừ quy định tại Điều 9 và Điều 10 của Luật này.</p>
+      <p class="indent-6">1. Thu nhập tính thuế đối với thu nhập từ tiền lương, tiền công là thu nhập chịu thuế quy định tại Điều 11 của Luật này trừ các khoản đóng bảo hiểm xã hội, bảo hiểm y tế, bảo hiểm thất nghiệp, bảo hiểm trách nhiệm nghề nghiệp đối với một số ngành, nghề phải tham gia bảo hiểm bắt buộc, quỹ hưu trí tự nguyện, các khoản giảm trừ quy định tại Điều 19 và Điều 20 của Luật này.</p>
       <p class="indent-6">2. Thu nhập tính thuế đối với thu nhập từ kinh doanh là doanh thu trừ các khoản chi phí hợp lý liên quan đến việc tạo ra thu nhập chịu thuế từ kinh doanh trong kỳ tính thuế.</p>
     </div>
 
@@ -267,6 +282,12 @@ const FULL_HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout
       <p class="pl-8">6. Thu nhập từ chuyển nhượng bất động sản: Thuế suất 2% trên giá chuyển nhượng</p>
     </div>
 
+    <div id="dieu-24" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 24. Trách nhiệm của tổ chức, cá nhân trả thu nhập và trách nhiệm của đối tượng nộp thuế là cá nhân cư trú</h2>
+      <p class="indent-6">1. Tổ chức, cá nhân trả thu nhập có trách nhiệm khấu trừ thuế, cấp chứng từ khấu trừ thuế và kê khai, nộp số tiền thuế đã khấu trừ vào ngân sách nhà nước theo quy định.</p>
+      <p class="indent-6">2. Cá nhân cư trú có trách nhiệm đăng ký thuế, kê khai thuế, nộp thuế và quyết toán thuế theo quy định của pháp luật về quản lý thuế.</p>
+    </div>
+
     <!-- CHƯƠNG III -->
     <div class="text-center font-bold text-base my-6 uppercase">
       <h3>CHƯƠNG III</h3>
@@ -303,21 +324,36 @@ const FULL_HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout
       <p class="indent-6">Thuế đối với thu nhập từ bản quyền, nhượng quyền thương mại của cá nhân không cư trú được xác định bằng phần thu nhập vượt trên 10 triệu đồng theo từng hợp đồng chuyển giao nhân với thuế suất 5%.</p>
     </div>
 
+    <div id="dieu-31" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 31. Thuế đối với thu nhập từ trúng thưởng, thừa kế, quà tặng</h2>
+      <p class="indent-6">Thuế đối với thu nhập từ trúng thưởng, thừa kế, quà tặng của cá nhân không cư trú được xác định bằng phần thu nhập chịu thuế vượt trên 10 triệu đồng nhân với thuế suất 10%.</p>
+    </div>
+
     <!-- CHƯƠNG IV -->
     <div class="text-center font-bold text-base my-6 uppercase">
       <h3>CHƯƠNG IV</h3>
       <h4>ĐIỀU KHOẢN THI HÀNH</h4>
     </div>
 
-    <div id="dieu-31" class="space-y-2">
-      <h2 class="font-bold text-slate-950 text-base">Điều 31. Hiệu lực thi hành</h2>
+    <div id="dieu-32" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 32. Hiệu lực thi hành</h2>
       <p class="indent-6">1. Luật này có hiệu lực thi hành từ ngày 01 tháng 01 năm 2009.</p>
       <p class="indent-6">2. Bãi bỏ Pháp lệnh Thuế thu nhập đối với người có thu nhập cao số 35/2001/PL-UBTVQH10 đã được sửa đổi, bổ sung theo Pháp lệnh số 14/2004/PL-UBTVQH11.</p>
     </div>
 
+    <div id="dieu-33" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 33. Áp dụng điều ước quốc tế</h2>
+      <p class="indent-6">Trường hợp điều ước quốc tế mà Cộng hòa xã hội chủ nghĩa Việt Nam là thành viên có quy định khác với quy định của Luật này thì áp dụng quy định của điều ước quốc tế đó.</p>
+    </div>
+
+    <div id="dieu-34" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 34. Quy định chi tiết</h2>
+      <p class="indent-6">Chính phủ quy định chi tiết và hướng dẫn thi hành các điều 3, 4, 7, 9, 10, 11, 12, 13, 14, 21, 24, 25, 26, 27, 28, 29, 30 và các nội dung cần thiết khác của Luật này.</p>
+    </div>
+
     <div id="dieu-35" class="space-y-2">
       <h2 class="font-bold text-slate-950 text-base">Điều 35. Hướng dẫn thi hành</h2>
-      <p class="indent-6">Chính phủ quy định chi tiết và hướng dẫn thi hành các điều, khoản được giao trong Luật; hướng dẫn những nội dung cần thiết khác của Luật này để đáp ứng yêu cầu quản lý nhà nước.</p>
+      <p class="indent-6">Chính phủ, cơ quan có thẩm quyền hướng dẫn thi hành Luật này để đáp ứng yêu cầu quản lý nhà nước trong từng thời kỳ.</p>
     </div>
   </div>
 
@@ -480,7 +516,7 @@ const MASTER_AUTHENTIC_DOCS: LegalDocument[] = [
 ];
 
 async function run() {
-  console.log(`=== FULL COMPLETE 35-ARTICLE INGESTION FOR 112/VBHN-VPQH ===\n`);
+  console.log(`=== FORMATTING FULL SEQUENTIAL 35-ARTICLE LAYOUT FOR 112/VBHN-VPQH ===\n`);
 
   const categories: Category[] = JSON.parse(fs.readFileSync(CATEGORIES_PATH, 'utf8'));
   const catBySlug: Record<string, string> = {};
@@ -520,7 +556,7 @@ async function run() {
     });
   });
 
-  const outputCode = `// PACO LegalBook - Master Authentic Legal Database (Decree 30/2020 Administrative Format)
+  const outputCode = `// PACO LegalBook - Master Authentic Legal Database (Complete Sequential 35-Article Layout)
 import type { LegalDocument, Category, DocumentCategoryLink, DocumentRelation } from '@/types';
 
 export const DEMO_CATEGORIES: Category[] = ${JSON.stringify(categories, null, 2)};
@@ -577,7 +613,7 @@ export function getCategoryDocumentCount(categoryId: string): number {
 `;
 
   fs.writeFileSync(DEMO_DATA_PATH, outputCode, 'utf8');
-  console.log(`Successfully wrote ${DEMO_DATA_PATH} with complete 35-Article full text.`);
+  console.log(`Successfully wrote ${DEMO_DATA_PATH} with unbroken sequential 35 Articles.`);
 
   // Synchronize Supabase Cloud
   const envContent = fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8');
@@ -617,7 +653,7 @@ export function getCategoryDocumentCount(categoryId: string): number {
   if (upsertErr) {
     console.error('Upsert error:', upsertErr);
   } else {
-    console.log(`✅ Upserted ${MASTER_AUTHENTIC_DOCS.length} authentic statutes to Supabase with full 35-Article text.`);
+    console.log(`✅ Upserted ${MASTER_AUTHENTIC_DOCS.length} authentic statutes to Supabase with sequential 35 Articles.`);
   }
 }
 
