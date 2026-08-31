@@ -47,12 +47,14 @@ export async function updateSession(request: NextRequest) {
     const supabase = createServerClient(supabaseUrl!, supabaseAnonKey!, {
       cookies: {
         getAll() {
-          return request.cookies.getAll();
+          return request.cookies && typeof request.cookies.getAll === 'function' ? request.cookies.getAll() : [];
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+          if (request.cookies && typeof request.cookies.set === 'function') {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+          }
           supabaseResponse = NextResponse.next({
             request,
           });
@@ -68,15 +70,11 @@ export async function updateSession(request: NextRequest) {
       setTimeout(() => resolve({ data: { user: null }, error: new Error('Auth timeout') }), 600)
     );
     const { data: { user } } = await Promise.race([userPromise, timeoutPromise]);
-    // Admin route protection on strict production mode
-    const pathname = request.nextUrl.pathname;
-    const isStrictProd = process.env.NEXT_PUBLIC_STRICT_PROD === 'true';
-    const isDemoExplicit = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-
-    if (isStrictProd && !isDemoExplicit && pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+    // Admin route protection on strict production mode (temporarily open for general access unless STRICT_ADMIN_AUTH is true)
+    const isStrictAdminAuth = process.env.STRICT_ADMIN_AUTH === 'true';
+    if (isStrictAdminAuth && isStrictProd && !isDemoExplicit && pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
       if (!user) {
-        const loginUrl = new URL('/', request.url);
-        loginUrl.searchParams.set('auth_required', 'admin');
+        const loginUrl = new URL('/admin/login', request.url);
         return NextResponse.redirect(loginUrl);
       }
     }

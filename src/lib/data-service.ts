@@ -189,22 +189,111 @@ export interface FileAttachmentInput {
 }
 
 /**
+ * Checks if a document with the same document_number or title exists to prevent duplication.
+ */
+export async function checkDuplicateDocument(
+  docNumber?: string | null,
+  title?: string | null,
+  excludeId?: string | null
+): Promise<{ isDuplicate: boolean; matchedDoc?: Partial<LegalDocument>; matchType?: 'exact_number' | 'exact_title' | 'none' }> {
+  const isConfigured = isSupabaseConfigured();
+  const cleanNum = (docNumber || '').trim();
+  const cleanTitle = (title || '').trim();
+
+  if (!cleanNum && !cleanTitle) {
+    return { isDuplicate: false, matchType: 'none' };
+  }
+
+  if (isConfigured) {
+    try {
+      const supabase = createClient();
+      let query = supabase
+        .from('legal_documents')
+        .select('id, document_number, title, document_type, status, issued_date')
+        .eq('is_deleted', false);
+
+      if (excludeId) {
+        query = query.neq('id', excludeId);
+      }
+
+      if (cleanNum) {
+        const { data: numMatch } = await query.ilike('document_number', cleanNum).maybeSingle();
+        if (numMatch) {
+          return { isDuplicate: true, matchedDoc: numMatch, matchType: 'exact_number' };
+        }
+      }
+
+      if (cleanTitle) {
+        const { data: titleMatch } = await query.ilike('title', cleanTitle).maybeSingle();
+        if (titleMatch) {
+          return { isDuplicate: true, matchedDoc: titleMatch, matchType: 'exact_title' };
+        }
+      }
+    } catch (err) {
+      console.warn('Supabase checkDuplicateDocument warning:', err);
+    }
+  }
+
+  // Fallback check against in-memory repository
+  const normNewNum = (cleanNum || '').toUpperCase().replace(/[\/\-\.\s]/g, '');
+  for (const d of DEMO_DOCUMENTS) {
+    if (excludeId && d.id === excludeId) continue;
+    const normExisting = (d.document_number || '').toUpperCase().replace(/[\/\-\.\s]/g, '');
+    if (normNewNum && normExisting && normNewNum === normExisting) {
+      return { isDuplicate: true, matchedDoc: d, matchType: 'exact_number' };
+    }
+    if (cleanTitle && d.title && cleanTitle.toLowerCase() === d.title.trim().toLowerCase()) {
+      return { isDuplicate: true, matchedDoc: d, matchType: 'exact_title' };
+    }
+  }
+
+  return { isDuplicate: false, matchType: 'none' };
+}
+
+/**
  * Saves or updates a legal document into Supabase (including Storage upload for attachments) and/or client persistence.
+ * Automatically prevents duplicate records for identical document numbers.
  */
 export async function saveDocument(
   doc: Partial<LegalDocument>,
   attachments?: FileAttachmentInput[]
-): Promise<{ success: boolean; data?: LegalDocument; error?: string }> {
+): Promise<{ success: boolean; data?: LegalDocument; isUpdatedExisting?: boolean; error?: string }> {
   invalidateDocumentCache();
 
   const isConfigured = isSupabaseConfigured();
   const isStrictProd = isStrictProductionMode();
-  const isExplicitNewDoc = !doc.id;
-  const docId = ensureValidUUID(doc.id);
+  let isExplicitNewDoc = !doc.id;
+  let docId = doc.id ? ensureValidUUID(doc.id) : '';
+  let isUpdatedExisting = false;
+
+  // Auto-deduplication: If doc.id is not provided, check if document_number already exists in database
+  if (!docId && doc.document_number && isConfigured) {
+    try {
+      const supabase = createClient();
+      const { data: existing } = await supabase
+        .from('legal_documents')
+        .select('id')
+        .eq('is_deleted', false)
+        .ilike('document_number', doc.document_number.trim())
+        .maybeSingle();
+
+      if (existing) {
+        docId = existing.id;
+        isExplicitNewDoc = false;
+        isUpdatedExisting = true;
+      }
+    } catch {}
+  }
+
+  if (!docId) {
+    docId = ensureValidUUID();
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 
   const processedFiles: DocumentFile[] = [];
   const fileUploadTasks: Array<{ storageKey: string; buffer: Uint8Array | ArrayBuffer | Blob; contentType: string }> = [];
+
   // Build document files payload with namespaced unique storage keys
   if (attachments && attachments.length > 0) {
     for (const att of attachments) {
@@ -739,79 +828,6 @@ export async function getDocumentRelations(docId: string): Promise<DataResult<{
   };
 }
 
-function getEmbeddedRelationsFallback(docId: string) {
-  return getEmbeddedDocumentRelations(docId);
-}
-
-/**
- * Fetches bidirectional relationships for a document.
- */
-export async function getDocumentRelations(docId: string): Promise<DataResult<{
-  as_source: DocumentRelation[];
-  as_target: DocumentRelation[];
-}>> {
-  const isConfigured = isSupabaseConfigured();
-  const isStrictProd = isStrictProductionMode();
-
-  if (isConfigured) {
-    try {
-      const supabase = createClient();
-      const [srcRes, tgtRes] = await Promise.all([
-        supabase
-          .from('document_relations')
-          .select('*, target_document:legal_documents!document_relations_target_document_id_fkey(*)')
-          .eq('source_document_id', docId),
-        supabase
-          .from('document_relations')
-          .select('*, source_document:legal_documents!document_relations_source_document_id_fkey(*)')
-          .eq('target_document_id', docId),
-      ]);
-
-      if (srcRes.error || tgtRes.error) {
-        if (isStrictProd) {
-          return {
-            data: { as_source: [], as_target: [] },
-            source: 'unavailable',
-            error: `Lỗi quan hệ văn bản: ${srcRes.error?.message || tgtRes.error?.message}`,
-          };
-        }
-      } else {
-        return {
-          data: {
-            as_source: (srcRes.data || []) as DocumentRelation[],
-            as_target: (tgtRes.data || []) as DocumentRelation[],
-          },
-          source: 'supabase_live',
-        };
-      }
-    } catch (err: unknown) {
-      if (isStrictProd) {
-        return {
-          data: { as_source: [], as_target: [] },
-          source: 'unavailable',
-          error: `Lỗi kết nối khi tải quan hệ: ${err instanceof Error ? err.message : String(err)}`,
-        };
-      }
-    }
-  }
-
-  if (isStrictProd) {
-    return {
-      data: { as_source: [], as_target: [] },
-      source: 'unavailable',
-      error: 'CSDL chính thức không khả dụng.',
-    };
-  }
-
-  const rels = getEmbeddedDocumentRelations(docId);
-  return {
-    data: {
-      as_source: rels.as_source,
-      as_target: rels.as_target,
-    },
-    source: 'embedded_repository',
-  };
-}
 
 export interface HybridSearchParams {
   query: string;

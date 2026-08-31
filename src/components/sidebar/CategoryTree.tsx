@@ -38,6 +38,7 @@ export interface CategoryTreeProps {
   selectedDocType?: DocumentType | null;
   onSelectCategory: (id: string | null) => void;
   onSelectDocType?: (type: DocumentType | null) => void;
+  onDropDocumentOnCategory?: (docId: string, categoryId: string) => void;
   activeCategoryCount?: number;
   onCollapse?: () => void;
 }
@@ -150,6 +151,7 @@ interface TreeNodeProps {
   selectedCategoryId: string | null;
   onToggleExpand: (id: string, e?: React.MouseEvent) => void;
   onSelectCategory: (id: string) => void;
+  onDropDocumentOnCategory?: (docId: string, categoryId: string) => void;
 }
 
 function TopicTreeNode({
@@ -163,7 +165,9 @@ function TopicTreeNode({
   selectedCategoryId,
   onToggleExpand,
   onSelectCategory,
+  onDropDocumentOnCategory,
 }: TreeNodeProps) {
+  const [isDragOver, setIsDragOver] = useState(false);
   const hasChildren = Boolean(category.children && category.children.length > 0);
   const count = categoryCounts.get(category.id);
   const isRoot = depth === 0;
@@ -192,41 +196,39 @@ function TopicTreeNode({
         tabIndex={0}
         role="treeitem"
         aria-level={depth + 1}
-        aria-expanded={hasChildren ? isExpanded : undefined}
         aria-selected={isSelected}
         data-selected={isSelected}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = 'move';
+          if (!isDragOver) setIsDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(false);
+          const docId = e.dataTransfer.getData('text/plain');
+          if (docId && onDropDocumentOnCategory) {
+            onDropDocumentOnCategory(docId, category.id);
+          }
+        }}
         onClick={() => onSelectCategory(category.id)}
+        title={`${category.name}${typeof count === 'number' ? ` (${count} văn bản)` : ''}`}
         style={{ paddingLeft: `${indentPx}px` }}
-        title={count !== undefined ? `${category.name} (${count} văn bản)` : category.name}
         className={cn(
-          'tree-row group grid grid-cols-[18px_auto_minmax(0,1fr)_24px] items-center gap-x-[7px] pr-[8px] rounded-[6px] cursor-pointer transition-colors text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
+          'tree-row group grid grid-cols-[18px_auto_minmax(0,1fr)_24px] items-center gap-x-[7px] pr-[8px] rounded-[6px] cursor-pointer transition-all text-left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
           heightClass,
-          isSelected
-            ? 'bg-[#eff6ff] text-[#1d4ed8] shadow-[inset_2px_0_0_#2563eb]'
-            : 'hover:bg-slate-100/70 text-slate-800 hover:text-slate-950'
+          isDragOver && 'bg-blue-100/90 ring-2 ring-blue-500 text-blue-950 font-bold shadow-md scale-[1.02] z-20',
+          !isDragOver && isSelected && 'bg-[#eff6ff] text-[#1d4ed8] shadow-[inset_2px_0_0_#2563eb]',
+          !isDragOver && !isSelected && 'hover:bg-slate-100/70 text-slate-800 hover:text-slate-950'
         )}
       >
-        {/* Column 1: Chevron Button (18px container, 14px icon) */}
-        <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
-          {hasChildren ? (
-            <button
-              type="button"
-              onClick={(e) => onToggleExpand(category.id, e)}
-              className="w-[18px] h-[18px] flex items-center justify-center text-slate-400 hover:text-slate-700 rounded transition-colors cursor-pointer focus:outline-none"
-              aria-label={isExpanded ? `Thu gọn ${category.name}` : `Mở rộng ${category.name}`}
-            >
-              <ChevronRight
-                className={cn(
-                  'w-[14px] h-[14px] transition-transform duration-150',
-                  isExpanded && 'rotate-90 text-slate-600'
-                )}
-              />
-            </button>
-          ) : (
-            <span className="w-[18px] h-[18px] block" aria-hidden="true" />
-          )}
-        </div>
-
         {/* Column 2: Icon (17px for root) / Bullet Indicator (max 5px for sub-nodes) */}
         <div className="flex items-center justify-center shrink-0">
           {isRoot ? (
@@ -293,6 +295,7 @@ function TopicTreeNode({
                 selectedCategoryId={selectedCategoryId}
                 onToggleExpand={onToggleExpand}
                 onSelectCategory={onSelectCategory}
+                onDropDocumentOnCategory={onDropDocumentOnCategory}
               />
             );
           })}
@@ -309,6 +312,7 @@ export function CategoryTree({
   selectedDocType,
   onSelectCategory,
   onSelectDocType,
+  onDropDocumentOnCategory,
   activeCategoryCount: _activeCategoryCount,
   onCollapse,
 }: CategoryTreeProps) {
@@ -862,6 +866,7 @@ export function CategoryTree({
                   selectedCategoryId={selectedCategoryId}
                   onToggleExpand={toggleExpand}
                   onSelectCategory={handleSelectCategoryAndExpandAncestors}
+                  onDropDocumentOnCategory={onDropDocumentOnCategory}
                 />
               );
             })}

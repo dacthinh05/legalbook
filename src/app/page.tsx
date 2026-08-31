@@ -54,30 +54,6 @@ export default function MainPage() {
   const [searchInitialQuery, setSearchInitialQuery] = useState('');
   const [importModalOpen, setImportModalOpen] = useState(false);
 
-  // Post-mount synchronization for URL query parameters (?doc=... or ?cat=...)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const docParam = params.get('doc');
-    const catParam = params.get('cat');
-    if (docParam || catParam) {
-      setTimeout(() => {
-        if (docParam) setSelectedDocumentId(docParam);
-        if (catParam) setSelectedCategoryId(catParam);
-      }, 0);
-    }
-  }, []);
-
-  // User state
-  const [bookmarksRaw, setBookmarksRaw] = useLocalStorageString('lb_bookmarks', '[]');
-
-  const bookmarkedDocuments = useMemo(() => {
-    try {
-      return new Set<string>(JSON.parse(bookmarksRaw));
-    } catch {
-      return new Set<string>();
-    }
-  }, [bookmarksRaw]);
-
   // Focus Mode Memory & Toast Notification
   const [focusToast, setFocusToast] = useState<string | null>(null);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -89,6 +65,36 @@ export default function MainPage() {
       setFocusToast(null);
     }, 2500);
   }, []);
+
+  // Post-mount synchronization for URL query parameters (?doc=... or ?cat=... or ?auth_required=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const docParam = params.get('doc');
+    const catParam = params.get('cat');
+    const authRequired = params.get('auth_required');
+
+    if (authRequired) {
+      showFocusToast('Bạn cần đăng nhập tài khoản Quản trị viên để truy cập Bàn Quản trị.');
+    }
+
+    if (docParam || catParam) {
+      setTimeout(() => {
+        if (docParam) setSelectedDocumentId(docParam);
+        if (catParam) setSelectedCategoryId(catParam);
+      }, 0);
+    }
+  }, [showFocusToast]);
+
+  // User state
+  const [bookmarksRaw, setBookmarksRaw] = useLocalStorageString('lb_bookmarks', '[]');
+
+  const bookmarkedDocuments = useMemo(() => {
+    try {
+      return new Set<string>(JSON.parse(bookmarksRaw));
+    } catch {
+      return new Set<string>();
+    }
+  }, [bookmarksRaw]);
 
   const prevLayoutRef = useRef<{ sidebarOpen: boolean; listOpen: boolean }>({
     sidebarOpen: true,
@@ -286,7 +292,9 @@ export default function MainPage() {
       const [baseCatId, docType] = selectedCategoryId.split('__type__');
       const descendantIds = new Set(getDescendantCategoryIds(baseCatId, categoryData.categories));
       return allDocList.filter((d) => {
-        const links = DEMO_CATEGORY_LINKS.filter((l) => l.document_id === d.id);
+        const links = DEMO_CATEGORY_LINKS.filter(
+          (l) => l.document_id === d.id || l.document_id === d.document_number || (d.slug && l.document_id === d.slug)
+        );
         const matchesCat = links.some((l) => descendantIds.has(l.category_id));
         if (docType === 'khac') {
           return matchesCat && (d.document_type === 'khac' || d.document_type === 'huong_dan');
@@ -296,17 +304,20 @@ export default function MainPage() {
     }
     const descendantIds = new Set(getDescendantCategoryIds(selectedCategoryId, categoryData.categories));
     return allDocList.filter((d) => {
-      const links = DEMO_CATEGORY_LINKS.filter((l) => l.document_id === d.id);
+      const links = DEMO_CATEGORY_LINKS.filter(
+        (l) => l.document_id === d.id || l.document_id === d.document_number || (d.slug && l.document_id === d.slug)
+      );
       return links.some((l) => descendantIds.has(l.category_id));
     });
   }, [allDocList, selectedCategoryId, selectedDocType, categoryData.categories]);
 
   const selectedDocument = selectedDocumentId
-    ? loadedDoc?.id === selectedDocumentId
+    ? loadedDoc?.id === selectedDocumentId || loadedDoc?.document_number === selectedDocumentId || loadedDoc?.slug === selectedDocumentId
       ? loadedDoc
-      : allDocList.find((d) => d.id === selectedDocumentId) || null
+      : allDocList.find(
+          (d) => d.id === selectedDocumentId || d.document_number === selectedDocumentId || (d.slug && d.slug === selectedDocumentId)
+        ) || null
     : null;
-
   const categoryTree = useMemo(() => {
     const baseTree = categoryData.tree.length > 0 ? categoryData.tree : categoryData.categories;
     return injectVirtualSubcategories(baseTree, allDocList, DEMO_CATEGORY_LINKS);
@@ -362,7 +373,7 @@ export default function MainPage() {
     setSearchTarget(navTarget || null);
     if (typeof window !== 'undefined') {
       if (navTarget?.targetNodeId) {
-        window.history.replaceState(null, '', `#${navTarget.targetNodeId}`);
+        window.location.hash = navTarget.targetNodeId;
       } else if (window.location.hash) {
         window.history.replaceState(
           null,
@@ -373,6 +384,32 @@ export default function MainPage() {
     }
   };
 
+  const handleDropDocumentOnCategory = useCallback((docId: string, targetCategoryId: string) => {
+    const doc = allDocList.find((d) => d.id === docId);
+    if (!doc) return;
+
+    const cleanCatId = targetCategoryId.includes('__type__')
+      ? targetCategoryId.split('__type__')[0]
+      : targetCategoryId;
+
+    const targetCat = categoryData.categories.find((c) => c.id === cleanCatId);
+    const catName = targetCat ? targetCat.name : 'Danh mục mới';
+
+    const existingIndex = DEMO_CATEGORY_LINKS.findIndex((l) => l.document_id === docId);
+    if (existingIndex !== -1) {
+      DEMO_CATEGORY_LINKS[existingIndex].category_id = cleanCatId;
+    } else {
+      DEMO_CATEGORY_LINKS.push({
+        id: `link-${docId.slice(0, 8)}-${cleanCatId}`,
+        document_id: docId,
+        category_id: cleanCatId,
+        is_primary: true,
+      });
+    }
+
+    setAllDocList((prev) => [...prev]);
+    showFocusToast(`Đã chuyển văn bản "${doc.document_number || doc.title.slice(0, 25)}" sang [${catName}]`);
+  }, [allDocList, categoryData.categories, showFocusToast]);
   const handleResetHome = useCallback(() => {
     setSelectedDocumentId(null);
     setSelectedCategoryId(null);
@@ -517,6 +554,7 @@ export default function MainPage() {
               selectedDocType={selectedDocType}
               onSelectCategory={handleCategorySelect}
               onSelectDocType={handleDocTypeSelect}
+              onDropDocumentOnCategory={handleDropDocumentOnCategory}
               activeCategoryCount={categoryDocuments.length}
               onCollapse={() => setSidebarOpen(false)}
             />
@@ -528,17 +566,16 @@ export default function MainPage() {
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="hidden md:flex flex-col items-center justify-start pt-3 gap-2 w-7 h-full bg-slate-50 hover:bg-blue-50 border-r border-slate-200 hover:border-blue-300 text-slate-500 hover:text-blue-700 transition-colors cursor-pointer shrink-0 z-20 group select-none"
+            className="hidden md:flex flex-col items-center justify-start pt-3 gap-2 w-8 h-full bg-slate-50 hover:bg-blue-50 border-r border-slate-200 hover:border-blue-300 text-slate-500 hover:text-blue-700 transition-colors cursor-pointer shrink-0 z-20 group select-none"
             title="Mở cây chủ đề ( [ )"
             aria-label="Mở cây chủ đề"
           >
-            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-            <span className="[writing-mode:vertical-lr] text-[10px] font-semibold tracking-wider uppercase text-slate-600 group-hover:text-blue-700">
+            <FolderTree className="w-4 h-4 text-slate-400 group-hover:text-blue-600 shrink-0" />
+            <span className="text-[10px] font-bold [writing-mode:vertical-lr] tracking-wider uppercase text-slate-500 group-hover:text-blue-700">
               Chủ đề
             </span>
           </button>
         )}
-
         {/* Splitter 1: Between Category Sidebar & Document List */}
         {sidebarOpen && (
           <div
@@ -587,12 +624,12 @@ export default function MainPage() {
           <button
             type="button"
             onClick={() => setListOpen(true)}
-            className="hidden md:flex flex-col items-center justify-start pt-3 gap-2 w-7 h-full bg-slate-50 hover:bg-blue-50 border-r border-slate-200 hover:border-blue-300 text-slate-500 hover:text-blue-700 transition-colors cursor-pointer shrink-0 z-20 group select-none"
+            className="hidden md:flex flex-col items-center justify-start pt-3 gap-2 w-8 h-full bg-slate-50 hover:bg-blue-50 border-r border-slate-200 hover:border-blue-300 text-slate-500 hover:text-blue-700 transition-colors cursor-pointer shrink-0 z-20 group select-none"
             title="Mở danh sách văn bản ( ] )"
             aria-label="Mở danh sách văn bản"
           >
-            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-            <span className="[writing-mode:vertical-lr] text-[10px] font-semibold tracking-wider uppercase text-slate-600 group-hover:text-blue-700">
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+            <span className="text-[10px] font-bold [writing-mode:vertical-lr] tracking-wider uppercase text-slate-500 group-hover:text-blue-700">
               Danh sách
             </span>
           </button>

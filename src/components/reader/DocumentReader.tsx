@@ -885,19 +885,6 @@ export function DocumentReader({
         '--reader-background': '#f8fafc',
       } as React.CSSProperties}
     >
-      <div className="reader-workspace flex flex-1 overflow-hidden h-full">
-        {/* ── Scrollable Document Viewport (Centered Canvas) ── */}
-        <div
-          ref={viewportRef}
-          onScroll={handleScroll}
-          className={cn(
-            "reader-viewport flex-1 overflow-y-auto relative min-w-0 flex flex-col",
-            activeTab === 'banggoc' ? 'p-0 flex flex-col h-full overflow-hidden bg-slate-900/5' : ''
-          )}
-        >
-      {/* ================================================================
-          1. DOCUMENT HEADER (Standardized Spacing & Refined Actions)
-          ================================================================ */}
       <header className="px-4 sm:px-6 py-2 sm:py-2.5 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
         {/* Dòng 1: Breadcrumb + Số hiệu (trái) + Trạng thái & Actions (phải) */}
         <div className="flex items-center justify-between gap-2.5 mb-1.5 min-w-0">
@@ -1165,10 +1152,10 @@ export function DocumentReader({
       {/* ================================================================
           2. STICKY TOOLBAR (Compact 44-48px)
           ================================================================ */}
-      <div className="sticky top-0 z-20 w-full px-3.5 sm:px-6 border-b border-slate-200 bg-white flex items-center justify-between gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs">
-        <div className="flex items-center gap-1.5 py-1 overflow-x-auto scrollbar-none min-w-0">
+      <div className="sticky top-0 z-20 w-full px-2.5 sm:px-4 md:px-5 border-b border-slate-200 bg-white flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs overflow-x-auto no-scrollbar min-w-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 py-1 shrink-0">
           {isScrolledHeader && doc.document_number && (
-            <span className="font-mono text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/80 shrink-0 hidden sm:inline-block animate-in fade-in duration-150">
+            <span className="font-mono text-xs font-bold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/80 shrink-0 hidden sm:inline-block animate-in fade-in duration-150">
               {doc.document_number}
             </span>
           )}
@@ -1196,7 +1183,7 @@ export function DocumentReader({
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
               className={cn(
-                'px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer',
+                'px-2 sm:px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer',
                 activeTab === tab.id
                   ? 'bg-slate-100 text-blue-900 font-semibold shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1215,8 +1202,8 @@ export function DocumentReader({
         {/* Right: Search + Panels + Compact Typography Controls */}
         <div className="flex items-center gap-1 sm:gap-1.5 py-1 shrink-0 ml-auto">
           {/* Desktop in-document search */}
-          <div className="relative hidden md:flex items-center">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" />
+          <div className="relative hidden md:flex items-center shrink-0">
+            <Search className="w-3.5 h-3.5 absolute left-2 text-slate-400 pointer-events-none" />
             <input
               type="text"
               value={searchInputValue}
@@ -1224,8 +1211,8 @@ export function DocumentReader({
               onKeyDown={handleSearchKeyDown}
               placeholder="Tìm trong văn bản..."
               className={cn(
-                'pl-7 py-1 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-md text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
-                searchInputValue ? 'pr-20 w-44 lg:w-56' : 'pr-2 w-28 lg:w-36 focus:w-48'
+                'pl-6.5 py-1 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-md text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all shrink-0',
+                searchInputValue ? 'pr-16 w-32 sm:w-40 md:w-44 lg:w-52' : 'pr-2 w-20 sm:w-24 md:w-28 lg:w-32 focus:w-44'
               )}
             />
             {/* Match Navigation Controls */}
@@ -1295,7 +1282,7 @@ export function DocumentReader({
               aria-pressed={panelMode === 'ai'}
             >
               <MessageSquareText className={cn('w-3.5 h-3.5 shrink-0', panelMode === 'ai' ? 'text-white' : 'text-blue-700')} />
-              <span className="hidden sm:inline">Hỏi đáp AI</span>
+              <span className="hidden md:inline">Hỏi đáp AI</span>
             </button>
           )}
 
@@ -1347,7 +1334,7 @@ export function DocumentReader({
           )}
 
           {/* Undo / Redo Toolbar buttons */}
-          <div className="hidden sm:flex items-center bg-white border border-slate-200/90 rounded-md p-0.5 shadow-2xs">
+          <div className="hidden xl:flex items-center bg-white border border-slate-200/90 rounded-md p-0.5 shadow-2xs">
             <button
               type="button"
               onClick={executeUndo}
@@ -1563,6 +1550,19 @@ export function DocumentReader({
           </div>
         </div>
       )}
+      <div className="reader-workspace flex flex-1 overflow-hidden h-full">
+        {/* ── Scrollable Document Viewport (Centered Canvas) ── */}
+        <div
+          ref={viewportRef}
+          onScroll={handleScroll}
+          className={cn(
+            "reader-viewport flex-1 overflow-y-auto relative min-w-0 flex flex-col",
+            activeTab === 'banggoc' ? 'p-0 flex flex-col h-full overflow-hidden bg-slate-900/5' : ''
+          )}
+        >
+      {/* ================================================================
+          1. DOCUMENT HEADER (Standardized Spacing & Refined Actions)
+          ================================================================ */}
 
           {/* ── TAB: NOIDUNG ── */}
           <div className={activeTab === 'noidung' ? 'reader-canvas' : 'hidden'}>

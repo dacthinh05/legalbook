@@ -47,8 +47,11 @@ export function injectVirtualSubcategories(
   if (!allDocuments || allDocuments.length === 0) return treeNodes;
 
   const docMap = new Map<string, LegalDocument>();
-  allDocuments.forEach((d) => docMap.set(d.id, d));
-
+  allDocuments.forEach((d) => {
+    if (d.id) docMap.set(d.id, d);
+    if (d.document_number) docMap.set(d.document_number, d);
+    if (d.slug) docMap.set(d.slug, d);
+  });
   const cloneNodes = (nodes: Category[]): Category[] => {
     return nodes.map((node) => {
       const clonedNode: Category = { ...node, children: node.children ? cloneNodes(node.children) : [] };

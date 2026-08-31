@@ -5,31 +5,73 @@
 -- ============================================================
 
 -- ─── 1. Extensions ───────────────────────────────────────────────────────────
-CREATE EXTENSION IF NOT EXISTS "vector";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-CREATE EXTENSION IF NOT EXISTS "unaccent";
+CREATE EXTENSION IF NOT EXISTS "vector" WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "unaccent" WITH SCHEMA extensions;
+
+-- Ensure extensions schema is in search path
+SET search_path = public, extensions;
 
 -- ─── 2. Document Provisions (Article-Level Chunks) ───────────────────────────
 CREATE TABLE IF NOT EXISTS public.document_provisions (
     id              UUID            NOT NULL DEFAULT uuid_generate_v4(),
     document_id     UUID            NOT NULL REFERENCES public.legal_documents(id) ON DELETE CASCADE,
-    article_number  TEXT            NOT NULL,               -- e.g. "Điều 14"
-    article_title   TEXT            NOT NULL,               -- e.g. "Điều 14. Kiểm tra an toàn thông tin"
-    content         TEXT            NOT NULL,               -- Complete plain text of the article
+    article_number  TEXT,                                   -- e.g. "Điều 14"
+    article_title   TEXT,                                   -- e.g. "Điều 14. Kiểm tra an toàn thông tin"
+    content         TEXT,                                   -- Complete plain text of the article
     clause_count    INT             NOT NULL DEFAULT 1,
     chapter_num     TEXT,                                   -- e.g. "Chương II"
     chapter_title   TEXT,                                   -- e.g. "Quy định chi tiết"
-    dom_id          TEXT            NOT NULL,               -- e.g. "dieu-14" matching Reader DOM
+    dom_id          TEXT,                                   -- e.g. "dieu-14" matching Reader DOM
     search_vector   TSVECTOR,
-    embedding       VECTOR(1536),                           -- text-embedding-3-small (1536 dim)
+    embedding       extensions.VECTOR(1536),                -- text-embedding-3-small (1536 dim)
     quality_score   NUMERIC(5,2)    NOT NULL DEFAULT 1.0,
     is_verified     BOOLEAN         NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT document_provisions_pkey PRIMARY KEY (id),
-    CONSTRAINT doc_provisions_unique UNIQUE (document_id, dom_id)
+    CONSTRAINT document_provisions_pkey PRIMARY KEY (id)
 );
+
+-- Schema alignment: If document_provisions was already created by migration 008
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'article_number') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN article_number TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'article_title') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN article_title TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'content') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN content TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'clause_count') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN clause_count INT NOT NULL DEFAULT 1;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'chapter_num') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN chapter_num TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'chapter_title') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN chapter_title TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'dom_id') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN dom_id TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'search_vector') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN search_vector TSVECTOR;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'embedding') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN embedding extensions.VECTOR(1536);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'quality_score') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN quality_score NUMERIC(5,2) NOT NULL DEFAULT 1.0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'is_verified') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN is_verified BOOLEAN NOT NULL DEFAULT TRUE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'document_provisions' AND column_name = 'updated_at') THEN
+        ALTER TABLE public.document_provisions ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+    END IF;
+END $$;
 
 -- ─── 3. Search Vector Generation for Provisions ──────────────────────────────
 CREATE OR REPLACE FUNCTION public.compute_provision_search_vector()
@@ -61,23 +103,28 @@ CREATE INDEX IF NOT EXISTS idx_doc_provisions_search_vector
     ON public.document_provisions USING GIN (search_vector);
 
 CREATE INDEX IF NOT EXISTS idx_doc_provisions_trgm_title
-    ON public.document_provisions USING GIN (article_title gin_trgm_ops);
+    ON public.document_provisions USING GIN (article_title extensions.gin_trgm_ops);
 
--- HNSW Cosine similarity index for vector search
-CREATE INDEX IF NOT EXISTS idx_doc_provisions_embedding_hnsw
-    ON public.document_provisions USING hnsw (embedding vector_cosine_ops)
-    WITH (m = 16, ef_construction = 64);
+-- HNSW Cosine similarity index for vector search (if vector extension is enabled)
+DO $$ BEGIN
+    CREATE INDEX IF NOT EXISTS idx_doc_provisions_embedding_hnsw
+        ON public.document_provisions USING hnsw (embedding extensions.vector_cosine_ops)
+        WITH (m = 16, ef_construction = 64);
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'HNSW vector index could not be created directly, skipping.';
+END $$;
 
 -- ─── 5. Reciprocal Rank Fusion (RRF) Hybrid Search Stored Procedure ──────────
 CREATE OR REPLACE FUNCTION public.search_provisions_hybrid(
     query_text TEXT,
-    query_embedding VECTOR(1536) DEFAULT NULL,
+    query_embedding extensions.VECTOR(1536) DEFAULT NULL,
     match_count INT DEFAULT 15,
     filter_doc_ids UUID[] DEFAULT NULL,
     rrf_k INT DEFAULT 60
 )
 RETURNS TABLE (
-    id UUID,
+    id TEXT,
     document_id UUID,
     document_number TEXT,
     document_title TEXT,
@@ -94,6 +141,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
 AS $$
 DECLARE
     clean_query TEXT := trim(query_text);
@@ -108,7 +156,7 @@ BEGIN
     RETURN QUERY
     WITH fulltext_matches AS (
         SELECT
-            dp.id AS provision_id,
+            dp.id::TEXT AS provision_id,
             ROW_NUMBER() OVER (ORDER BY ts_rank_cd(dp.search_vector, ts_query) DESC) AS rank_ft
         FROM public.document_provisions dp
         JOIN public.legal_documents ld ON ld.id = dp.document_id
@@ -119,8 +167,8 @@ BEGIN
     ),
     vector_matches AS (
         SELECT
-            dp.id AS provision_id,
-            1.0 - (dp.embedding <=> query_embedding) AS cos_similarity,
+            dp.id::TEXT AS provision_id,
+            (1.0 - (dp.embedding <=> query_embedding))::REAL AS cos_similarity,
             ROW_NUMBER() OVER (ORDER BY dp.embedding <=> query_embedding) AS rank_vec
         FROM public.document_provisions dp
         JOIN public.legal_documents ld ON ld.id = dp.document_id
@@ -141,7 +189,7 @@ BEGIN
         FULL OUTER JOIN vector_matches vm ON ft.provision_id = vm.provision_id
     )
     SELECT
-        dp.id,
+        dp.id::TEXT,
         dp.document_id,
         ld.document_number,
         ld.title AS document_title,
@@ -150,13 +198,13 @@ BEGIN
         ld.effective_date,
         ld.status,
         dp.dom_id,
-        dp.article_number,
-        dp.article_title,
-        substring(dp.content from 1 for 350) AS content_snippet,
+        COALESCE(dp.article_number, dp.number_label),
+        COALESCE(dp.article_title, dp.heading_title),
+        substring(COALESCE(dp.content, dp.content_text) from 1 for 350) AS content_snippet,
         cs.similarity,
         cs.score_rrf AS rrf_score
     FROM combined_scores cs
-    JOIN public.document_provisions dp ON dp.id = cs.provision_id
+    JOIN public.document_provisions dp ON dp.id::TEXT = cs.provision_id
     JOIN public.legal_documents ld ON ld.id = dp.document_id
     ORDER BY cs.score_rrf DESC, ld.effective_date DESC NULLS LAST
     LIMIT match_count;

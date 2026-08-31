@@ -99,29 +99,30 @@ export function AppHeader({
       </div>
 
       {/* Center: Global Search Bar */}
-      <div className="flex-1 max-w-xl mx-auto px-2">
+      <div className="flex-1 max-w-xl mx-auto px-2 min-w-[200px] md:min-w-[280px]">
         <button
-          className="w-full flex items-center gap-2.5 px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100/80 text-slate-500 hover:text-slate-800 rounded-lg text-xs border border-slate-200/90 transition-all text-left group shadow-2xs hover:border-slate-300"
+          className="w-full min-w-0 flex items-center gap-2.5 px-3 sm:px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100/80 text-slate-500 hover:text-slate-800 rounded-lg text-xs border border-slate-200/90 transition-all text-left group shadow-2xs hover:border-slate-300 cursor-pointer"
           onClick={onSearchClick}
           title="Tìm kiếm văn bản (Ctrl+K hoặc ⌘K)"
         >
           <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors shrink-0" />
-          <span className="flex-1 truncate text-slate-500 group-hover:text-slate-700">
+          <span className="flex-1 truncate text-slate-500 group-hover:text-slate-700 min-w-0">
             Tìm số hiệu, tên luật, nghị định, thông tư...
           </span>
-          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-slate-200 rounded text-[10.5px] font-mono text-slate-500 shadow-2xs group-hover:border-slate-300">
+          <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10.5px] font-mono text-slate-500 shadow-2xs group-hover:border-slate-300 shrink-0">
             <span className="text-[11px]">⌘</span>K
           </kbd>
         </button>
       </div>
+
       {/* Right Actions */}
-      <div className="flex items-center gap-2 ml-auto shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
         {/* NotebookLM Assistant */}
         <a
           href={NOTEBOOKLM_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-md transition-all cursor-pointer shadow-2xs group"
+          className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-md transition-all cursor-pointer shadow-2xs group"
           title="Mở Sổ tay NotebookLM tổng quan pháp luật"
         >
           <BookOpen className="w-3.5 h-3.5 text-slate-600" />

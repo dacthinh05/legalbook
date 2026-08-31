@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, GripVertical } from 'lucide-react';
 import {
   cn,
   DOCUMENT_TYPE_ABBREV,
@@ -34,8 +34,14 @@ export function DocumentCard({
 
   return (
     <div
+      draggable={true}
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/plain', doc.id);
+        e.dataTransfer.setData('application/json', JSON.stringify({ id: doc.id, document_number: doc.document_number, title: doc.title }));
+        e.dataTransfer.effectAllowed = 'move';
+      }}
       className={cn(
-        'px-3 py-2.5 cursor-pointer transition-all border-b border-slate-100 relative text-left select-text group',
+        'px-3 py-2.5 cursor-grab active:cursor-grabbing transition-all border-b border-slate-100 relative text-left select-text group',
         isSelected
           ? 'bg-blue-50/90 border-l-2 border-l-blue-600'
           : 'hover:bg-slate-50/90 bg-white'
@@ -48,6 +54,9 @@ export function DocumentCard({
       {/* DÒNG 1: ĐỊNH DANH (SỐ HIỆU + TYPE) BÊN TRÁI + TRẠNG THÁI DUY NHẤT BÊN PHẢI */}
       <div className="flex items-center justify-between gap-1.5 mb-1">
         <div className="flex items-center gap-1.5 min-w-0">
+          <span title="Kéo để thả vào danh mục" className="shrink-0 flex items-center">
+            <GripVertical className="w-3 h-3 text-slate-300 group-hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
+          </span>
           {!hideTypeBadge && (
             <span
               className={cn(

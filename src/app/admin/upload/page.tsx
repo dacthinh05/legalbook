@@ -167,7 +167,11 @@ export default function AdminUploadPage() {
       prev.map((d) => (d.id === approvedDoc.id ? { ...d, extractionStatus: 'approved' } : d))
     );
 
-    setSuccessMessage(`Đã phê duyệt và lưu văn bản "${newLegalDoc.title}" vào CSDL.`);
+    if (res.isUpdatedExisting) {
+      setSuccessMessage(`Đã phát hiện văn bản cùng số hiệu (${res.data?.document_number || ''}) và CẬP NHẬT thành công vào CSDL.`);
+    } else {
+      setSuccessMessage(`Đã phê duyệt và lưu văn bản mới "${newLegalDoc.title}" vào CSDL.`);
+    }
     setReviewingDocId(null);
   };
 

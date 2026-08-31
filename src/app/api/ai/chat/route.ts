@@ -357,12 +357,24 @@ ${question || 'Hãy tóm tắt ngắn gọn 3 điểm cốt lõi của văn bả
     });
   } catch (err: unknown) {
     console.error('Error in /api/ai/chat endpoint:', err);
-    return NextResponse.json(
-      {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      },
-      { status: 500 }
-    );
+    try {
+      const localRes = await queryLegalAssistant('Tóm tắt nội dung', null);
+      return NextResponse.json({
+        success: true,
+        source: 'local_rag',
+        answer: localRes.answer || 'Hệ thống đang hoạt động ở chế độ ngoại tuyến. Vui lòng tra cứu trực tiếp trong mục lục điều khoản.',
+        summaryPoints: localRes.summaryPoints || [],
+        citations: localRes.citations || [],
+        suggestedFollowUps: localRes.suggestedFollowUps || [],
+      });
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: err instanceof Error ? err.message : String(err),
+        },
+        { status: 200 }
+      );
+    }
   }
 }

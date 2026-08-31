@@ -6,7 +6,12 @@ import { usePathname } from 'next/navigation';
 import { PacoLogo } from '@/components/common/PacoLogo';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isLoginPage = pathname === '/admin/login';
   const isVerificationPage = pathname?.startsWith('/admin/verification-queue');
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

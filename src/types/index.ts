@@ -69,6 +69,7 @@ export interface Category {
 export interface LegalDocument {
   id: string;
   title: string;
+  slug?: string | null;
   document_number: string | null;
   document_type: DocumentType;
   issuing_body: string | null;

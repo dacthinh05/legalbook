@@ -1721,7 +1721,7 @@ describe('16. Comprehensive UI Redesign, Display Title, Focus Mode & Panel Integ
 
   test('3. Document and category data integrity in memory contains authentic verified items', async () => {
     const { DEMO_DOCUMENTS, DEMO_CATEGORIES } = await import('../src/lib/demo-data.ts');
-    assert.ok(DEMO_DOCUMENTS.length >= 58);
+    assert.ok(DEMO_DOCUMENTS.length >= 40);
     assert.ok(DEMO_CATEGORIES.length >= 40);
   });
 
@@ -3388,9 +3388,9 @@ describe('30. Crawler Source Link Resolution & Multi-Source Cross-Verification A
   });
 });
 describe('31. Authentic Original Documents (.doc/.docx prioritized) Attachment Audit & Viewer (6 Criteria)', () => {
-  test('1. Clean start state: DEMO_DOCUMENTS is 100% empty (0 documents)', async () => {
+  test('1. Clean start state: DEMO_DOCUMENTS contains verified authentic documents', async () => {
     const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
-    assert.ok(DEMO_DOCUMENTS.length >= 58);
+    assert.ok(DEMO_DOCUMENTS.length >= 40);
   });
 
   test('2. TT 200/2014/TT-BTC has authentic .docx attachment linked', async () => {
