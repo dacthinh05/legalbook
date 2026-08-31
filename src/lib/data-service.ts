@@ -127,7 +127,15 @@ export function restoreAllDeletedDocuments(): void {
 export async function deleteDocument(id: string): Promise<{ success: boolean; error?: string }> {
   markDocumentAsDeleted(id);
 
-  if (isSupabaseConfigured()) {
+  if (typeof window !== 'undefined') {
+    try {
+      await fetch(`/api/admin/documents?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+    } catch (err: unknown) {
+      console.warn('API remote delete sync warning:', err);
+    }
+  } else if (isSupabaseConfigured()) {
     try {
       const supabase = createClient();
       await supabase.from('legal_documents').delete().eq('id', id);
@@ -147,7 +155,15 @@ export async function batchDeleteDocuments(ids: string[]): Promise<{ success: bo
 
   markDocumentsAsDeleted(ids);
 
-  if (isSupabaseConfigured()) {
+  if (typeof window !== 'undefined') {
+    try {
+      await fetch(`/api/admin/documents?ids=${encodeURIComponent(ids.join(','))}`, {
+        method: 'DELETE',
+      });
+    } catch (err: unknown) {
+      console.warn('API remote batch delete sync warning:', err);
+    }
+  } else if (isSupabaseConfigured()) {
     try {
       const supabase = createClient();
       await supabase.from('legal_documents').delete().in('id', ids);
@@ -259,6 +275,36 @@ export async function saveDocument(
   attachments?: FileAttachmentInput[]
 ): Promise<{ success: boolean; data?: LegalDocument; isUpdatedExisting?: boolean; error?: string }> {
   invalidateDocumentCache();
+
+  // Client-side execution: Send request to secure server API to bypass RLS policies
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/admin/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doc, attachments }),
+      });
+
+      const result = await res.json();
+      if (result.success && result.data) {
+        const saved = result.data as LegalDocument;
+        const idx = DEMO_DOCUMENTS.findIndex(
+          (d) => d.id === saved.id || (saved.document_number && d.document_number === saved.document_number)
+        );
+        if (idx >= 0) {
+          DEMO_DOCUMENTS[idx] = saved;
+        } else {
+          DEMO_DOCUMENTS.unshift(saved);
+        }
+        return { success: true, data: saved };
+      }
+      if (!result.success && result.error) {
+        return { success: false, error: result.error };
+      }
+    } catch (apiErr) {
+      console.warn('API /api/admin/documents network note:', apiErr);
+    }
+  }
 
   const isConfigured = isSupabaseConfigured();
   const isStrictProd = isStrictProductionMode();

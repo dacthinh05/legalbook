@@ -19,6 +19,7 @@ import {
   X,
   BookOpen,
   Shield,
+  Calculator,
 } from 'lucide-react';
 import { PacoLogo } from '@/components/common/PacoLogo';
 import {
@@ -42,7 +43,6 @@ interface AppHeaderProps {
   onOpenImportModal?: () => void;
   onLogoClick?: () => void;
 }
-
 export function AppHeader({
   onSearchClick,
   newUpdatesCount = 0,
@@ -57,7 +57,6 @@ export function AppHeader({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (adminMenuRef.current && !adminMenuRef.current.contains(e.target as Node)) {
@@ -129,7 +128,6 @@ export function AppHeader({
           <span className="truncate">Sổ tay NotebookLM</span>
           <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-slate-700" />
         </a>
-        {/* Admin Menu Dropdown */}
         <div className="relative" ref={adminMenuRef}>
           <button
             onClick={() => setAdminMenuOpen(!adminMenuOpen)}

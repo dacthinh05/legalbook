@@ -57,7 +57,8 @@ import type { LegalDocument, ReaderPanelMode, TocItem, DocumentRelation, Annotat
 import { ContentQualityValidator } from '@/lib/quality/content-validator';
 import { LegalHierarchyTree } from './LegalHierarchyTree';
 import { useLocalStorageNumber } from '@/lib/useLocalStorage';
-import { getDocumentRelations } from '@/lib/demo-data';
+import { getDocumentRelations, DEMO_DOCUMENTS } from '@/lib/demo-data';
+import { linkLegalCitations } from '@/lib/legal-engine/citation-linker';
 import { extractToc, scrollToTocItem, createTocObserver } from '@/lib/toc-utils';
 import { buildAnnotationFromSelection, sanitizeNoteContent } from '@/lib/annotation-engine';
 import { useAnnotations } from '@/lib/useAnnotations';
@@ -395,13 +396,14 @@ export function DocumentReader({
   }, [searchInputValue]);
 
   // ── Rendered HTML with 2-Column Administrative Letterhead & Styling ─────
+  // ── Rendered HTML with 2-Column Administrative Letterhead & Styling & Smart Citations ─────
   const renderedHtml = useMemo(() => {
     if (!effectiveHtml) return null;
     const formatted = formatLegalHtmlContent(effectiveHtml, doc);
-    const { html } = highlightHtml(formatted, debouncedSearchQuery);
+    const withCitations = linkLegalCitations(formatted, DEMO_DOCUMENTS as unknown as LegalDocument[]).html;
+    const { html } = highlightHtml(withCitations, debouncedSearchQuery);
     return html;
   }, [effectiveHtml, doc, debouncedSearchQuery]);
-
   // Track and highlight active search match in DOM
   useEffect(() => {
     if (!contentRef.current || !debouncedSearchQuery) {
@@ -1765,9 +1767,18 @@ export function DocumentReader({
                         fontSize: `var(--reader-font-size)`,
                         lineHeight: `var(--reader-line-height)`,
                       }}
-                      dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                      onClick={(e) => {
+                        const target = (e.target as HTMLElement).closest('.legal-citation-link') as HTMLElement | null;
+                        if (target) {
+                          e.preventDefault();
+                          const docId = target.getAttribute('data-doc-id');
+                          if (docId && onSelectRelatedDocument) {
+                            onSelectRelatedDocument(docId);
+                          }
+                        }
+                      }}
+                      dangerouslySetInnerHTML={{ __html: renderedHtml || '' }}
                     />
-
                     {/* Highlight layer */}
                     <HighlightLayer
                       containerRef={contentRef}
@@ -2038,6 +2049,16 @@ export function DocumentReader({
                       {/* Authentic Document Content Presentation */}
                       <div
                         className="legal-document-body prose prose-slate max-w-none text-slate-900 leading-relaxed text-sm sm:text-[15px]"
+                        onClick={(e) => {
+                          const target = (e.target as HTMLElement).closest('.legal-citation-link') as HTMLElement | null;
+                          if (target) {
+                            e.preventDefault();
+                            const docId = target.getAttribute('data-doc-id');
+                            if (docId && onSelectRelatedDocument) {
+                              onSelectRelatedDocument(docId);
+                            }
+                          }
+                        }}
                         dangerouslySetInnerHTML={{ __html: renderedHtml || '' }}
                       />
                     </div>

@@ -4,17 +4,19 @@ import { useMemo, useRef, useEffect } from 'react';
 import type { LegalDocument } from '@/types';
 import { highlightHtml } from '@/lib/sanitize';
 import { formatLegalHtmlContent } from '@/lib/legal-formatter';
+import { linkLegalCitations } from '@/lib/legal-engine/citation-linker';
+import { DEMO_DOCUMENTS } from '@/lib/demo-data';
 import { ChevronRight } from 'lucide-react';
-
 interface HTMLViewerProps {
   document: LegalDocument;
   fontSize: number;
   searchQuery: string;
   showOutline: boolean;
+  allDocuments?: LegalDocument[];
   onOutlineClose?: () => void;
   onMatchesCountChange?: (count: number) => void;
+  onNavigateToDocument?: (docId: string, targetNodeId?: string) => void;
 }
-
 interface OutlineItem {
   id: string;
   title: string;
@@ -26,10 +28,13 @@ export function HTMLViewer({
   fontSize,
   searchQuery,
   showOutline,
+  allDocuments,
   onOutlineClose,
   onMatchesCountChange,
+  onNavigateToDocument,
 }: HTMLViewerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const docCorpus = useMemo(() => allDocuments || (DEMO_DOCUMENTS as unknown as LegalDocument[]), [allDocuments]);
 
   // Extract outline from html content (H2, H3, strong Điều/Chương)
   const outline = useMemo<OutlineItem[]>(() => {
@@ -85,17 +90,18 @@ export function HTMLViewer({
     }
     
     const formatted = formatLegalHtmlContent(doc.html_content, doc);
+    const withCitations = linkLegalCitations(formatted, docCorpus).html;
 
     // Insert anchor tags to headings so outline can jump to them
     let idx = 0;
-    const htmlWithAnchors = formatted.replace(/(<h[1234][^>]*>|<p[^>]*><strong>(?:Điều|Chương|Phần)[^<]*<\/strong>)/gi, (match) => {
+    const htmlWithAnchors = withCitations.replace(/(<h[1234][^>]*>|<p[^>]*><strong>(?:Điều|Chương|Phần)[^<]*<\/strong>)/gi, (match) => {
       const anchor = `<span id="sec-${idx}" class="scroll-mt-4"></span>`;
       idx++;
       return anchor + match;
     });
 
     return highlightHtml(htmlWithAnchors, searchQuery);
-  }, [doc, searchQuery]);
+  }, [doc, searchQuery, docCorpus]);
 
   useEffect(() => {
     onMatchesCountChange?.(matchCount);
@@ -149,6 +155,17 @@ export function HTMLViewer({
       <div
         ref={contentRef}
         className="flex-1 overflow-y-auto reader-viewport"
+        onClick={(e) => {
+          const target = (e.target as HTMLElement).closest('.legal-citation-link') as HTMLElement | null;
+          if (target) {
+            e.preventDefault();
+            const docId = target.getAttribute('data-doc-id');
+            const provId = target.getAttribute('data-provision-id') || undefined;
+            if (docId && onNavigateToDocument) {
+              onNavigateToDocument(docId, provId);
+            }
+          }
+        }}
       >
         <div className="document-page">
           <div

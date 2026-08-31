@@ -517,7 +517,6 @@ export default function MainPage() {
         onOpenImportModal={() => setImportModalOpen(true)}
         onLogoClick={handleResetHome}
       />
-      {/* 2. Main 3-Column Workspace */}
       <div className="flex flex-1 overflow-hidden relative min-h-0">
         {/* Mobile drawer overlay */}
         {mobileSidebarOpen && (
@@ -798,6 +797,7 @@ export default function MainPage() {
           <span className="font-medium">{focusToast}</span>
         </div>
       )}
+
     </div>
   );
 }
