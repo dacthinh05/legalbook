@@ -19,6 +19,7 @@ async function main() {
   const { data: docs } = await supabase.from('legal_documents').select('*, files:document_files(*)').order('issued_date', { ascending: false });
   const { data: cats } = await supabase.from('categories').select('*').order('order_index');
   const { data: links } = await supabase.from('document_category_links').select('*');
+  const { data: rels } = await supabase.from('document_relations').select('*');
 
   let code = '// PACO LegalBook - Master Authentic Legal Database (Decree 30/2020 Administrative Format)\n';
   code += "import type { LegalDocument, Category, DocumentCategoryLink, DocumentRelation } from '@/types';\n\n";
@@ -26,7 +27,7 @@ async function main() {
   code += 'export const DEMO_DOCUMENTS: LegalDocument[] = ' + JSON.stringify(docs, null, 2) + ';\n\n';
   code += 'export const DEMO_DOCUMENT_CATEGORY_LINKS: DocumentCategoryLink[] = ' + JSON.stringify(links, null, 2) + ';\n\n';
   code += 'export const DEMO_CATEGORY_LINKS: DocumentCategoryLink[] = DEMO_DOCUMENT_CATEGORY_LINKS;\n\n';
-  code += 'export const DEMO_DOCUMENT_RELATIONS: DocumentRelation[] = [];\n\n';
+  code += 'export const DEMO_DOCUMENT_RELATIONS: DocumentRelation[] = ' + JSON.stringify(rels || [], null, 2) + ';\n\n';
   code += 'export const DEMO_RELATIONS: DocumentRelation[] = DEMO_DOCUMENT_RELATIONS;\n\n';
   code += `export function buildCategoryTree(categories: Category[] = DEMO_CATEGORIES) {
   const map = new Map<string, any>();
