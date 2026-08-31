@@ -25,6 +25,7 @@ async function main() {
   code += 'export const DEMO_CATEGORIES: Category[] = ' + JSON.stringify(cats, null, 2) + ';\n\n';
   code += 'export const DEMO_DOCUMENTS: LegalDocument[] = ' + JSON.stringify(docs, null, 2) + ';\n\n';
   code += 'export const DEMO_DOCUMENT_CATEGORY_LINKS: DocumentCategoryLink[] = ' + JSON.stringify(links, null, 2) + ';\n\n';
+  code += 'export const DEMO_CATEGORY_LINKS: DocumentCategoryLink[] = DEMO_DOCUMENT_CATEGORY_LINKS;\n\n';
   code += 'export const DEMO_DOCUMENT_RELATIONS: DocumentRelation[] = [];\n\n';
   code += 'export const DEMO_RELATIONS: DocumentRelation[] = DEMO_DOCUMENT_RELATIONS;\n\n';
   code += `export function buildCategoryTree(categories: Category[] = DEMO_CATEGORIES) {

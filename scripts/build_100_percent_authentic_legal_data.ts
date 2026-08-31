@@ -1420,16 +1420,21 @@ async function main() {
     }
 
     // 3. Upsert document file record
-    await supabase.from('document_files').upsert({
-      id: `file-${doc.id.slice(1)}`,
+    const fileId = `f${doc.id.slice(1)}`;
+    const { error: fileError } = await supabase.from('document_files').upsert({
+      id: fileId,
       document_id: doc.id,
       file_type: 'docx',
       file_url: fileUrl,
       original_filename: fileName,
       file_size: docxBuffer.length,
-      mime_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      is_primary: true
+      is_primary: true,
+      version: 1
     }, { onConflict: 'id' });
+
+    if (fileError) {
+      console.error(`❌ Lỗi nạp document_files ${doc.document_number}:`, fileError);
+    }
 
     // 4. Link categories
     for (const catName of doc.categories) {
