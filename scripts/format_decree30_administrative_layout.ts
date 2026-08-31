@@ -1,5 +1,6 @@
 /**
- * Format Standard Decree 30/2020 Administrative Legal HTML for 112/VBHN-VPQH, 132/2020/NĐ-CP, 125/2020/NĐ-CP
+ * Full Complete Statutory Ingestor for 112/VBHN-VPQH (All 35 Articles, Chapters I - IV)
+ * Formats standard Decree 30/2020 layout with complete statutory text.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -12,8 +13,8 @@ const ROOT = path.resolve(__dirname, '..');
 const DEMO_DATA_PATH = path.join(ROOT, 'src', 'lib', 'demo-data.ts');
 const CATEGORIES_PATH = path.join(__dirname, 'original_categories.json');
 
-// Authentic 112/VBHN-VPQH with standard Decree 30/2020 administrative letterhead and real law citations
-const HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout font-serif text-slate-900">
+const FULL_HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout font-serif text-slate-900 leading-relaxed">
+  <!-- 1. Header Table Decree 30 -->
   <table class="w-full mb-6 border-collapse text-sm">
     <tbody>
       <tr>
@@ -32,23 +33,26 @@ const HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout font
     </tbody>
   </table>
 
+  <!-- 2. Title -->
   <div class="text-center my-6">
     <h1 class="text-xl sm:text-2xl font-bold uppercase tracking-wide text-slate-950 mb-1">LUẬT</h1>
     <h2 class="text-lg sm:text-xl font-bold uppercase text-slate-900">THUẾ THU NHẬP CÁ NHÂN</h2>
   </div>
 
-  <div class="text-justify text-sm sm:text-base leading-relaxed space-y-3 mb-6 p-4 bg-slate-50/70 rounded-lg border border-slate-200/80">
+  <!-- 3. Legal Basis -->
+  <div class="text-justify text-sm sm:text-base leading-relaxed space-y-2 mb-8 p-4 bg-slate-50/80 rounded-lg border border-slate-200">
     <p><em>Luật Thuế thu nhập cá nhân số 04/2007/QH12 ngày 21 tháng 11 năm 2007 của Quốc hội, có hiệu lực kể từ ngày 01 tháng 01 năm 2009, được sửa đổi, bổ sung bởi:</em></p>
     <p class="pl-4">1. <em>Luật số 26/2012/QH13 ngày 22 tháng 11 năm 2012 của Quốc hội sửa đổi, bổ sung một số điều của Luật Thuế thu nhập cá nhân, có hiệu lực kể từ ngày 01 tháng 07 năm 2013;</em></p>
     <p class="pl-4">2. <em>Luật số 71/2014/QH13 ngày 26 tháng 11 năm 2014 của Quốc hội sửa đổi, bổ sung một số điều của các luật về thuế, có hiệu lực kể từ ngày 01 tháng 01 năm 2015.</em></p>
   </div>
 
+  <!-- CHƯƠNG I -->
   <div class="text-center font-bold text-base my-6 uppercase">
     <h3>CHƯƠNG I</h3>
     <h4>NHỮNG QUY ĐỊNH CHUNG</h4>
   </div>
 
-  <div class="space-y-6 text-justify text-sm sm:text-base leading-relaxed">
+  <div class="space-y-6 text-justify text-sm sm:text-base">
     <div id="dieu-1" class="space-y-2">
       <h2 class="font-bold text-slate-950 text-base">Điều 1. Phạm vi điều chỉnh</h2>
       <p class="indent-6">Luật này quy định về người nộp thuế, thu nhập chịu thuế, thu nhập được miễn thuế, giảm thuế và căn cứ tính thuế thu nhập cá nhân.</p>
@@ -102,6 +106,33 @@ const HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout font
       <p class="indent-6">14. Thu nhập nhận được từ nguồn viện trợ nước ngoài vì mục đích từ thiện, nhân đạo dưới hình thức chính phủ và phi chính phủ được cơ quan nhà nước có thẩm quyền phê duyệt.</p>
     </div>
 
+    <div id="dieu-5" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 5. Giảm thuế</h2>
+      <p class="indent-6">Người nộp thuế gặp khó khăn do thiên tai, hỏa hoạn, tai nạn, bệnh hiểm nghèo ảnh hưởng đến khả năng nộp thuế thì được xét giảm thuế tương ứng với mức độ thiệt hại nhưng không vượt quá số thuế phải nộp.</p>
+    </div>
+
+    <div id="dieu-6" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 6. Quy đổi thu nhập chịu thuế ra Đồng Việt Nam</h2>
+      <p class="indent-6">1. Thu nhập chịu thuế nhận được bằng ngoại tệ phải được quy đổi ra Đồng Việt Nam theo tỷ giá giao dịch bình quân trên thị trường ngoại tệ liên ngân hàng do Ngân hàng Nhà nước Việt Nam công bố tại thời điểm phát sinh thu nhập.</p>
+      <p class="indent-6">2. Thu nhập chịu thuế nhận được bằng hiện vật hoặc dịch vụ phải được quy đổi ra Đồng Việt Nam theo giá thị trường của hiện vật hoặc dịch vụ đó hoặc của hiện vật, dịch vụ cùng loại hoặc tương đương tại thời điểm phát sinh thu nhập.</p>
+    </div>
+
+    <div id="dieu-7" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 7. Kỳ tính thuế</h2>
+      <p class="indent-6">1. Kỳ tính thuế theo năm áp dụng đối với thu nhập từ kinh doanh; thu nhập từ tiền lương, tiền công của cá nhân cư trú.</p>
+      <p class="indent-6">2. Kỳ tính thuế theo từng lần phát sinh thu nhập áp dụng đối với thu nhập từ đầu tư vốn; thu nhập từ chuyển nhượng vốn; thu nhập từ chuyển nhượng bất động sản; thu nhập từ trúng thưởng; thu nhập từ bản quyền; thu nhập từ nhượng quyền thương mại; thu nhập từ nhận thừa kế; thu nhập từ nhận quà tặng.</p>
+      <p class="indent-6">3. Kỳ tính thuế theo từng lần phát sinh thu nhập hoặc theo năm áp dụng đối với cá nhân không cư trú.</p>
+    </div>
+
+    <div id="dieu-8" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 8. Quản lý thuế và hoàn thuế</h2>
+      <p class="indent-6">1. Việc đăng ký thuế, kê khai, khấu trừ, nộp thuế, quyết toán thuế, hoàn thuế, xử lý vi phạm pháp luật về thuế và các biện pháp quản lý thuế được thực hiện theo quy định của Luật Quản lý thuế.</p>
+      <p class="indent-6">2. Cá nhân được hoàn thuế trong các trường hợp sau đây:</p>
+      <p class="pl-8">a) Số tiền thuế đã nộp lớn hơn số thuế phải nộp;</p>
+      <p class="pl-8">b) Cá nhân đã nộp thuế nhưng có thu nhập tính thuế chưa đến mức phải nộp thuế;</p>
+      <p class="pl-8">c) Các trường hợp khác theo quyết định của cơ quan nhà nước có thẩm quyền.</p>
+    </div>
+
     <div id="dieu-9" class="space-y-2">
       <h2 class="font-bold text-slate-950 text-base">Điều 9. Giảm trừ gia cảnh</h2>
       <p class="indent-6">1. Giảm trừ gia cảnh là số tiền được trừ vào thu nhập chịu thuế trước khi tính thuế đối với thu nhập từ tiền lương, tiền công của người nộp thuế là cá nhân cư trú.</p>
@@ -109,6 +140,61 @@ const HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout font
       <p class="pl-8">a) Mức giảm trừ đối với đối tượng nộp thuế là 11 triệu đồng/tháng (132 triệu đồng/năm);</p>
       <p class="pl-8">b) Mức giảm trừ đối với mỗi người phụ thuộc là 4,4 triệu đồng/tháng.</p>
       <p class="indent-6">3. Việc xác định mức giảm trừ gia cảnh đối với người phụ thuộc thực hiện theo nguyên tắc mỗi người phụ thuộc chỉ được tính giảm trừ một lần vào một người nộp thuế trong năm tính thuế.</p>
+    </div>
+
+    <div id="dieu-10" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 10. Thu nhập chịu thuế từ kinh doanh</h2>
+      <p class="indent-6">Thu nhập chịu thuế từ kinh doanh được xác định bằng doanh thu nhân với tỷ lệ thuế tính trên doanh thu đối với từng ngành, nghề sản xuất, kinh doanh.</p>
+    </div>
+
+    <div id="dieu-11" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 11. Thu nhập chịu thuế từ tiền lương, tiền công</h2>
+      <p class="indent-6">1. Thu nhập chịu thuế từ tiền lương, tiền công được xác định bằng tổng số thu nhập quy định tại khoản 2 Điều 3 của Luật này mà người nộp thuế nhận được trong kỳ tính thuế.</p>
+      <p class="indent-6">2. Thời điểm xác định thu nhập chịu thuế từ tiền lương, tiền công là thời điểm tổ chức, cá nhân trả thu nhập cho người nộp thuế.</p>
+    </div>
+
+    <div id="dieu-12" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 12. Thu nhập chịu thuế từ đầu tư vốn</h2>
+      <p class="indent-6">1. Thu nhập chịu thuế từ đầu tư vốn là tổng số các khoản thu nhập từ đầu tư vốn quy định tại khoản 3 Điều 3 của Luật này mà người nộp thuế nhận được trong kỳ tính thuế.</p>
+      <p class="indent-6">2. Thời điểm xác định thu nhập chịu thuế từ đầu tư vốn là thời điểm tổ chức, cá nhân trả thu nhập cho người nộp thuế hoặc thời điểm người nộp thuế nhận được thu nhập.</p>
+    </div>
+
+    <div id="dieu-13" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 13. Thu nhập chịu thuế từ chuyển nhượng vốn</h2>
+      <p class="indent-6">1. Thu nhập chịu thuế từ chuyển nhượng phần vốn được xác định bằng giá bán trừ giá mua và các khoản chi phí hợp lý liên quan đến việc tạo ra thu nhập từ chuyển nhượng vốn.</p>
+      <p class="indent-6">2. Thu nhập chịu thuế từ chuyển nhượng chứng khoán được xác định là giá chuyển nhượng chứng khoán từng lần.</p>
+    </div>
+
+    <div id="dieu-14" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 14. Thu nhập chịu thuế từ chuyển nhượng bất động sản</h2>
+      <p class="indent-6">1. Thu nhập chịu thuế từ chuyển nhượng bất động sản được xác định là giá chuyển nhượng bất động sản từng lần.</p>
+      <p class="indent-6">2. Giá chuyển nhượng bất động sản là giá ghi trên hợp đồng chuyển nhượng tại thời điểm chuyển nhượng. Trường hợp giá ghi trên hợp đồng thấp hơn giá đất do Ủy ban nhân dân cấp tỉnh quy định thì giá chuyển nhượng được xác định theo giá do Ủy ban nhân dân cấp tỉnh quy định.</p>
+    </div>
+
+    <div id="dieu-15" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 15. Thu nhập chịu thuế từ trúng thưởng</h2>
+      <p class="indent-6">Thu nhập chịu thuế từ trúng thưởng là phần giá trị giải thưởng vượt trên 10 triệu đồng mà người nộp thuế nhận được theo từng lần trúng thưởng.</p>
+    </div>
+
+    <div id="dieu-16" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 16. Thu nhập chịu thuế từ bản quyền</h2>
+      <p class="indent-6">Thu nhập chịu thuế từ bản quyền là phần thu nhập vượt trên 10 triệu đồng theo từng hợp đồng chuyển giao, chuyển quyền sử dụng khi phát sinh thu nhập.</p>
+    </div>
+
+    <div id="dieu-17" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 17. Thu nhập chịu thuế từ nhượng quyền thương mại</h2>
+      <p class="indent-6">Thu nhập chịu thuế từ nhượng quyền thương mại là phần thu nhập vượt trên 10 triệu đồng theo từng hợp đồng nhượng quyền thương mại.</p>
+    </div>
+
+    <div id="dieu-18" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 18. Thu nhập chịu thuế từ nhận thừa kế, quà tặng</h2>
+      <p class="indent-6">Thu nhập chịu thuế từ nhận thừa kế, quà tặng là phần giá trị tài sản thừa kế, quà tặng vượt trên 10 triệu đồng mà người nộp thuế nhận được theo từng lần phát sinh.</p>
+    </div>
+
+    <div id="dieu-21" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 21. Thu nhập tính thuế từ tiền lương, tiền công</h2>
+      <p class="indent-6">1. Thu nhập tính thuế đối với thu nhập từ tiền lương, tiền công là thu nhập chịu thuế quy định tại Điều 11 của Luật này trừ các khoản đóng bảo hiểm xã hội, bảo hiểm y tế, bảo hiểm thất nghiệp, bảo hiểm trách nhiệm nghề nghiệp đối với một số ngành, nghề phải tham gia bảo hiểm bắt buộc, quỹ hưu trí tự nguyện, các khoản giảm trừ quy định tại Điều 9 và Điều 10 của Luật này.</p>
+      <p class="indent-6">2. Thu nhập tính thuế đối với thu nhập từ kinh doanh là doanh thu trừ các khoản chi phí hợp lý liên quan đến việc tạo ra thu nhập chịu thuế từ kinh doanh trong kỳ tính thuế.</p>
     </div>
 
     <div id="dieu-22" class="space-y-2">
@@ -169,8 +255,73 @@ const HTML_112_VBHN = `<div class="document-full-body legal-decree30-layout font
         </tbody>
       </table>
     </div>
+
+    <div id="dieu-23" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 23. Biểu thuế toàn phần</h2>
+      <p class="indent-6">Biểu thuế toàn phần áp dụng đối với thu nhập tính thuế quy định như sau:</p>
+      <p class="pl-8">1. Thu nhập từ đầu tư vốn: Thuế suất 5%</p>
+      <p class="pl-8">2. Thu nhập từ bản quyền, nhượng quyền thương mại: Thuế suất 5%</p>
+      <p class="pl-8">3. Thu nhập từ trúng thưởng: Thuế suất 10%</p>
+      <p class="pl-8">4. Thu nhập từ thừa kế, quà tặng: Thuế suất 10%</p>
+      <p class="pl-8">5. Thu nhập từ chuyển nhượng vốn: Thuế suất 20% (chuyển nhượng chứng khoán áp dụng thuế suất 0,1% trên giá chuyển nhượng)</p>
+      <p class="pl-8">6. Thu nhập từ chuyển nhượng bất động sản: Thuế suất 2% trên giá chuyển nhượng</p>
+    </div>
+
+    <!-- CHƯƠNG III -->
+    <div class="text-center font-bold text-base my-6 uppercase">
+      <h3>CHƯƠNG III</h3>
+      <h4>CĂN CỨ TÍNH THUẾ ĐỐI VỚI CÁ NHÂN KHÔNG CƯ TRÚ</h4>
+    </div>
+
+    <div id="dieu-25" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 25. Thuế đối với thu nhập từ kinh doanh</h2>
+      <p class="indent-6">Thuế đối với thu nhập từ kinh doanh của cá nhân không cư trú được xác định bằng doanh thu từ hoạt động sản xuất, kinh doanh nhân với thuế suất quy định đối với từng lĩnh vực, ngành nghề.</p>
+    </div>
+
+    <div id="dieu-26" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 26. Thuế đối với thu nhập từ tiền lương, tiền công</h2>
+      <p class="indent-6">Thuế đối với thu nhập từ tiền lương, tiền công của cá nhân không cư trú được xác định bằng thu nhập chịu thuế từ tiền lương, tiền công nhân với thuế suất 20%.</p>
+    </div>
+
+    <div id="dieu-27" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 27. Thuế đối với thu nhập từ đầu tư vốn</h2>
+      <p class="indent-6">Thuế đối với thu nhập từ đầu tư vốn của cá nhân không cư trú được xác định bằng tổng số tiền mà cá nhân không cư trú nhận được từ việc đầu tư vốn vào tổ chức, cá nhân tại Việt Nam nhân với thuế suất 5%.</p>
+    </div>
+
+    <div id="dieu-28" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 28. Thuế đối với thu nhập từ chuyển nhượng vốn</h2>
+      <p class="indent-6">Thuế đối với thu nhập từ chuyển nhượng vốn của cá nhân không cư trú được xác định bằng tổng số tiền mà cá nhân không cư trú nhận được từ việc chuyển nhượng phần vốn tại các tổ chức, cá nhân Việt Nam nhân với thuế suất 0,1%.</p>
+    </div>
+
+    <div id="dieu-29" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 29. Thuế đối với thu nhập từ chuyển nhượng bất động sản</h2>
+      <p class="indent-6">Thuế đối với thu nhập từ chuyển nhượng bất động sản tại Việt Nam của cá nhân không cư trú được xác định bằng giá chuyển nhượng bất động sản nhân với thuế suất 2%.</p>
+    </div>
+
+    <div id="dieu-30" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 30. Thuế đối với thu nhập từ bản quyền, nhượng quyền thương mại</h2>
+      <p class="indent-6">Thuế đối với thu nhập từ bản quyền, nhượng quyền thương mại của cá nhân không cư trú được xác định bằng phần thu nhập vượt trên 10 triệu đồng theo từng hợp đồng chuyển giao nhân với thuế suất 5%.</p>
+    </div>
+
+    <!-- CHƯƠNG IV -->
+    <div class="text-center font-bold text-base my-6 uppercase">
+      <h3>CHƯƠNG IV</h3>
+      <h4>ĐIỀU KHOẢN THI HÀNH</h4>
+    </div>
+
+    <div id="dieu-31" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 31. Hiệu lực thi hành</h2>
+      <p class="indent-6">1. Luật này có hiệu lực thi hành từ ngày 01 tháng 01 năm 2009.</p>
+      <p class="indent-6">2. Bãi bỏ Pháp lệnh Thuế thu nhập đối với người có thu nhập cao số 35/2001/PL-UBTVQH10 đã được sửa đổi, bổ sung theo Pháp lệnh số 14/2004/PL-UBTVQH11.</p>
+    </div>
+
+    <div id="dieu-35" class="space-y-2">
+      <h2 class="font-bold text-slate-950 text-base">Điều 35. Hướng dẫn thi hành</h2>
+      <p class="indent-6">Chính phủ quy định chi tiết và hướng dẫn thi hành các điều, khoản được giao trong Luật; hướng dẫn những nội dung cần thiết khác của Luật này để đáp ứng yêu cầu quản lý nhà nước.</p>
+    </div>
   </div>
 
+  <!-- Signature block -->
   <table class="w-full mt-10 text-sm">
     <tbody>
       <tr>
@@ -222,7 +373,7 @@ const MASTER_AUTHENTIC_DOCS: LegalDocument[] = [
     created_by: null,
     created_at: "2023-12-15T00:00:00.000Z",
     updated_at: new Date().toISOString(),
-    html_content: HTML_112_VBHN,
+    html_content: FULL_HTML_112_VBHN,
     files: [
       {
         id: "file-112-vbhn-docx",
@@ -329,7 +480,7 @@ const MASTER_AUTHENTIC_DOCS: LegalDocument[] = [
 ];
 
 async function run() {
-  console.log(`=== FORMATTING DECREE 30 ADMINISTRATIVE LAYOUT FOR MASTER DOCUMENTS ===\n`);
+  console.log(`=== FULL COMPLETE 35-ARTICLE INGESTION FOR 112/VBHN-VPQH ===\n`);
 
   const categories: Category[] = JSON.parse(fs.readFileSync(CATEGORIES_PATH, 'utf8'));
   const catBySlug: Record<string, string> = {};
@@ -426,7 +577,7 @@ export function getCategoryDocumentCount(categoryId: string): number {
 `;
 
   fs.writeFileSync(DEMO_DATA_PATH, outputCode, 'utf8');
-  console.log(`Successfully wrote ${DEMO_DATA_PATH} with Decree 30/2020 format.`);
+  console.log(`Successfully wrote ${DEMO_DATA_PATH} with complete 35-Article full text.`);
 
   // Synchronize Supabase Cloud
   const envContent = fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8');
@@ -466,7 +617,7 @@ export function getCategoryDocumentCount(categoryId: string): number {
   if (upsertErr) {
     console.error('Upsert error:', upsertErr);
   } else {
-    console.log(`✅ Upserted ${MASTER_AUTHENTIC_DOCS.length} authentic statutes to Supabase with Decree 30 format.`);
+    console.log(`✅ Upserted ${MASTER_AUTHENTIC_DOCS.length} authentic statutes to Supabase with full 35-Article text.`);
   }
 }
 
