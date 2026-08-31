@@ -2977,7 +2977,128 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
   }
 ];
 
-export const DEMO_DOCUMENT_CATEGORY_LINKS: DocumentCategoryLink[] = [];
+export const DEMO_DOCUMENT_CATEGORY_LINKS: DocumentCategoryLink[] = [
+  {
+    "id": "e222efd4-11ce-4c8f-ae94-0782655c07fb",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "55d48135-3632-4049-9f3e-64b1e378c603",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "760044ed-854b-49c6-872d-19ee8bb82cd4",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "9c5f7408-f4c6-4b07-875e-c029cbdd6620",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "d6f40470-4273-44fa-a013-e25d289cbce9",
+    "document_id": "3332302f-3230-4235-8f4e-1102d4350000",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "b242bf77-5979-4a84-9fc2-e0eabca7e9b5",
+    "document_id": "3332302f-3230-4235-8f4e-1102d4350000",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "d597bb07-2fca-47c4-a408-2c236697c3ea",
+    "document_id": "3332302f-3230-4235-8f4e-1102d4350000",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "8a1c0f05-5499-4e11-b871-5853dfa1dcfe",
+    "document_id": "3332302f-3230-4235-8f4e-1102d4350000",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "2999e0e4-ab7e-48c5-b97b-3e2173593bfc",
+    "document_id": "33303538-2f54-4354-8d43-530000000000",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "0595d26e-814d-4663-a09b-640cb6b655a4",
+    "document_id": "33303538-2f54-4354-8d43-530000000000",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "386e7f5b-29a3-4c2f-adc2-ce8d9e1badbb",
+    "document_id": "33303538-2f54-4354-8d43-530000000000",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "fa75347b-21ab-4ce0-acf2-df206d03573b",
+    "document_id": "33303538-2f54-4354-8d43-530000000000",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "cbd43fd0-b39e-48c6-93d9-8a3899f4904e",
+    "document_id": "31313838-2f54-4354-8d54-544b54000000",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "9690b9b3-8d4d-4ade-8007-b352ecdfd9b6",
+    "document_id": "31313838-2f54-4354-8d54-544b54000000",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "08e61ea6-7706-4b56-afad-ecffa376dada",
+    "document_id": "31313838-2f54-4354-8d54-544b54000000",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "a64ed2df-c72d-4c58-85cf-c39e1e14764c",
+    "document_id": "31313838-2f54-4354-8d54-544b54000000",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "c4f84c3d-102e-4a8c-96ff-bdd261b3a92f",
+    "document_id": "36372f32-3032-452f-8148-313500000000",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "b0129317-587d-45af-8113-460986351358",
+    "document_id": "36372f32-3032-452f-8148-313500000000",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "56a3017b-2019-4133-b478-fd573892943a",
+    "document_id": "36372f32-3032-452f-8148-313500000000",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "46f20159-56af-4ed6-9c1e-90a58b70f2b1",
+    "document_id": "36372f32-3032-452f-8148-313500000000",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  }
+];
 
 export const DEMO_CATEGORY_LINKS: DocumentCategoryLink[] = DEMO_DOCUMENT_CATEGORY_LINKS;
 
