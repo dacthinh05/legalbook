@@ -41,9 +41,10 @@ export function isSupabaseConfigured(): boolean {
  * Determines whether running in production mode without explicit demo allowance.
  */
 export function isStrictProductionMode(): boolean {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_STRICT_PROD === 'true';
-  }
+  // NEXT_PUBLIC_DEMO_MODE và NODE_ENV đều được Next.js inline tại build time,
+  // nên logic này hoạt động thống nhất cả phía client lẫn server.
+  // Fail-closed: production mặc định là strict (không dùng dữ liệu mô phỏng)
+  // trừ khi NEXT_PUBLIC_DEMO_MODE='true' được bật tường minh.
   const isProd = process.env.NODE_ENV === 'production';
   const isDemoExplicit = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
   return isProd && !isDemoExplicit;
@@ -194,6 +195,15 @@ export async function getCategories(): Promise<DataResult<{
     }
   }
 
+  // Strict production: KHÔNG bao giờ rơi về dữ liệu mô phỏng
+  if (isStrictProd) {
+    return {
+      data: { categories: [], tree: [] },
+      source: 'unavailable',
+      error: 'CSDL danh mục chính thức chưa được cấu hình.',
+    };
+  }
+
   // Return verified embedded category tree if live DB is unseeded
   return {
     data: {
@@ -312,6 +322,15 @@ export async function getDocuments(categoryId?: string | null): Promise<DataResu
         };
       }
     }
+  }
+
+  // Strict production: KHÔNG bao giờ rơi về dữ liệu mô phỏng
+  if (isStrictProd) {
+    return {
+      data: [],
+      source: 'unavailable',
+      error: 'CSDL văn bản pháp luật chính thức chưa được cấu hình.',
+    };
   }
 
   // Return verified embedded documents if live DB is unseeded (filtered by deleted IDs)

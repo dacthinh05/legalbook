@@ -75,6 +75,12 @@ export default function CrawlerAdminPage() {
 
   const handleApproveSelected = () => {
     if (selectedDocIds.size === 0) return;
+    const simulatedSelected = discoveredDocs.filter((d) => selectedDocIds.has(d.id) && d.is_simulated);
+    if (simulatedSelected.length > 0) {
+      setFeedbackMessage('⛔ Không thể phê duyệt văn bản mô phỏng (simulated) từ cron staging feed.');
+      setTimeout(() => setFeedbackMessage(null), 4000);
+      return;
+    }
     const count = selectedDocIds.size;
     setDiscoveredDocs((prev) =>
       prev.map((d) => (selectedDocIds.has(d.id) ? { ...d, is_approved: true } : d))
@@ -94,6 +100,8 @@ export default function CrawlerAdminPage() {
   };
 
   const handleApproveSingle = (docId: string) => {
+    const doc = discoveredDocs.find((d) => d.id === docId);
+    if (!doc || doc.is_simulated) return;
     setDiscoveredDocs((prev) =>
       prev.map((d) => (d.id === docId ? { ...d, is_approved: true } : d))
     );
@@ -113,33 +121,35 @@ export default function CrawlerAdminPage() {
       if (data.stagedDocs && Array.isArray(data.stagedDocs)) {
         setDiscoveredDocs((prev) => {
           const existingNums = new Set(prev.map((d) => d.document_number));
-          const newEntries: DiscoveredDoc[] = (data.stagedDocs as Array<Record<string, string>>)
-            .filter((d) => !existingNums.has(d.document_number))
+          const newEntries: DiscoveredDoc[] = (data.stagedDocs as Array<Record<string, string | boolean>>)
+            .filter((d) => !existingNums.has(String(d.document_number ?? '')))
             .map((d) => {
+              const officialSourceUrl = String(d.source_url || d.url || '');
               const safeSourceUrl = getSafeSourceUrl({
-                official_source_url: d.source_url || d.url,
-                sourceUrl: d.source_url || d.url,
-                document_number: d.document_number,
-                title: d.title,
+                official_source_url: officialSourceUrl,
+                sourceUrl: officialSourceUrl,
+                document_number: String(d.document_number || ''),
+                title: String(d.title || ''),
               });
 
               return {
-                id: d.id || `doc-${Date.now()}`,
-                source: d.source?.includes('gdt') ? ('gdt_gov' as const) : d.source?.includes('vbpl') ? ('vbpl' as const) : ('chinhphu' as const),
-                sourceName: d.source || 'Cổng pháp luật',
+                id: String(d.id || `doc-${Date.now()}`),
+                source: officialSourceUrl.includes('gdt') ? ('gdt_gov' as const) : officialSourceUrl.includes('vbpl') ? ('vbpl' as const) : ('chinhphu' as const),
+                sourceName: String(d.source || 'Cổng pháp luật'),
                 sourceUrl: safeSourceUrl,
-                document_number: d.document_number,
-                title: d.title,
-                issuing_body: d.issuing_body || 'Cơ quan có thẩm quyền',
-                issued_date: d.issued_date || '2026-01-01',
-                effective_date: d.effective_date || '2026-01-01',
+                document_number: String(d.document_number || ''),
+                title: String(d.title || ''),
+                issuing_body: String(d.issuing_body || 'Cơ quan có thẩm quyền'),
+                issued_date: String(d.issued_date || '2026-01-01'),
+                effective_date: String(d.effective_date || '2026-01-01'),
                 status: 'hieu_luc' as const,
-                domain: (d.category_name?.toLowerCase().includes('kiểm toán') ? 'audit' : d.category_name?.toLowerCase().includes('kế toán') ? 'accounting' : 'tax') as 'tax' | 'accounting' | 'audit',
-                category_name: d.category_name || 'Thuế - Kế toán',
+                domain: (String(d.category_name || '').toLowerCase().includes('kiểm toán') ? 'audit' : String(d.category_name || '').toLowerCase().includes('kế toán') ? 'accounting' : 'tax') as 'tax' | 'accounting' | 'audit',
+                category_name: String(d.category_name || 'Thuế - Kế toán'),
                 file_format: 'docx' as const,
-                summary_main: d.summary_main || '',
+                summary_main: String(d.summary_main || ''),
                 crawled_at: 'Vừa quét xong',
                 is_approved: false,
+                is_simulated: d.is_simulated === true,
               };
             });
           return [...newEntries, ...prev];

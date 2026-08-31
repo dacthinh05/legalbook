@@ -20,6 +20,8 @@ export interface DiscoveredDoc {
   summary_main: string;
   crawled_at: string;
   is_approved: boolean;
+  /** true khi văn bản chỉ là dữ liệu mô phỏng từ cron staging feed — không được approve */
+  is_simulated?: boolean;
   fallbackChain?: string[];
 }
 

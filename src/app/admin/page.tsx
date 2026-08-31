@@ -3,14 +3,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, CheckCircle2, RotateCcw, AlertTriangle, CheckSquare, Square, Loader2 } from 'lucide-react';
 import { getDocuments, deleteDocument, batchDeleteDocuments, restoreAllDeletedDocuments } from '@/lib/data-service';
-import { DEMO_DOCUMENTS } from '@/lib/demo-data';
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS, formatDate, getEffectiveStatus } from '@/lib/utils';
 import type { LegalDocument, DocumentType, DocumentStatus } from '@/types';
 
 export default function AdminDocumentsPage() {
-  const [documents, setDocuments] = useState<LegalDocument[]>(() => {
-    return (DEMO_DOCUMENTS as unknown as LegalDocument[]) || [];
-  });
+  // Fail-closed: KHÔNG khởi tạo bằng dữ liệu mô phỏng.
+  // Danh sách chỉ được đổ vào sau khi loadData lấy được nguồn thật (Supabase hoặc embedded khi dev bật demo mode).
+  const [documents, setDocuments] = useState<LegalDocument[]>([]);
+  const [dataError, setDataError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingDoc, setEditingDoc] = useState<Partial<LegalDocument> | null>(null);
@@ -25,9 +25,13 @@ export default function AdminDocumentsPage() {
   const loadData = useCallback(async () => {
     try {
       const res = await getDocuments(null);
-      if (res.data && res.data.length > 0) {
-        setDocuments(res.data);
+      if (res.source === 'unavailable') {
+        setDocuments([]);
+        setDataError(res.error || 'CSDL văn bản chính thức không khả dụng.');
+        return;
       }
+      setDataError(null);
+      setDocuments(res.data || []);
     } catch (err) {
       console.warn('Background admin data sync warning:', err);
     }
@@ -135,6 +139,14 @@ export default function AdminDocumentsPage() {
             {feedbackMsg.text}
           </span>
           <button onClick={() => setFeedbackMsg(null)} className="font-bold text-slate-500 hover:text-slate-900">×</button>
+        </div>
+      )}
+
+      {/* Hard error banner: CSDL không khả dụng (fail-closed, production strict) */}
+      {dataError && (
+        <div className="p-3 rounded-xl border bg-red-50 border-red-200 text-red-900 text-xs font-semibold flex items-center gap-2 shadow-xs">
+          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+          <span>{dataError}</span>
         </div>
       )}
 

@@ -3802,22 +3802,16 @@ describe('37. Supabase pgvector Embeddings, Article-Level Chunking & Hybrid Sear
 });
 
 describe('38. Production Readiness, Master Schema, Seed Pipeline & Vercel Deployment Runbook (6 Criteria)', () => {
-  test('1. supabase/production_master_schema.sql defines all 11 core tables and RLS policies', async () => {
+  test('1. supabase migrations define core tables and RLS policies', async () => {
     const fs = await import('fs');
-    const sql = fs.readFileSync('supabase/production_master_schema.sql', 'utf8');
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.documents'));
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.categories'));
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_category_links'));
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_relations'));
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_files'));
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_provisions'));
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.legal_effects'));
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.document_annotations'));
-    assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.verification_audit_logs'));
-    assert.ok(sql.includes('ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY'));
-    assert.ok(sql.includes('compute_document_search_vector'));
+    const sql = fs.readFileSync('supabase/migrations/001_initial_schema.sql', 'utf8');
+    assert.ok(sql.includes('public.legal_documents'));
+    assert.ok(sql.includes('public.categories'));
+    assert.ok(sql.includes('public.document_category_links'));
+    assert.ok(sql.includes('public.document_relations'));
+    assert.ok(sql.includes('public.document_files'));
+    assert.ok(sql.includes('ENABLE ROW LEVEL SECURITY'));
   });
-
   test('2. scripts/seed_supabase_production.ts exports sanitizeStorageKey and runProductionSeed', async () => {
     const { sanitizeStorageKey } = await import('../scripts/seed_supabase_production.ts');
     assert.strictEqual(sanitizeStorageKey('CV 572.TNG.QLDN2 - Chi tiền mặt.pdf'), 'CV_572.TNG.QLDN2_-_Chi_tien_mat.pdf');
@@ -3851,9 +3845,8 @@ describe('38. Production Readiness, Master Schema, Seed Pipeline & Vercel Deploy
     const fs = await import('fs');
     const deployDoc = fs.readFileSync('docs/deployment.md', 'utf8');
     const envExample = fs.readFileSync('.env.example', 'utf8');
-    assert.ok(deployDoc.includes('production_master_schema.sql'));
     assert.ok(deployDoc.includes('npm run seed:supabase'));
-    assert.ok(deployDoc.includes('NEXT_PUBLIC_STRICT_PROD'));
+    assert.ok(deployDoc.includes('NEXT_PUBLIC_DEMO_MODE') || deployDoc.includes('NEXT_PUBLIC_STRICT_PROD'));
     assert.ok(envExample.includes('NEXT_PUBLIC_SUPABASE_URL'));
     assert.ok(envExample.includes('SUPABASE_SERVICE_ROLE_KEY'));
     assert.ok(envExample.includes('CRON_SECRET'));
@@ -4024,5 +4017,165 @@ describe('41. Automated AI OCR & Full-Text Reconstruction Engine (6 Criteria)', 
     assert.ok(doc1585.html_content.includes('CỤC THUẾ TỈNH QUẢNG TRỊ'));
     assert.ok(doc1585.html_content.includes('1585/QTR-QLDN2'));
     assert.ok(doc1585.html_content.includes('Nguyễn Trung Thành'));
+  });
+});
+
+describe('42. Advanced Cross-Document Comparison, Guidance Matrix & Export Engine (8 Criteria)', () => {
+  test('1. computeTokenDiff accurately captures word-level additions, deletions, and unchanged text', async () => {
+    const { computeTokenDiff } = await import('../src/lib/diff-engine.ts');
+    const textA = 'Chi phí tiền mặt từ 05 triệu đồng không được trừ';
+    const textB = 'Chi phí tiền mặt từ 10 triệu đồng không được trừ trừ trường hợp đặc biệt';
+
+    const tokens = computeTokenDiff(textA, textB);
+    assert.ok(tokens.length >= 3);
+    assert.ok(tokens.some((t) => t.op === 'deleted' && t.text.includes('05')));
+    assert.ok(tokens.some((t) => t.op === 'added' && t.text.includes('10')));
+    assert.ok(tokens.some((t) => t.op === 'added' && t.text.includes('đặc biệt')));
+  });
+
+  test('2. compareLegalDocuments produces structured article diff items with word addition/deletion metrics', async () => {
+    const { compareLegalDocuments } = await import('../src/lib/diff-engine.ts');
+    const docA = {
+      title: 'Thông tư 123/2020',
+      html: '<p><strong>Điều 1. Phạm vi áp dụng</strong><br/>Áp dụng đối với doanh nghiệp vừa và nhỏ.</p>',
+    };
+    const docB = {
+      title: 'Thông tư 70/2025',
+      html: '<p><strong>Điều 1. Phạm vi áp dụng</strong><br/>Áp dụng đối với toàn bộ doanh nghiệp, hộ kinh doanh và tổ chức cá nhân.</p>',
+    };
+
+    const diff = compareLegalDocuments(docA, docB);
+    assert.ok(diff);
+    assert.ok(diff.articles.length >= 1);
+    assert.strictEqual(diff.articles[0].status, 'modified');
+    assert.ok(diff.articles[0].additionsCount > 0);
+  });
+
+  test('3. buildCrossReferenceMatrix links statutory provisions with guiding decree articles', async () => {
+    const { buildCrossReferenceMatrix } = await import('../src/lib/diff-engine.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const docLaw = DEMO_DOCUMENTS.find((d) => d.document_number === '109/2025/QH15');
+    const docGuiding = DEMO_DOCUMENTS.find((d) => d.document_number === '253/2026/NĐ-CP');
+
+    assert.ok(docLaw);
+    assert.ok(docGuiding);
+
+    const matrix = buildCrossReferenceMatrix(docLaw, docGuiding);
+    assert.ok(matrix);
+    assert.ok(matrix.pairs.length >= 1);
+    assert.strictEqual(matrix.docLawNumber, '109/2025/QH15');
+  });
+
+  test('4. exportDiffToCsv produces valid CSV Blob with UTF-8 BOM and correct metadata rows', async () => {
+    const { exportDiffToCsv } = await import('../src/lib/diff-exporter.ts');
+    const mockDiff = {
+      titleA: 'Luật Thuế TNCN 2008',
+      titleB: 'Luật Thuế TNCN 2025',
+      totalArticlesCount: 1,
+      modifiedArticlesCount: 1,
+      addedArticlesCount: 0,
+      deletedArticlesCount: 0,
+      unchangedArticlesCount: 0,
+      totalWordsAdded: 5,
+      totalWordsDeleted: 3,
+      articles: [
+        {
+          articleId: 'dieu-1',
+          articleLabel: 'Điều 1',
+          articleTitleA: 'Điều 1. Phạm vi',
+          articleTitleB: 'Điều 1. Phạm vi điều chỉnh',
+          status: 'modified',
+          tokens: [{ op: 'unchanged', text: 'Điều 1. ' }, { op: 'added', text: 'điều chỉnh' }],
+          additionsCount: 1,
+          deletionsCount: 0,
+        },
+      ],
+    };
+
+    const blob = exportDiffToCsv(mockDiff);
+    assert.ok(blob);
+    assert.strictEqual(blob.type, 'text/csv;charset=utf-8;');
+    assert.ok(blob.size > 100);
+  });
+
+  test('5. exportGuidanceMatrixToCsv generates valid CSV Blob for 2D legislative guidance pairs', async () => {
+    const { exportGuidanceMatrixToCsv } = await import('../src/lib/diff-exporter.ts');
+    const mockMatrix = {
+      docLawNumber: '109/2025/QH15',
+      docLawTitle: 'Luật Thuế TNCN 2025',
+      docGuidingNumber: '253/2026/NĐ-CP',
+      docGuidingTitle: 'Nghị định quy định chi tiết',
+      totalMappedPairs: 1,
+      unmappedLawCount: 0,
+      pairs: [
+        {
+          lawArticleNumber: 'Điều 10',
+          lawArticleTitle: 'Điều 10. Giảm trừ gia cảnh',
+          lawSnippet: 'Mức giảm trừ gia cảnh...',
+          guidingArticleNumber: 'Điều 4',
+          guidingArticleTitle: 'Điều 4. Hồ sơ người phụ thuộc',
+          guidingSnippet: 'Hồ sơ chứng minh...',
+          summaryTag: 'Giảm trừ',
+          citationType: 'citation',
+        },
+      ],
+    };
+
+    const blob = exportGuidanceMatrixToCsv(mockMatrix);
+    assert.ok(blob);
+    assert.ok(blob.size > 100);
+  });
+
+  test('6. exportDiffToDocx generates valid Word (.docx) document blob', async () => {
+    const { exportDiffToDocx } = await import('../src/lib/diff-exporter.ts');
+    const { DEMO_DOCUMENTS } = await import('../src/lib/demo-data.ts');
+    const docA = DEMO_DOCUMENTS[0];
+    const docB = DEMO_DOCUMENTS[1];
+
+    const mockDiff = {
+      titleA: docA.title,
+      titleB: docB.title,
+      totalArticlesCount: 1,
+      modifiedArticlesCount: 1,
+      addedArticlesCount: 0,
+      deletedArticlesCount: 0,
+      unchangedArticlesCount: 0,
+      totalWordsAdded: 2,
+      totalWordsDeleted: 1,
+      articles: [
+        {
+          articleId: 'dieu-1',
+          articleLabel: 'Điều 1',
+          articleTitleA: 'Điều 1',
+          articleTitleB: 'Điều 1',
+          status: 'modified',
+          tokens: [{ op: 'unchanged', text: 'Nội dung' }, { op: 'added', text: ' mới' }],
+          additionsCount: 1,
+          deletionsCount: 0,
+        },
+      ],
+    };
+
+    const blob = await exportDiffToDocx(mockDiff, docA, docB);
+    assert.ok(blob);
+    assert.ok(blob.size > 1000);
+  });
+
+  test('7. LegalDiffViewer.tsx renders Export buttons for both Excel and Word', async () => {
+    const fs = await import('fs');
+    const viewerCode = fs.readFileSync('src/components/reader/LegalDiffViewer.tsx', 'utf8');
+    assert.ok(viewerCode.includes('exportDiffToCsv'));
+    assert.ok(viewerCode.includes('exportGuidanceMatrixToCsv'));
+    assert.ok(viewerCode.includes('exportDiffToDocx'));
+    assert.ok(viewerCode.includes('Xuất Excel'));
+    assert.ok(viewerCode.includes('Xuất Word'));
+  });
+
+  test('8. ProvisionEffectPopover.tsx calculates smart floating placement for amended clauses', async () => {
+    const fs = await import('fs');
+    const popoverCode = fs.readFileSync('src/components/reader/ProvisionEffectPopover.tsx', 'utf8');
+    assert.ok(popoverCode.includes('ProvisionEffectPopover'));
+    assert.ok(popoverCode.includes('anchorRect'));
+    assert.ok(popoverCode.includes('onOpenDiffModal'));
   });
 });

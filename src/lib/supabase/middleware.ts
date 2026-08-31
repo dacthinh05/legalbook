@@ -17,6 +17,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  const pathname = request.nextUrl ? request.nextUrl.pathname : new URL(request.url).pathname;
+  const isStrictProd = process.env.NEXT_PUBLIC_STRICT_PROD === 'true';
+  const isDemoExplicit = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
   // Fast-path: Check if any Supabase session cookies exist in the request
   const allCookies = request.cookies && typeof request.cookies.getAll === 'function' ? request.cookies.getAll() : [];
   const hasAuthCookie = allCookies.some(
@@ -26,11 +30,13 @@ export async function updateSession(request: NextRequest) {
       c.name.includes('supabase')
   );
 
-  const isStrictProd = process.env.NEXT_PUBLIC_STRICT_PROD === 'true';
-  const isDemoExplicit = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-
   // If no auth cookie exists, return immediately in 0ms without external network calls
   if (!hasAuthCookie && (!isStrictProd || isDemoExplicit)) {
+    return NextResponse.next({ request });
+  }
+
+  // Fast-path for development or explicit demo mode: zero network delay on page routing
+  if (!isStrictProd || isDemoExplicit) {
     return NextResponse.next({ request });
   }
 

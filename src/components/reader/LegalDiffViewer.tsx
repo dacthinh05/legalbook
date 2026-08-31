@@ -20,16 +20,20 @@ import {
   ExternalLink,
   Scale,
   ShieldAlert,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { askLegalAi } from '@/lib/ai/legal-rag';
 import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
+import { exportDiffToCsv, exportGuidanceMatrixToCsv, exportDiffToDocx } from '@/lib/diff-exporter';
 import {
   compareLegalDocuments,
   buildCrossReferenceMatrix,
-  type LegalDocumentDiffResult,
-  type LegalCrossReferenceResult,
-  type ArticleDiffItem,
+} from '@/lib/diff-engine';
+import type {
+  LegalDocumentDiffResult,
+  LegalCrossReferenceResult,
+  ArticleDiffItem,
 } from '@/lib/diff-engine';
 import type { LegalDocument } from '@/types';
 import { verifyExactAmendmentEligibility } from '@/lib/cross-document-analysis/verifier';
@@ -240,6 +244,39 @@ export function LegalDiffViewer({
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Phân tích bằng AI</span>
             </button>
+          </div>
+
+          {/* Export Dropdown / Buttons */}
+          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (activeTab === 'matrix') {
+                  exportGuidanceMatrixToCsv(matrixResult, `Ma-tran-huong-dan-${docLaw.document_number || 'Luat'}-${docGuiding.document_number || 'ND'}.csv`);
+                } else {
+                  exportDiffToCsv(diffResult, `Bao-cao-so-sanh-${sourceDoc.document_number || 'VB1'}-${amendingDoc.document_number || 'VB2'}.csv`);
+                }
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-md transition-colors shadow-2xs cursor-pointer"
+              title="Xuất bảng đối chiếu ra tệp Excel (.csv)"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">Xuất Excel</span>
+            </button>
+
+            {activeTab === 'diff' && (
+              <button
+                type="button"
+                onClick={() => {
+                  exportDiffToDocx(diffResult, sourceDoc, amendingDoc, `Bao-cao-so-sanh-${sourceDoc.document_number || 'VB1'}-${amendingDoc.document_number || 'VB2'}.docx`);
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-md transition-colors shadow-2xs cursor-pointer"
+                title="Xuất báo cáo đối chiếu thể thức Word (.docx NĐ 30/2020)"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">Xuất Word</span>
+              </button>
+            )}
           </div>
 
           {onClose && (

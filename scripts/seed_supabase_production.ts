@@ -159,9 +159,9 @@ export async function runProductionSeed(): Promise<{
       };
     });
 
-    const { error: docErr } = await supabase.from('documents').upsert(documentsPayload, { onConflict: 'id' });
-    if (docErr) throw new Error(`Document seed error: ${docErr.message}`);
-    console.log(`✅ Seeded ${documentsPayload.length} documents.`);
+    const { error: docErr } = await supabase.from('legal_documents').upsert(documentsPayload, { onConflict: 'id' });
+    if (docErr) throw new Error(`legal_documents seed error: ${docErr.message}`);
+    console.log(`✅ Seeded ${documentsPayload.length} legal_documents.`);
 
     // ─── 4. Document Files References ────────────────────────────────────
     console.log('📎 4. Linking Document File Attachments...');
