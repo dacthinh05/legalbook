@@ -45,9 +45,8 @@ export function formatLegalHtmlContent(htmlContent: string | null | undefined, d
   let html = htmlContent.trim();
 
   // 1. Remove raw underscore / dash decorative lines that mimic physical underlines
-  html = html.replace(/_{3,}/g, '');
-  html = html.replace(/(?:^|<p[^>]*>|\s)(?:-{4,}|—{3,})(?:<\/p>|\s|$)/g, '');
-
+  html = html.replace(/_{2,}/g, '');
+  html = html.replace(/(?:^|<p[^>]*>|\s)(?:-{2,}|—{2,}|_{2,})(?:<\/p>|\s|$)/gi, '');
   // 2. Format 2-Column Administrative Letterhead (Nghị định 30/2020/NĐ-CP)
   html = formatAdministrativeMasthead(html, doc);
   // 3. Clean up empty paragraphs, repeated <br> tags and merge broken PDF paragraph splits
@@ -105,17 +104,17 @@ function formatAdministrativeMasthead(html: string, doc?: Partial<LegalDocument>
   const placeAndDate = extractedDate || (doc?.issued_date ? formatLegalDate(doc.issued_date) : '');
   const letterheadHtml = `
 <div class="document-letterhead" role="region" aria-label="Đầu văn bản hành chính">
-  <section class="letterhead-left">
+  <div class="letterhead-left">
     <p class="letterhead-agency">${agencyName.toUpperCase()}</p>
     <div class="letterhead-rule letterhead-rule-agency" aria-hidden="true"></div>
     ${docNumber ? `<p class="letterhead-number">${docNumber.startsWith('Số:') ? docNumber : 'Số: ' + docNumber}</p>` : ''}
-  </section>
-  <section class="letterhead-right">
+  </div>
+  <div class="letterhead-right">
     <p class="letterhead-motto-country">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
     <p class="letterhead-motto-slogan">Độc lập - Tự do - Hạnh phúc</p>
     <div class="letterhead-rule letterhead-rule-motto" aria-hidden="true"></div>
     ${placeAndDate ? `<p class="letterhead-date">${placeAndDate}</p>` : ''}
-  </section>
+  </div>
 </div>`;
 
   // Case A: Table-based letterhead (common in Word imports & TVPL tables)

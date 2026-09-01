@@ -1195,9 +1195,40 @@ mark.legal-effect-guides:hover {
     break-after: avoid;
     page-break-after: avoid;
   }
-
   a {
     color: #000000 !important;
     text-decoration: none !important;
   }
+}
+
+/* ============================================================
+   TVPL AUTHENTIC CITATION HYPERLINKS & PROVISION LINKS
+   ============================================================ */
+.legal-citation-link,
+a.legal-citation-link {
+  color: #0066cc !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  display: inline !important;
+}
+
+.legal-citation-link:hover,
+a.legal-citation-link:hover {
+  color: #004499 !important;
+  text-decoration: underline !important;
+}
+
+.legal-citation-badge {
+  color: #0f172a !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-weight: 500 !important;
+  display: inline !important;
 }

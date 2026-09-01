@@ -2115,51 +2115,11 @@ export function DocumentReader({
                   </div>
                 ) : hasDocx ? (
                   /* ── Official Word / Standard Document Viewer Canvas ── */
-                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-100 flex flex-col items-center">
-                    <div className="w-full max-w-4xl bg-white border border-slate-300 rounded-sm shadow-md p-6 sm:p-10 lg:p-12 mb-8">
-                      {/* Word Document Banner Header */}
-                      <div className="mb-6 p-4 bg-emerald-50/90 border border-emerald-200 rounded-lg flex items-center justify-between gap-3 flex-wrap">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-2 bg-emerald-600 text-white rounded-md shadow-xs">
-                            <FileText className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-xs sm:text-sm text-emerald-950">
-                              Bản gốc văn bản chính thức — {doc.document_number}
-                            </h3>
-                            <p className="text-[11px] text-emerald-800 mt-0.5">
-                              Chuẩn thể thức Nghị định 30/2020/NĐ-CP · Đối chiếu trực tiếp từ {doc.issuing_body || 'Cơ quan ban hành'}.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {primaryDocxUrl && (
-                            <a
-                              href={primaryDocxUrl}
-                              download={currentDocx?.original_filename || `${doc.document_number}.docx`}
-                              className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-                              title="Tải tệp .docx gốc"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              <span>Tải Word (.docx)</span>
-                            </a>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => window.print()}
-                            className="px-3.5 py-1.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-                            title="In hoặc lưu bản PDF A4 chuẩn thể thức"
-                          >
-                            <Printer className="w-3.5 h-3.5" />
-                            <span>In / Lưu PDF</span>
-                          </button>
-                        </div>
-                      </div>
-
+                  <div className="flex-1 overflow-y-auto reader-canvas bg-slate-100 flex flex-col items-center p-3 sm:p-6 lg:p-8">
+                    <div className="document-page" id="legal-printable-document">
                       {/* Authentic Document Content Presentation */}
                       <div
-                        className="legal-document-body prose prose-slate max-w-none text-slate-900 leading-relaxed text-sm sm:text-[15px]"
+                        className="document-content select-text"
                         onClick={(e) => {
                           const target = (e.target as HTMLElement).closest('.legal-citation-link') as HTMLElement | null;
                           if (target) {
