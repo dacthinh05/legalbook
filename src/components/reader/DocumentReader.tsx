@@ -1264,10 +1264,11 @@ export function DocumentReader({
         <div className="flex items-center gap-1 sm:gap-1.5 py-1 shrink-0">
           {(
             [
+              { id: 'thongtin', label: 'Tóm tắt nội dung' },
               { id: 'noidung', label: 'Nội dung' },
               {
                 id: 'banggoc',
-                label: 'Bản gốc',
+                label: 'Văn bản gốc / PDF',
                 badge: hasDocxUrl ? 'DOCX' : hasPdfUrl ? 'PDF' : undefined,
                 badgeClass: hasDocxUrl
                   ? 'text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded text-[9.5px] border border-emerald-200 font-sans font-bold'
@@ -1275,21 +1276,22 @@ export function DocumentReader({
               },
               {
                 id: 'quanhe',
-                label: 'Quan hệ',
+                label: 'Lược đồ / Quan hệ',
                 badge: relationsCount > 0 ? relationsCount : undefined,
                 badgeClass: 'text-blue-600',
               },
-              { id: 'thongtin', label: 'Tổng quan' },
             ] as const
           ).map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
               className={cn(
-                'px-2 sm:px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer',
+                'px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-t-md transition-all whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer',
                 activeTab === tab.id
-                  ? 'bg-slate-100 text-blue-900 font-semibold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? tab.id === 'noidung'
+                    ? 'bg-[#f39c12] text-white font-bold shadow-xs border-t-2 border-[#d68910]'
+                    : 'bg-slate-800 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100 font-medium'
               )}
             >
               <span>{tab.label}</span>

@@ -203,7 +203,34 @@ export function HTMLViewer({
           }
         }}
       >
-        <div className="document-page" id="legal-printable-document">
+        <div className="document-page relative" id="legal-printable-document">
+          {/* TVPL Authentic Table of Contents Quick Banner */}
+          {outline.length > 0 && (
+            <div 
+              onClick={() => {
+                if (outline[0]) scrollToSection(outline[0].id);
+              }}
+              className="tvpl-toc-bar no-print"
+              title="Bấm để xem Mục lục văn bản"
+            >
+              <div className="tvpl-toc-title">
+                <span>MỤC LỤC VĂN BẢN</span>
+              </div>
+              <span className="text-[11px] text-red-700 font-semibold hover:underline">
+                {outline.length} Điều / Mục →
+              </span>
+            </div>
+          )}
+
+          {/* TVPL Authentic Effect Seal Stamp */}
+          <div className="tvpl-effect-seal no-print hidden md:block" title="Hiệu lực: Đã biết | Tình trạng: Đã biết">
+            <div className="tvpl-effect-seal-inner">
+              <div className="tvpl-seal-status">Hiệu lực: Đã biết</div>
+              <div className="tvpl-seal-status text-[10px] text-sky-700 font-medium">Tình trạng: Đã biết</div>
+              <div className="tvpl-seal-brand">THƯ VIỆN PHÁP LUẬT</div>
+            </div>
+          </div>
+
           {/* Inline Transclusion Callout Blocks */}
           {transcludedSnippets.length > 0 && (
             <div className="mb-6 space-y-3">

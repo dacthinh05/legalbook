@@ -3291,7 +3291,7 @@ describe('29. AI Summary Redesign: Concise Legal Overview, Verified Citations & 
   test('7. DocumentReader defines native "Tổng quan" tab and embeds DocumentSummaryView', async () => {
     const fs = await import('fs');
     const readerCode = fs.readFileSync('src/components/reader/DocumentReader.tsx', 'utf8');
-    assert.ok(readerCode.includes("id: 'thongtin', label: 'Tổng quan'"));
+    assert.ok(readerCode.includes("id: 'thongtin'") && (readerCode.includes("label: 'Tổng quan'") || readerCode.includes("label: 'Tóm tắt nội dung'")));
     assert.ok(readerCode.includes('<DocumentSummaryView'));
     assert.ok(readerCode.includes('onNavigateToArticle'));
     assert.ok(readerCode.includes('toc-scroll-target'));
