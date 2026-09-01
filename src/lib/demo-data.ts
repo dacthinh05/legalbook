@@ -2413,130 +2413,889 @@ export const DEMO_DOCUMENTS: LegalDocument[] = [
 
 export const DEMO_DOCUMENT_CATEGORY_LINKS: DocumentCategoryLink[] = [
   {
-    "id": "f0000000-0000-0001-0000-400080000000",
-    "document_id": "e1232020-0000-4000-8000-000000000123",
-    "category_id": "9d224384-b33d-432e-a016-c2f0a2fd8a66",
-    "is_primary": true
-  },
-  {
-    "id": "f0000000-0000-0002-0000-400080000000",
-    "document_id": "e1232020-0000-4000-8000-000000000123",
+    "id": "5b4f2ba3-ef67-46b2-80d0-668a400304e4",
+    "document_id": "38372f32-3032-462f-8454-2d4254430000",
     "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
-    "is_primary": true
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0003-0000-400080000000",
-    "document_id": "e1232020-0000-4000-8000-000000000123",
-    "category_id": "8380fdb0-0318-42e6-aba5-263c62922d9a",
-    "is_primary": true
+    "id": "ec0ea529-888a-49d9-933c-aba81c70b6a8",
+    "document_id": "38372f32-3032-462f-8454-2d4254430000",
+    "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0004-0000-400080000000",
-    "document_id": "e1322020-0000-4000-8000-000000000132",
-    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
-    "is_primary": true
+    "id": "5f0d0c0f-df20-45b9-8cb6-fa6d563c41d4",
+    "document_id": "38372f32-3032-462f-8454-2d4254430000",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000003",
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0005-0000-400080000000",
-    "document_id": "e1322020-0000-4000-8000-000000000132",
-    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
-    "is_primary": true
-  },
-  {
-    "id": "f0000000-0000-0006-0000-400080000000",
-    "document_id": "e1322020-0000-4000-8000-000000000132",
-    "category_id": "8380fdb0-0318-42e6-aba5-263c62922d9a",
-    "is_primary": true
-  },
-  {
-    "id": "f0000000-0000-0007-0000-400080000000",
-    "document_id": "e1252020-0000-4000-8000-000000000125",
-    "category_id": "9d224384-b33d-432e-a016-c2f0a2fd8a66",
-    "is_primary": true
-  },
-  {
-    "id": "f0000000-0000-0008-0000-400080000000",
-    "document_id": "e1252020-0000-4000-8000-000000000125",
-    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
-    "is_primary": true
-  },
-  {
-    "id": "f0000000-0000-0009-0000-400080000000",
-    "document_id": "e1252020-0000-4000-8000-000000000125",
-    "category_id": "8380fdb0-0318-42e6-aba5-263c62922d9a",
-    "is_primary": true
-  },
-  {
-    "id": "f0000000-0000-0010-0000-400080000000",
-    "document_id": "e1262020-0000-4000-8000-000000000126",
-    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
-    "is_primary": true
-  },
-  {
-    "id": "f0000000-0000-0011-0000-400080000000",
-    "document_id": "e1262020-0000-4000-8000-000000000126",
-    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
-    "is_primary": true
-  },
-  {
-    "id": "f0000000-0000-0012-0000-400080000000",
-    "document_id": "e1452020-0000-4000-8000-000000000145",
+    "id": "9fb43443-6097-4ce9-8a71-7b578c0cc0f3",
+    "document_id": "e0412024-0000-4000-8000-000000000041",
     "category_id": "767ed3c1-ca2e-41dd-a1a2-08dad6e303f6",
-    "is_primary": true
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0013-0000-400080000000",
+    "id": "1c204246-314f-4d76-a09c-f8cab7761195",
+    "document_id": "e0412024-0000-4000-8000-000000000041",
+    "category_id": "727e6881-3368-42b0-a4f9-bde6cc1961ba",
+    "is_primary": false
+  },
+  {
+    "id": "a9dd5042-402b-4124-9f94-dfc986bff0bd",
+    "document_id": "e1293020-0000-4000-8000-000000001293",
+    "category_id": "a76249fc-86c7-4472-a5ed-ea606472798e",
+    "is_primary": false
+  },
+  {
+    "id": "f9f2b333-83a5-4a31-a031-db0263d53bbd",
+    "document_id": "e1293020-0000-4000-8000-000000001293",
+    "category_id": "21ee2bfd-ead9-4a8f-a4b1-b4d08fd93f58",
+    "is_primary": false
+  },
+  {
+    "id": "3fc8fa72-21ff-4c80-abfb-f45c5fa6d144",
+    "document_id": "e1293020-0000-4000-8000-000000001293",
+    "category_id": "8380fdb0-0318-42e6-aba5-263c62922d9a",
+    "is_primary": false
+  },
+  {
+    "id": "c1f2aff2-4122-4213-a70d-bb24c48ca6dc",
+    "document_id": "c4128025-0000-4000-8000-000000004128",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "868daa71-e68a-4c29-8a9c-659f4e98cda6",
+    "document_id": "c4128025-0000-4000-8000-000000004128",
+    "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
+    "is_primary": false
+  },
+  {
+    "id": "b5d5c7db-183b-44ed-b8ef-79722e8b6971",
+    "document_id": "c4128025-0000-4000-8000-000000004128",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000004",
+    "is_primary": false
+  },
+  {
+    "id": "0e0a33a3-1278-4872-97e9-63624becf4c0",
+    "document_id": "e1232020-0000-4000-8000-000000000123",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "f682c274-33ac-4f8e-a45b-ec2ccc626546",
+    "document_id": "e1232020-0000-4000-8000-000000000123",
+    "category_id": "dd67525a-0adc-427b-ac98-000822b40aa0",
+    "is_primary": false
+  },
+  {
+    "id": "d107ff47-e29d-47f1-8e42-fd7719c4ea59",
+    "document_id": "e1232020-0000-4000-8000-000000000123",
+    "category_id": "f3af6f47-f74a-49fc-ac3d-da17aefe6a1e",
+    "is_primary": false
+  },
+  {
+    "id": "ba601851-2768-4f41-a75b-9d3778c90569",
+    "document_id": "c1188025-0000-4000-8000-000000001188",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "3a2add66-b5cf-461e-a791-b5b68e71bafc",
+    "document_id": "c1188025-0000-4000-8000-000000001188",
+    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "is_primary": false
+  },
+  {
+    "id": "89b5bbaf-bfdf-4190-8e76-2a33042af06f",
+    "document_id": "c1188025-0000-4000-8000-000000001188",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "a0436488-f8e0-4b60-a289-5f07dc890a41",
+    "document_id": "c1188025-0000-4000-8000-000000001188",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "486703d5-be8a-4860-a077-f7b0491d2735",
+    "document_id": "c1188025-0000-4000-8000-000000001188",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "7f5e3f73-308d-48db-b899-ab5b31c7e99b",
+    "document_id": "c1188025-0000-4000-8000-000000001188",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000004",
+    "is_primary": false
+  },
+  {
+    "id": "271b6705-d7aa-43e6-9f0d-119036cd7b11",
+    "document_id": "e0202025-0000-4000-8000-000000000020",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "80f86945-861f-458a-9bb2-2e9420ac9786",
+    "document_id": "e0202025-0000-4000-8000-000000000020",
+    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "is_primary": false
+  },
+  {
+    "id": "848d4d64-39e2-4296-910b-c04017362c78",
+    "document_id": "e0202025-0000-4000-8000-000000000020",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "cb8c71d0-dcd1-4b68-b344-3bac3a0918b8",
+    "document_id": "e0202025-0000-4000-8000-000000000020",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "732ef086-967f-410d-a784-7a744f982d07",
+    "document_id": "e0202025-0000-4000-8000-000000000020",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "8d8bf751-8ba5-4f4c-9c18-9aae9259486f",
+    "document_id": "e0202025-0000-4000-8000-000000000020",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000002",
+    "is_primary": false
+  },
+  {
+    "id": "03f566c8-f5f7-4241-8904-46f2d352d41c",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "ec628fe5-2e96-4217-be4b-7ac05d125674",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "is_primary": false
+  },
+  {
+    "id": "e30a11eb-4e4a-4d53-8552-52f7c5f50ae7",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "44c265f4-b61a-4d5b-9c7d-a2c1adc4244e",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "9cd9a61f-a89a-41e5-ac9f-d39acb23ebb4",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "546e35ad-9ecd-4709-a841-c649c697e8d5",
+    "document_id": "e1322020-0000-4000-8000-000000000132",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000002",
+    "is_primary": false
+  },
+  {
+    "id": "3754cfb8-ad3b-48b8-b60a-6d7c952e24dc",
+    "document_id": "e1252020-0000-4000-8000-000000000125",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "19e9f495-2577-44f7-8922-ffc51d3730b9",
+    "document_id": "e1252020-0000-4000-8000-000000000125",
+    "category_id": "f3af6f47-f74a-49fc-ac3d-da17aefe6a1e",
+    "is_primary": false
+  },
+  {
+    "id": "35d7cf9c-958c-44e2-a9c1-8244586dec6e",
+    "document_id": "e1252020-0000-4000-8000-000000000125",
+    "category_id": "dd67525a-0adc-427b-ac98-000822b40aa0",
+    "is_primary": false
+  },
+  {
+    "id": "d699ffac-f323-4058-a74d-728c865dc1ea",
+    "document_id": "e0742024-0000-4000-8000-000000000074",
+    "category_id": "63d88c12-2036-41f3-a3e3-0928b141d68d",
+    "is_primary": false
+  },
+  {
+    "id": "42c07cab-3faf-48b9-9f50-18e6617ad75b",
+    "document_id": "e0742024-0000-4000-8000-000000000074",
+    "category_id": "c575615d-362b-4cb8-ac7f-014b454cd7ce",
+    "is_primary": false
+  },
+  {
+    "id": "a2805504-2228-46b5-8e43-80f4b9122a25",
     "document_id": "e0742024-0000-4000-8000-000000000074",
     "category_id": "767ed3c1-ca2e-41dd-a1a2-08dad6e303f6",
-    "is_primary": true
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0014-0000-400080000000",
+    "id": "8e1cb63f-ed4f-4de9-8913-13bb6550265f",
+    "document_id": "e1262020-0000-4000-8000-000000000126",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "8d18f3e2-e673-49ac-a9b0-eabde5b6ec22",
+    "document_id": "e1262020-0000-4000-8000-000000000126",
+    "category_id": "f3af6f47-f74a-49fc-ac3d-da17aefe6a1e",
+    "is_primary": false
+  },
+  {
+    "id": "8a620a79-2b41-4409-ab31-bffe5933aca4",
+    "document_id": "e1452020-0000-4000-8000-000000000145",
+    "category_id": "63d88c12-2036-41f3-a3e3-0928b141d68d",
+    "is_primary": false
+  },
+  {
+    "id": "752cacaa-9ee6-42fd-aba5-310eadb63175",
+    "document_id": "e1452020-0000-4000-8000-000000000145",
+    "category_id": "c575615d-362b-4cb8-ac7f-014b454cd7ce",
+    "is_primary": false
+  },
+  {
+    "id": "49eac8a7-f4ec-46ed-8dd9-a41711950de0",
+    "document_id": "c3058025-0000-4000-8000-000000003058",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "eeda9b1c-b347-4fbf-9114-7b4905602000",
+    "document_id": "c3058025-0000-4000-8000-000000003058",
+    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "is_primary": false
+  },
+  {
+    "id": "e5daf680-126d-4ac4-adb6-f3aff6ea826f",
+    "document_id": "c3058025-0000-4000-8000-000000003058",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "da84f0e2-5a55-4378-9678-f3192752fad9",
+    "document_id": "c3058025-0000-4000-8000-000000003058",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "63b109b4-415f-44bb-962f-799a394b954d",
+    "document_id": "c3058025-0000-4000-8000-000000003058",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "4ba9003d-cf23-4f67-86fe-d40d69f81fdc",
+    "document_id": "c3058025-0000-4000-8000-000000003058",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000004",
+    "is_primary": false
+  },
+  {
+    "id": "657795aa-3daa-453c-8c29-96d8009deb79",
     "document_id": "e0842016-0000-4000-8000-000000000084",
     "category_id": "a76249fc-86c7-4472-a5ed-ea606472798e",
-    "is_primary": true
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0015-0000-400080000000",
+    "id": "6027c1ac-174a-4525-bb44-94fafc96d353",
+    "document_id": "e0842016-0000-4000-8000-000000000084",
+    "category_id": "db9d0158-aa14-47d4-a3a6-f6664353ca45",
+    "is_primary": false
+  },
+  {
+    "id": "09138b93-fe09-48cc-9c6d-858f7df07491",
     "document_id": "e1152015-0000-4000-8000-000000000115",
     "category_id": "767ed3c1-ca2e-41dd-a1a2-08dad6e303f6",
-    "is_primary": true
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0016-0000-400080000000",
+    "id": "7be74483-181f-4608-af4d-39b3b36ed8b4",
+    "document_id": "e1152015-0000-4000-8000-000000000115",
+    "category_id": "e84d2704-271b-4b03-a836-25a310aeff6a",
+    "is_primary": false
+  },
+  {
+    "id": "d7568dd4-4fc2-429a-bb78-0cbb47bad259",
     "document_id": "e0012021-0000-4000-8000-000000000001",
     "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
-    "is_primary": true
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0017-0000-400080000000",
-    "document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
-    "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
-    "is_primary": true
+    "id": "c645251e-2d32-48be-8b4e-5d4d4b67d60d",
+    "document_id": "e0012021-0000-4000-8000-000000000001",
+    "category_id": "bde54a1f-1be1-4485-af7a-3f96a700c8c5",
+    "is_primary": false
   },
   {
-    "id": "f0000000-0000-0018-0000-400080000000",
+    "id": "2c1e621a-b378-4b8e-85a0-92223fa1c191",
     "document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
     "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
-    "is_primary": true
+    "is_primary": false
   },
   {
-    "id": "096351ee-ca24-4f74-a5e1-ddd7224369be",
-    "document_id": "38372f32-3032-462f-8454-2d4254430000",
+    "id": "ef20e19b-d73c-4e54-a649-7c61903d55c0",
+    "document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
     "category_id": "331e58b6-5a2f-480a-a0e8-e8b6b40bb5af",
-    "is_primary": true
+    "is_primary": false
   },
   {
-    "id": "4e80fc30-09ab-4739-99d9-4f818a06c9b9",
-    "document_id": "38372f32-3032-462f-8454-2d4254430000",
+    "id": "96c9ef52-9c4b-45f1-873c-8d0ca6971433",
+    "document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
+    "category_id": "d8f3c202-0e23-4d33-a3bc-220000000001",
+    "is_primary": false
+  },
+  {
+    "id": "59ae6b12-eb88-4f06-a746-45b1b78512f5",
+    "document_id": "e0312024-0000-4000-8000-000000000031",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "f0852e65-56d5-4c7f-90e4-2cb0faf1ac20",
+    "document_id": "e0312024-0000-4000-8000-000000000031",
+    "category_id": "51fa9dc9-d6a7-42e5-a8a4-5ae3ca72ed76",
+    "is_primary": false
+  },
+  {
+    "id": "abd0e0af-fbcf-49a7-a61c-20c22db78d18",
+    "document_id": "e0452019-0000-4000-8000-000000000045",
+    "category_id": "63d88c12-2036-41f3-a3e3-0928b141d68d",
+    "is_primary": false
+  },
+  {
+    "id": "ab54a69a-2273-42a6-8a60-3468b49222b1",
+    "document_id": "e0452019-0000-4000-8000-000000000045",
+    "category_id": "33c404b5-bcb9-4a62-a553-53a2dfeca101",
+    "is_primary": false
+  },
+  {
+    "id": "25f7eb16-e013-4b99-a329-47fc273f0e02",
+    "document_id": "e0672025-0000-4000-8000-000000000067",
     "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "abe48097-cfd9-4b41-b3a1-571d9090cda5",
+    "document_id": "e0672025-0000-4000-8000-000000000067",
+    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "is_primary": false
+  },
+  {
+    "id": "0d214486-7471-4d08-81d9-3c604d005df2",
+    "document_id": "e0672025-0000-4000-8000-000000000067",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000001",
+    "is_primary": false
+  },
+  {
+    "id": "a39e31bd-6e5c-47fc-b680-d7bd068265b5",
+    "document_id": "e0672025-0000-4000-8000-000000000067",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "8cd846f5-8d92-438d-aa76-bfce7696354d",
+    "document_id": "e0672025-0000-4000-8000-000000000067",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "b5bf4210-dfe2-41ca-a64f-6c38ae8791ae",
+    "document_id": "e0672025-0000-4000-8000-000000000067",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "76009c64-b0e6-4e19-9fa5-9535654a5d93",
+    "document_id": "e0592020-0000-4000-8000-000000000059",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "06ed5cc6-0841-4bd6-80bb-700d44a50b83",
+    "document_id": "e0592020-0000-4000-8000-000000000059",
+    "category_id": "4d95d45a-498e-41dd-a830-cecf0b0a0ef7",
+    "is_primary": false
+  },
+  {
+    "id": "8b678b6e-958f-4c68-bd5b-e83f21765bab",
+    "document_id": "e0882015-0000-4000-8000-000000000088",
+    "category_id": "8380fdb0-0318-42e6-aba5-263c62922d9a",
+    "is_primary": false
+  },
+  {
+    "id": "bf43ad9e-9c3f-4e6c-b5e3-5ba7ca53e732",
+    "document_id": "e0882015-0000-4000-8000-000000000088",
+    "category_id": "21509a18-4d0b-4f5f-a205-8d9d3f68da3d",
+    "is_primary": false
+  },
+  {
+    "id": "8d50cf92-11b6-405e-8250-859850331091",
+    "document_id": "e3202025-0000-4000-8000-000000000320",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "7d845f2d-a20f-4951-8ef8-c092f672277e",
+    "document_id": "e3202025-0000-4000-8000-000000000320",
+    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "is_primary": false
+  },
+  {
+    "id": "d04bf48f-4a4e-4050-94fb-7a498f7a6a06",
+    "document_id": "e3202025-0000-4000-8000-000000000320",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000002",
+    "is_primary": false
+  },
+  {
+    "id": "ecfa4494-13de-4560-b0ae-4c3560c05a1a",
+    "document_id": "e3202025-0000-4000-8000-000000000320",
+    "category_id": "19ac7b29-4e88-44f9-a131-e440cf372516",
+    "is_primary": false
+  },
+  {
+    "id": "e22d6f5e-5ed0-43fd-969f-e24fd01658b7",
+    "document_id": "e3202025-0000-4000-8000-000000000320",
+    "category_id": "bd0928ee-1e7f-4a11-a6fd-9cf4372137a3",
+    "is_primary": false
+  },
+  {
+    "id": "fc13b8f9-7bc4-4c8a-9308-df5bfcc2c43d",
+    "document_id": "e3202025-0000-4000-8000-000000000320",
+    "category_id": "7896aa1d-729c-4a17-ab18-1bb38c09a419",
+    "is_primary": false
+  },
+  {
+    "id": "e61a9664-abad-49cb-90d1-910efd0bb4b8",
+    "document_id": "e1812025-0000-4000-8000-000000000181",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "757bf07f-3e9f-4dd3-903b-96848766b447",
+    "document_id": "e1812025-0000-4000-8000-000000000181",
+    "category_id": "9d224384-b33d-432e-a016-c2f0a2fd8a66",
+    "is_primary": false
+  },
+  {
+    "id": "db0e4b8a-2fe1-4f6f-b9ae-3d07fe8e7578",
+    "document_id": "e1812025-0000-4000-8000-000000000181",
+    "category_id": "d19c0797-defd-4fc8-a9ef-8480b2d6c4e6",
+    "is_primary": false
+  },
+  {
+    "id": "3d411a7f-8461-4b1f-8b23-f109172d81e9",
+    "document_id": "e1742025-0000-4000-8000-000000000174",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "61888bbc-f4ad-44fa-a630-5237086075de",
+    "document_id": "e1742025-0000-4000-8000-000000000174",
+    "category_id": "9d224384-b33d-432e-a016-c2f0a2fd8a66",
+    "is_primary": false
+  },
+  {
+    "id": "03e7168d-8e8c-45aa-bc12-09221ad67f3e",
+    "document_id": "e1742025-0000-4000-8000-000000000174",
+    "category_id": "d19c0797-defd-4fc8-a9ef-8480b2d6c4e6",
+    "is_primary": false
+  },
+  {
+    "id": "673f766a-3f0b-4db6-8d4d-6de31d03326b",
+    "document_id": "e0702025-0000-4000-8000-000000000070",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "dfcddcd7-d8f7-4c97-b252-9401b6f1f07c",
+    "document_id": "e0702025-0000-4000-8000-000000000070",
+    "category_id": "dd67525a-0adc-427b-ac98-000822b40aa0",
+    "is_primary": false
+  },
+  {
+    "id": "2dba0450-6453-4541-b234-284cb16ffbe2",
+    "document_id": "e0702025-0000-4000-8000-000000000070",
+    "category_id": "f3af6f47-f74a-49fc-ac3d-da17aefe6a1e",
+    "is_primary": false
+  },
+  {
+    "id": "dadd4218-46e2-4d5b-b75e-4cd1b0798a38",
+    "document_id": "e0992025-0000-4000-8000-000000000099",
+    "category_id": "8380fdb0-0318-42e6-aba5-263c62922d9a",
+    "is_primary": false
+  },
+  {
+    "id": "01870d41-6c1f-40d3-816f-48331dc647f5",
+    "document_id": "e0992025-0000-4000-8000-000000000099",
+    "category_id": "d803e6e0-3dd2-4ab6-a968-365603ee92df",
+    "is_primary": false
+  },
+  {
+    "id": "5a00b581-fe7f-4499-95b2-6ece2360a3f9",
+    "document_id": "e0992025-0000-4000-8000-000000000099",
+    "category_id": "9714ec18-4716-4716-ae8b-0e9e0b6b775d",
+    "is_primary": false
+  },
+  {
+    "id": "7293f3bb-5a94-42fb-8dec-7393fef150de",
+    "document_id": "e0692025-0000-4000-8000-000000000069",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "b1717d12-6627-45de-8abb-2041d891b4d6",
+    "document_id": "e0692025-0000-4000-8000-000000000069",
+    "category_id": "9d224384-b33d-432e-a016-c2f0a2fd8a66",
+    "is_primary": false
+  },
+  {
+    "id": "21c031bc-fb3f-433d-a328-9aa73fe582c3",
+    "document_id": "e0692025-0000-4000-8000-000000000069",
+    "category_id": "1c60fbd1-4aed-4ec2-a27d-bc7fe640c255",
+    "is_primary": false
+  },
+  {
+    "id": "98a82693-a4f0-4703-b2ec-c4f2e74ba6a3",
+    "document_id": "e0692025-0000-4000-8000-000000000069",
+    "category_id": "f3af6f47-f74a-49fc-ac3d-da17aefe6a1e",
+    "is_primary": false
+  },
+  {
+    "id": "042a4a6b-4eed-415e-bf80-259f91dc9a0b",
+    "document_id": "e0692025-0000-4000-8000-000000000069",
+    "category_id": "dd67525a-0adc-427b-ac98-000822b40aa0",
+    "is_primary": false
+  },
+  {
+    "id": "cdf6cca4-49a9-4435-9b18-6d4bebcfa065",
+    "document_id": "e0422026-0000-4000-8000-000000000042",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "81f880d6-05b6-4b7b-97f0-ba49975722e7",
+    "document_id": "e0422026-0000-4000-8000-000000000042",
+    "category_id": "fb501a15-6742-449b-a0eb-34d445aaa745",
+    "is_primary": false
+  },
+  {
+    "id": "998de36d-fe43-4df2-8afd-005e42d9e0c1",
+    "document_id": "e0422026-0000-4000-8000-000000000042",
+    "category_id": "c7e2b101-9f12-4c22-92ab-110000000003",
+    "is_primary": false
+  },
+  {
+    "id": "d877b168-d026-4d0f-96e4-44a6abb5a409",
+    "document_id": "e0382019-0000-4000-8000-000000000038",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "692d1944-04ab-4605-a167-a3c12bbb6b80",
+    "document_id": "e0382019-0000-4000-8000-000000000038",
+    "category_id": "f3af6f47-f74a-49fc-ac3d-da17aefe6a1e",
+    "is_primary": false
+  },
+  {
+    "id": "bd2f49f9-7797-4de4-a8d7-71cb1bcec5e5",
+    "document_id": "e0482024-0000-4000-8000-000000000048",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "99944bcf-bb42-4e29-b1e7-18feeef68d30",
+    "document_id": "e0482024-0000-4000-8000-000000000048",
+    "category_id": "9d224384-b33d-432e-a016-c2f0a2fd8a66",
+    "is_primary": false
+  },
+  {
+    "id": "81160b58-e958-4dbe-8853-e08ec82e1a57",
+    "document_id": "e0482024-0000-4000-8000-000000000048",
+    "category_id": "8ae77872-c9c3-4f81-a64e-055aade89fdf",
+    "is_primary": false
+  },
+  {
+    "id": "ac97dbe3-6710-44b2-bcbc-3065c64519df",
+    "document_id": "c1585025-0000-4000-8000-000000001585",
+    "category_id": "33d0c530-17e1-46bb-adb3-9ff5dbaf55c8",
+    "is_primary": false
+  },
+  {
+    "id": "30a95fde-3c7b-4f7f-8ca8-c103c62a360a",
+    "document_id": "c1585025-0000-4000-8000-000000001585",
+    "category_id": "9d224384-b33d-432e-a016-c2f0a2fd8a66",
+    "is_primary": false
+  },
+  {
+    "id": "c1c72d07-fdfb-45b9-8248-88fc408ea39c",
+    "document_id": "c1585025-0000-4000-8000-000000001585",
+    "category_id": "ea022de4-7597-4261-aec6-7ab5ff9131d9",
     "is_primary": false
   }
 ];
 
 export const DEMO_CATEGORY_LINKS: DocumentCategoryLink[] = DEMO_DOCUMENT_CATEGORY_LINKS;
 
-export const DEMO_DOCUMENT_RELATIONS: DocumentRelation[] = [];
+export const DEMO_DOCUMENT_RELATIONS: DocumentRelation[] = [
+  {
+    "id": "79ad0367-2d4c-4ce3-bf80-affe369600ba",
+    "source_document_id": "e3202025-0000-4000-8000-000000000320",
+    "target_document_id": "e0672025-0000-4000-8000-000000000067",
+    "relation_type": "huong_dan",
+    "notes": "Quy định chi tiết thi hành Luật Thuế TNDN 2025",
+    "created_at": "2026-09-01T00:48:30.238+00:00"
+  },
+  {
+    "id": "1fab9ebb-f3c1-4b37-b6d1-ee710814e504",
+    "source_document_id": "e1322020-0000-4000-8000-000000000132",
+    "target_document_id": "e0672025-0000-4000-8000-000000000067",
+    "relation_type": "huong_dan",
+    "notes": "Quản lý thuế đối với doanh nghiệp có giao dịch liên kết",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "44348293-87ed-4aa1-a447-e38483855ec9",
+    "source_document_id": "e0202025-0000-4000-8000-000000000020",
+    "target_document_id": "e0672025-0000-4000-8000-000000000067",
+    "relation_type": "huong_dan",
+    "notes": "Sửa đổi NĐ 132/2020 về giao dịch liên kết khi vay vốn",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "9d17231b-b9e5-4cf4-9829-2571f9d6001c",
+    "source_document_id": "e0202025-0000-4000-8000-000000000020",
+    "target_document_id": "e1322020-0000-4000-8000-000000000132",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi điểm d khoản 2 Điều 5 Nghị định 132/2020",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "6ef50100-ba5e-49c7-b872-77cf223d96f0",
+    "source_document_id": "e0422026-0000-4000-8000-000000000042",
+    "target_document_id": "e0672025-0000-4000-8000-000000000067",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn Luật Thuế TNDN 2025 và thuế tối thiểu toàn cầu",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "8f48458d-f9a2-4ec8-bb69-d84d5951e435",
+    "source_document_id": "e0422026-0000-4000-8000-000000000042",
+    "target_document_id": "e3202025-0000-4000-8000-000000000320",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn thực hiện Nghị định 320/2025/NĐ-CP",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "99fa754d-5ff9-414f-8281-052a82df84d9",
+    "source_document_id": "c3058025-0000-4000-8000-000000003058",
+    "target_document_id": "e0672025-0000-4000-8000-000000000067",
+    "relation_type": "huong_dan",
+    "notes": "Xác định quan hệ liên kết qua vay vốn và khống chế 30% EBITDA",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "b3b57cc0-ab3f-45ca-b004-1e087b129ad8",
+    "source_document_id": "c3058025-0000-4000-8000-000000003058",
+    "target_document_id": "e1322020-0000-4000-8000-000000000132",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn áp dụng Điều 16 Nghị định 132/2020",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "3348846c-ead4-462b-9137-c74821277763",
+    "source_document_id": "c1188025-0000-4000-8000-000000001188",
+    "target_document_id": "e0672025-0000-4000-8000-000000000067",
+    "relation_type": "huong_dan",
+    "notes": "Chi phí được trừ đối với khoản tài trợ giáo dục, y tế",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "8e6c6ba2-05fb-4510-a8f4-5c0e67201bea",
+    "source_document_id": "e1812025-0000-4000-8000-000000000181",
+    "target_document_id": "e0482024-0000-4000-8000-000000000048",
+    "relation_type": "huong_dan",
+    "notes": "Quy định chi tiết thi hành Luật Thuế GTGT 2024",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "ef86a2fc-f648-4103-af4d-ed85d11ac9d1",
+    "source_document_id": "e1742025-0000-4000-8000-000000000174",
+    "target_document_id": "e0482024-0000-4000-8000-000000000048",
+    "relation_type": "huong_dan",
+    "notes": "Chính sách giảm 2% thuế suất thuế GTGT năm 2025",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "61a8b894-b1bc-4bd3-a3b9-9233324793db",
+    "source_document_id": "e0692025-0000-4000-8000-000000000069",
+    "target_document_id": "e0482024-0000-4000-8000-000000000048",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết quản lý thuế và hoàn thuế GTGT điện tử",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "ad3cb3b4-dcdf-4ccc-8b29-e7b589e89370",
+    "source_document_id": "e0692025-0000-4000-8000-000000000069",
+    "target_document_id": "e1812025-0000-4000-8000-000000000181",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn hồ sơ hoàn thuế GTGT theo Nghị định 181/2025",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "29277f68-32c7-4ad9-a769-9ebb7b811f9a",
+    "source_document_id": "c1585025-0000-4000-8000-000000001585",
+    "target_document_id": "e0482024-0000-4000-8000-000000000048",
+    "relation_type": "huong_dan",
+    "notes": "Điều kiện hoàn thuế GTGT dự án đầu tư mới từ 300 triệu đồng",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "098cb64c-804c-44b4-82d6-8c268922706c",
+    "source_document_id": "c1585025-0000-4000-8000-000000001585",
+    "target_document_id": "e1812025-0000-4000-8000-000000000181",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn áp dụng Điều 9 và Điều 15 Nghị định 181/2025",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "954c32ff-6e37-4387-bf2e-7d8058109dd5",
+    "source_document_id": "38372f32-3032-462f-8454-2d4254430000",
+    "target_document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết thi hành Luật Thuế Thu nhập cá nhân",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "5125413a-95c3-42e9-9d84-493b24460acc",
+    "source_document_id": "c4128025-0000-4000-8000-000000004128",
+    "target_document_id": "60cc814d-6a97-4a30-ab03-dfc2d3d2f747",
+    "relation_type": "huong_dan",
+    "notes": "Miễn thuế TNCN làm thêm giờ, tiền ăn ca và quyết toán qua VNeID",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "21a7defb-b4ad-4c5b-bd3a-9b761693ef2c",
+    "source_document_id": "e0992025-0000-4000-8000-000000000099",
+    "target_document_id": "e0882015-0000-4000-8000-000000000088",
+    "relation_type": "huong_dan",
+    "notes": "Chế độ kế toán doanh nghiệp mới (Thay thế TT 200/2014)",
+    "created_at": "2026-09-01T00:48:30.25+00:00"
+  },
+  {
+    "id": "5ab147e1-d6cf-4ddd-a7b9-53f01aad49e6",
+    "source_document_id": "e1293020-0000-4000-8000-000000001293",
+    "target_document_id": "e0882015-0000-4000-8000-000000000088",
+    "relation_type": "huong_dan",
+    "notes": "Đơn giản hóa thủ tục hành chính trong lĩnh vực kế toán, kiểm toán",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "4fb74603-ecac-471e-8ecd-a498628afd6e",
+    "source_document_id": "e0842016-0000-4000-8000-000000000084",
+    "target_document_id": "e0882015-0000-4000-8000-000000000088",
+    "relation_type": "huong_dan",
+    "notes": "Quy định về tiêu chuẩn, điều kiện đối với kiểm toán viên",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "20094d9b-a85f-4d6f-84a3-8f00931dcddb",
+    "source_document_id": "e1232020-0000-4000-8000-000000000123",
+    "target_document_id": "e0382019-0000-4000-8000-000000000038",
+    "relation_type": "huong_dan",
+    "notes": "Quy định về hóa đơn, chứng từ điện tử",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "213924cf-5146-4aeb-bab6-90100b7775b1",
+    "source_document_id": "e0702025-0000-4000-8000-000000000070",
+    "target_document_id": "e0382019-0000-4000-8000-000000000038",
+    "relation_type": "huong_dan",
+    "notes": "Sửa đổi, bổ sung Nghị định 123/2020/NĐ-CP",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "7a2a6bdc-5f04-4fa7-8a86-2007520b373d",
+    "source_document_id": "e0702025-0000-4000-8000-000000000070",
+    "target_document_id": "e1232020-0000-4000-8000-000000000123",
+    "relation_type": "sua_doi",
+    "notes": "Sửa đổi thời điểm xuất hóa đơn xăng dầu, máy tính tiền",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "8c602f84-978d-4a21-9cd8-d59f392da4d0",
+    "source_document_id": "e1252020-0000-4000-8000-000000000125",
+    "target_document_id": "e0382019-0000-4000-8000-000000000038",
+    "relation_type": "huong_dan",
+    "notes": "Xử phạt vi phạm hành chính về thuế, hóa đơn",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "287122bb-2720-4011-b7e0-61af81915978",
+    "source_document_id": "e1262020-0000-4000-8000-000000000126",
+    "target_document_id": "e0382019-0000-4000-8000-000000000038",
+    "relation_type": "huong_dan",
+    "notes": "Quy định chi tiết thi hành Luật Quản lý thuế",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "4e70d7d1-8630-4eab-a58d-494a37cb57f1",
+    "source_document_id": "e0692025-0000-4000-8000-000000000069",
+    "target_document_id": "e0382019-0000-4000-8000-000000000038",
+    "relation_type": "huong_dan",
+    "notes": "Hướng dẫn chi tiết thi hành Luật Quản lý thuế và Nghị định 70/2025",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "271d7ab7-2b5c-44c2-8cf0-b87a125aa16a",
+    "source_document_id": "e0742024-0000-4000-8000-000000000074",
+    "target_document_id": "e0452019-0000-4000-8000-000000000045",
+    "relation_type": "huong_dan",
+    "notes": "Quy định mức lương tối thiểu vùng theo Bộ luật Lao động",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "b64e4a66-76ed-4835-93af-0b595f4855c8",
+    "source_document_id": "e0742024-0000-4000-8000-000000000074",
+    "target_document_id": "e0412024-0000-4000-8000-000000000041",
+    "relation_type": "lien_quan",
+    "notes": "Căn cứ đóng bảo hiểm xã hội bắt buộc theo lương tối thiểu",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "5508b3b5-7baf-4750-9dd4-7b753b38fb85",
+    "source_document_id": "e1452020-0000-4000-8000-000000000145",
+    "target_document_id": "e0452019-0000-4000-8000-000000000045",
+    "relation_type": "huong_dan",
+    "notes": "Quy định chi tiết và hướng dẫn thi hành một số điều của Bộ luật Lao động",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "f577882c-fef9-46bd-a28b-c451a8cff6e5",
+    "source_document_id": "e1152015-0000-4000-8000-000000000115",
+    "target_document_id": "e0412024-0000-4000-8000-000000000041",
+    "relation_type": "huong_dan",
+    "notes": "Quy định chi tiết một số điều của Luật Bảo hiểm xã hội",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  },
+  {
+    "id": "ef95a1d4-c17d-4242-a862-103f70b8921c",
+    "source_document_id": "e0012021-0000-4000-8000-000000000001",
+    "target_document_id": "e0592020-0000-4000-8000-000000000059",
+    "relation_type": "huong_dan",
+    "notes": "Quy định về đăng ký doanh nghiệp",
+    "created_at": "2026-09-01T00:48:30.251+00:00"
+  }
+];
 
 export const DEMO_RELATIONS: DocumentRelation[] = DEMO_DOCUMENT_RELATIONS;
 
