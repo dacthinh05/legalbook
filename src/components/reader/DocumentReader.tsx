@@ -936,58 +936,54 @@ export function DocumentReader({
         '--reader-background': '#f8fafc',
       } as React.CSSProperties}
     >
-      <header className="px-3.5 sm:px-5 py-1.5 sm:py-2 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
-        {/* Dòng 1: Breadcrumb + Số hiệu (trái) + Trạng thái & Actions (phải) */}
-        <div className="flex items-center justify-between gap-2.5 mb-1 min-w-0">
-          {/* Breadcrumb + Document Number + Quick Back Pill */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-600 min-w-0 truncate">
-            {/* Quick History Back Button when navigated via hyperlink */}
+      <header className="px-3.5 sm:px-4.5 py-1.5 border-b border-slate-200 bg-white shrink-0 shadow-2xs">
+        {/* Dòng 1: Breadcrumb + Số hiệu + Tiêu đề + Trạng thái (Trái) & Nút thao tác (Phải) */}
+        <div className="flex items-center justify-between gap-2.5 min-w-0">
+          {/* Trái: Back + Số hiệu + Tiêu đề + Trạng thái */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-700 min-w-0 flex-1 truncate">
+            {/* Quick History Back Button */}
             {previousDoc && onNavigateBackInHistory ? (
               <button
                 type="button"
                 onClick={onNavigateBackInHistory}
-                className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold text-blue-800 bg-blue-50/90 hover:bg-blue-100/90 border border-blue-300/80 rounded-md transition-all shadow-2xs hover:shadow-xs cursor-pointer shrink-0 animate-in fade-in slide-in-from-left-2 duration-150 group mr-1"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-bold text-blue-800 bg-blue-50/90 hover:bg-blue-100 border border-blue-200 rounded transition-all shadow-2xs cursor-pointer shrink-0 group mr-0.5"
                 title={`Quay lại: ${previousDoc.docNumber || previousDoc.title} (Alt + ←)`}
                 aria-label={`Quay lại ${previousDoc.docNumber || previousDoc.title}`}
               >
                 <ArrowLeft className="w-3.5 h-3.5 text-blue-700 group-hover:-translate-x-0.5 transition-transform shrink-0" />
-                <span className="truncate max-w-[80px] xl:max-w-[140px]">
-                  {previousDoc.docNumber || 'Quay lại'}
-                </span>
+                <span className="truncate max-w-[80px] hidden sm:inline">{previousDoc.docNumber || 'Quay lại'}</span>
               </button>
             ) : onBack ? (
               <button
                 onClick={onBack}
-                className="flex items-center gap-1 p-0.5 -ml-1 text-slate-600 hover:text-blue-900 hover:bg-slate-100 rounded transition-colors shrink-0 cursor-pointer font-medium"
-                title="Quay lại danh sách / Trang chủ"
-                aria-label="Quay lại danh sách hoặc trang chủ"
+                className="flex items-center gap-1 p-0.5 -ml-1 text-slate-500 hover:text-blue-900 rounded transition-colors shrink-0 cursor-pointer font-medium"
+                title="Quay lại danh sách"
+                aria-label="Quay lại danh sách"
               >
                 <ArrowLeft className="w-3.5 h-3.5 text-blue-700 shrink-0" />
-                <span className="hidden sm:inline text-xs font-semibold text-blue-900">Trang chủ</span>
-                <span className="text-slate-300 hidden sm:inline">/</span>
               </button>
             ) : null}
 
-            <span className="text-slate-500 font-medium truncate">{topicName || 'Pháp luật'}</span>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-600 font-semibold truncate">{DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}</span>
-            {doc.document_number && (
-              <>
-                <span className="text-slate-300">/</span>
-                <span className="font-mono text-blue-900 font-bold bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200/80 truncate">
-                  {doc.document_number}
-                </span>
-              </>
-            )}
-          </div>
+            {/* Số hiệu / Loại văn bản badge */}
+            <span className="font-mono text-blue-950 font-bold bg-blue-50/90 text-[11.5px] px-1.5 py-0.5 rounded border border-blue-200/80 shrink-0">
+              {doc.document_number || DOCUMENT_TYPE_LABELS[doc.document_type] || 'Văn bản'}
+            </span>
 
-          {/* Actions & Status Badges */}
-          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-slate-300">·</span>
+
+            {/* Tiêu đề văn bản (gọn gàng, 1 dòng có tooltip) */}
+            <h1
+              className="text-[13.5px] sm:text-[14px] font-bold text-slate-900 truncate leading-snug min-w-0"
+              title={doc.title}
+            >
+              {displayTitle}
+            </h1>
+
             {/* 1. Trạng thái pháp lý */}
             {(() => {
               const effStatus = getEffectiveStatus(doc);
               return (
-                <span className={cn('px-2 py-0.5 rounded text-[10.5px] font-semibold border shrink-0', DOCUMENT_STATUS_COLORS[effStatus])}>
+                <span className={cn('px-1.5 py-0.2 rounded text-[10px] font-semibold border shrink-0 hidden md:inline-flex', DOCUMENT_STATUS_COLORS[effStatus])}>
                   {DOCUMENT_STATUS_LABELS[effStatus]}
                 </span>
               );
@@ -997,10 +993,10 @@ export function DocumentReader({
             {(() => {
               const breakdown = getVerificationBreakdown(doc);
               return (
-                <div className="relative group shrink-0">
+                <div className="relative group shrink-0 hidden lg:inline-flex">
                   <button
                     className={cn(
-                      'px-2 py-0.5 rounded text-[10.5px] font-medium border transition-colors flex items-center gap-1 cursor-help',
+                      'px-1.5 py-0.2 rounded text-[10px] font-medium border transition-colors flex items-center gap-1 cursor-help',
                       breakdown.primaryBadge.badgeColor
                     )}
                     title={breakdown.primaryBadge.tooltip}
@@ -1008,7 +1004,7 @@ export function DocumentReader({
                     <ShieldCheck className="w-3 h-3 opacity-70" />
                     <span>{breakdown.primaryBadge.label}</span>
                   </button>
-                  <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 hidden group-hover:block group-focus-within:block text-xs space-y-2 animate-in fade-in duration-150">
+                  <div className="absolute left-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 hidden group-hover:block group-focus-within:block text-xs space-y-2 animate-in fade-in duration-150">
                     <div className="font-bold text-slate-900 border-b border-slate-100 pb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-700">
                       <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
                       Trạng thái đối chiếu dữ liệu
@@ -1032,13 +1028,15 @@ export function DocumentReader({
                 </div>
               );
             })()}
+          </div>
 
-            {/* Read status button */}
+          {/* Phải: Actions Buttons Group */}
+          <div className="flex items-center gap-1 shrink-0">
             {/* Bookmark button (Lưu văn bản) */}
             <button
               onClick={onToggleBookmark}
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border transition-colors cursor-pointer shrink-0',
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors cursor-pointer shrink-0',
                 isBookmarked
                   ? 'bg-amber-50 text-amber-800 border-amber-300 font-semibold shadow-2xs'
                   : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-50'
@@ -1047,7 +1045,7 @@ export function DocumentReader({
               aria-label={isBookmarked ? 'Bỏ lưu văn bản' : 'Lưu văn bản'}
             >
               <Bookmark className={cn('w-3.5 h-3.5', isBookmarked ? 'fill-amber-500 text-amber-600' : 'text-slate-400')} />
-              <span className="hidden xl:inline">{isBookmarked ? 'Đã lưu' : 'Lưu văn bản'}</span>
+              <span className="hidden xl:inline">{isBookmarked ? 'Đã lưu' : 'Lưu'}</span>
             </button>
 
             {/* Focus Mode action */}
@@ -1055,7 +1053,7 @@ export function DocumentReader({
               <button
                 onClick={onToggleFocusMode}
                 className={cn(
-                  'inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-medium transition-colors cursor-pointer hidden md:inline-flex shrink-0',
+                  'inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium transition-colors cursor-pointer hidden md:inline-flex shrink-0',
                   isFocusMode
                     ? 'bg-blue-700 text-white border-blue-700 font-semibold'
                     : 'text-slate-700 hover:text-slate-900 border-slate-200 bg-white hover:bg-slate-100'
@@ -1072,18 +1070,19 @@ export function DocumentReader({
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all cursor-pointer shadow-2xs group shrink-0"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all cursor-pointer shadow-2xs group shrink-0"
               title="In văn bản hoặc Lưu dưới dạng file PDF (A4 Chuẩn NĐ 30/2020)"
               aria-label="In văn bản / Lưu PDF"
             >
               <Printer className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform shrink-0" />
-              <span className="hidden 2xl:inline">Xuất PDF / In</span>
+              <span className="hidden 2xl:inline">In / Xuất PDF</span>
             </button>
+
             {/* Overflow menu */}
             <div className="relative" ref={moreMenuRef}>
               <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="p-1.5 text-slate-600 hover:text-slate-900 border border-slate-200 bg-white rounded hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1 text-slate-600 hover:text-slate-900 border border-slate-200 bg-white rounded hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Tác vụ khác"
                 aria-label="Tác vụ khác"
               >
@@ -1163,104 +1162,92 @@ export function DocumentReader({
           </div>
         </div>
 
-        {/* Dòng 2: Tiêu đề văn bản (Max 2 dòng, line-clamp-2) */}
-        <div className="py-0.5 min-w-0">
-          <h1
-            className="text-[15px] sm:text-[16px] md:text-[17px] font-bold text-slate-950 leading-snug line-clamp-2 break-words"
-            title={doc.title}
-          >
-            {displayTitle}
-          </h1>
-        </div>
-
-        {/* Dòng 3: Metadata chi tiết minh bạch */}
-        <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-slate-600 flex-wrap pt-0.5 leading-normal">
-          {doc.document_type === 'vbhn' ? (
-            <>
-              {doc.issued_date && (
-                <span className="whitespace-nowrap text-slate-700">
-                  Xác thực: <strong className="text-slate-900 font-medium">{formatDate(doc.issued_date)}</strong>
-                </span>
-              )}
-              {doc.effective_date && (
-                <>
-                  <span className="text-slate-300">·</span>
-                  <span className="whitespace-nowrap text-slate-700">
-                    Áp dụng từ: <strong className="text-slate-900 font-semibold">{formatDate(doc.effective_date)}</strong>
+        {/* Dòng 2: Metadata chi tiết (Trái) & Inline Point-In-Time Selector (Phải) */}
+        <div className="flex items-center justify-between gap-2 text-xs text-slate-600 pt-1 mt-1 border-t border-slate-100/80 min-w-0 flex-wrap">
+          {/* Metadata chips */}
+          <div className="flex items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500 flex-wrap min-w-0">
+            {doc.document_type === 'vbhn' ? (
+              <>
+                {doc.issued_date && (
+                  <span className="whitespace-nowrap text-slate-600">
+                    Xác thực: <strong className="text-slate-800 font-medium">{formatDate(doc.issued_date)}</strong>
                   </span>
-                </>
-              )}
-            </>
-          ) : doc.document_type === 'cong_van' ? (
-            <>
-              {doc.issued_date && (
-                <span className="whitespace-nowrap text-slate-700">
-                  Ban hành: <strong className="text-slate-900 font-medium">{formatDate(doc.issued_date)}</strong>
-                </span>
-              )}
-            </>
-          ) : (
-            <>
-              {doc.issued_date && (
-                <span className="whitespace-nowrap text-slate-700">
-                  Ban hành: <strong className="text-slate-900 font-medium">{formatDate(doc.issued_date)}</strong>
-                </span>
-              )}
-              {doc.effective_date && (
-                <>
-                  <span className="text-slate-300">·</span>
-                  <span className="whitespace-nowrap text-slate-700">
-                    Hiệu lực: <strong className="text-slate-900 font-semibold">{formatDate(doc.effective_date)}</strong>
+                )}
+                {doc.effective_date && (
+                  <>
+                    <span className="text-slate-300">·</span>
+                    <span className="whitespace-nowrap text-slate-600">
+                      Áp dụng: <strong className="text-slate-800 font-semibold">{formatDate(doc.effective_date)}</strong>
+                    </span>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {doc.issued_date && (
+                  <span className="whitespace-nowrap text-slate-600">
+                    Ban hành: <strong className="text-slate-800 font-medium">{formatDate(doc.issued_date)}</strong>
                   </span>
-                </>
-              )}
-            </>
-          )}
+                )}
+                {doc.effective_date && (
+                  <>
+                    <span className="text-slate-300">·</span>
+                    <span className="whitespace-nowrap text-slate-600">
+                      Hiệu lực: <strong className="text-slate-800 font-semibold">{formatDate(doc.effective_date)}</strong>
+                    </span>
+                  </>
+                )}
+              </>
+            )}
 
-          {doc.issuing_body && (
-            <>
-              <span className="text-slate-300">·</span>
-              <span className="whitespace-nowrap text-slate-700">{doc.issuing_body}</span>
-            </>
-          )}
+            {doc.issuing_body && (
+              <>
+                <span className="text-slate-300">·</span>
+                <span className="whitespace-nowrap text-slate-600 truncate max-w-[140px] sm:max-w-[200px]">{doc.issuing_body}</span>
+              </>
+            )}
 
-          {doc.signer && (
-            <>
-              <span className="text-slate-300">·</span>
-              <span className="whitespace-nowrap text-slate-600">Người ký: {doc.signer}</span>
-            </>
-          )}
+            {doc.signer && (
+              <>
+                <span className="text-slate-300">·</span>
+                <span className="whitespace-nowrap text-slate-500 hidden lg:inline">Người ký: {doc.signer}</span>
+              </>
+            )}
 
-          <span className="text-slate-300">·</span>
-          <a
-            href={tvplUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-0.5 text-blue-700 hover:text-blue-900 font-medium hover:underline ml-auto sm:ml-0"
-            title="Mở nguồn chính thức Thư Viện Pháp Luật"
-          >
-            <span>Nguồn gốc</span>
-            <ExternalLink className="w-3 h-3 text-blue-600" />
-          </a>
+            <span className="text-slate-300">·</span>
+            <a
+              href={tvplUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-0.5 text-blue-700 hover:text-blue-900 font-medium hover:underline"
+              title="Mở nguồn chính thức Thư Viện Pháp Luật"
+            >
+              <span>Nguồn gốc</span>
+              <ExternalLink className="w-2.5 h-2.5 text-blue-600" />
+            </a>
+          </div>
+
+          {/* Inline Point In Time Selector right in row 2 */}
+          {activeTab === 'noidung' && (
+            <div className="ml-auto shrink-0">
+              <PointInTimeSelector
+                issuedDate={doc.issued_date}
+                selectedDate={selectedPointInTimeDate}
+                onSelectDate={setSelectedPointInTimeDate}
+                showOverlay={showLegalEffectsOverlay}
+                onToggleShowOverlay={() => setShowLegalEffectsOverlay((prev) => !prev)}
+                activeEffectsCount={activePointInTimeStats.totalActiveEffects}
+                totalEffectsCount={documentLegalEffects.length}
+                compact
+              />
+            </div>
+          )}
         </div>
       </header>
-
-      {/* Point In Time Legal Effect Sub-bar */}
-      {activeTab === 'noidung' && (
-        <PointInTimeSelector
-          issuedDate={doc.issued_date}
-          selectedDate={selectedPointInTimeDate}
-          onSelectDate={setSelectedPointInTimeDate}
-          showOverlay={showLegalEffectsOverlay}
-          onToggleShowOverlay={() => setShowLegalEffectsOverlay((prev) => !prev)}
-          activeEffectsCount={activePointInTimeStats.totalActiveEffects}
-          totalEffectsCount={documentLegalEffects.length}
-        />
-      )}
       {/* ================================================================
           2. STICKY TOOLBAR (Compact 44-48px)
           ================================================================ */}
-      <div className="sticky top-0 z-20 w-full px-2.5 sm:px-4 md:px-5 border-b border-slate-200 bg-white flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 min-h-[44px] max-h-[50px] shadow-2xs overflow-x-auto no-scrollbar min-w-0">
+      <div className="sticky top-0 z-20 w-full px-2.5 sm:px-4 md:px-5 border-b border-slate-200 bg-white flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 min-h-[38px] max-h-[42px] shadow-2xs overflow-x-auto no-scrollbar min-w-0">
         <div className="flex items-center gap-1 sm:gap-1.5 py-1 shrink-0">
           {(
             [
@@ -1286,12 +1273,10 @@ export function DocumentReader({
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
               className={cn(
-                'px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-t-md transition-all whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer',
+                'px-2.5 sm:px-3 py-1 text-xs rounded-md transition-all whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer',
                 activeTab === tab.id
-                  ? tab.id === 'noidung'
-                    ? 'bg-[#f39c12] text-white font-bold shadow-xs border-t-2 border-[#d68910]'
-                    : 'bg-slate-800 text-white font-bold shadow-xs'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100 font-medium'
+                  ? 'bg-blue-50 text-blue-900 font-bold border border-blue-200/80 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium'
               )}
             >
               <span>{tab.label}</span>

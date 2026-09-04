@@ -246,57 +246,64 @@ export function DocumentImportModal({
     setPastedText('');
   };
 
-  // Handle URL Tab
-  const handleProcessUrl = () => {
+  // Handle URL Tab: Live fetch & extract from real legal portal URL
+  const handleProcessUrl = async () => {
     const cleanUrl = sourceUrl.trim();
     if (!cleanUrl) return;
     setIsProcessingUrl(true);
 
-    setTimeout(() => {
+    try {
       const rawLastSegment = cleanUrl.split('/').pop()?.split('?')[0] || '';
       const urlFileName = decodeURIComponent(rawLastSegment || 'van-ban-phap-luat.pdf');
       const metadata = detectLegalDocumentMetadata(cleanUrl, urlFileName);
 
-      // Check if URL matches an authentic document in our repository
-      const matchedCorpusDoc = DEMO_DOCUMENTS.find((d) => {
-        if (metadata.documentNumber && d.document_number === metadata.documentNumber) return true;
-        if (metadata.title && d.title.toLowerCase().includes(metadata.title.toLowerCase())) return true;
-        const fnL = urlFileName.toLowerCase();
-        if (fnL.includes('48-2024-qh15') && d.document_number?.includes('48/2024')) return true;
-        if (fnL.includes('109-2025-qh15') && d.document_number?.includes('109/2025')) return true;
-        if (fnL.includes('253-2026') && d.document_number?.includes('253/2026')) return true;
-        if (fnL.includes('15-vbhn') && d.document_number?.includes('15/VBHN')) return true;
-        return false;
-      });
+      let fetchedDoc: Partial<LegalDocument> | null = null;
+      try {
+        const res = await fetch('/api/documents/import-external', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sourceUrl: cleanUrl,
+            documentNumber: metadata.documentNumber,
+            title: metadata.title,
+            issuingBody: metadata.issuingBody,
+            documentType: metadata.documentType,
+          }),
+        });
+        const result = await res.json();
+        if (result.success && result.document) {
+          fetchedDoc = result.document;
+        }
+      } catch (fetchErr) {
+        console.warn('Live URL fetch note, falling back to client-side extraction:', fetchErr);
+      }
 
-      const finalNumber = matchedCorpusDoc?.document_number || metadata.documentNumber || '48/2024/QH15';
-      const finalType = matchedCorpusDoc?.document_type || metadata.documentType || 'luat';
-      const finalBody = matchedCorpusDoc?.issuing_body || metadata.issuingBody || (finalType === 'luat' ? 'Quốc hội' : 'Chính phủ');
-      const finalSigner = matchedCorpusDoc?.signer || (finalType === 'luat' ? 'Chủ tịch Quốc hội' : 'Thủ tướng Chính phủ');
-      const finalIssuedDate = matchedCorpusDoc?.issued_date || '2024-11-26';
-      const finalEffectiveDate = matchedCorpusDoc?.effective_date || '2025-07-01';
-      const finalTitle = matchedCorpusDoc?.title || metadata.title || (urlFileName.includes('48') ? 'Luật Thuế giá trị gia tăng 2024' : 'Văn bản quy phạm pháp luật');
-      const finalHtml = matchedCorpusDoc?.html_content || `<div class="document-full-body">
-<table>
-  <tr>
-    <td class="w-1/2 align-top text-center">
-      <p><strong>${finalBody.toUpperCase()}</strong><br />_______<br />Số: ${finalNumber}</p>
-    </td>
-    <td class="w-1/2 align-top text-center">
-      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br /><strong>Độc lập - Tự do - Hạnh phúc</strong><br />__________________________<br /><em>Hà Nội, ngày 26 tháng 11 năm 2024</em></p>
-    </td>
-  </tr>
-</table>
-<p class="text-center font-bold text-base my-3"><strong>${finalTitle.toUpperCase()}</strong></p>
-<p><em>Căn cứ Hiến pháp nước Cộng hòa xã hội chủ nghĩa Việt Nam;</em></p>
-<p><em>Quốc hội ban hành ${finalTitle}.</em></p>
-<div id="dieu-1">
-  <p><strong>Điều 1. Phạm vi điều chỉnh</strong></p>
-  <p>Luật này quy định về đối tượng chịu thuế, đối tượng không chịu thuế, người nộp thuế, căn cứ và phương pháp tính thuế, khấu trừ và hoàn thuế giá trị gia tăng.</p>
+      const finalNumber = fetchedDoc?.document_number || metadata.documentNumber || 'VĂN BẢN QUY PHẠM';
+      const finalType = fetchedDoc?.document_type || metadata.documentType || 'cong_van';
+      const finalBody = fetchedDoc?.issuing_body || metadata.issuingBody || 'Cơ quan ban hành';
+      const finalSigner = fetchedDoc?.signer || 'Lãnh đạo cơ quan ban hành';
+      const finalIssuedDate = fetchedDoc?.issued_date || new Date().toISOString().slice(0, 10);
+      const finalEffectiveDate = fetchedDoc?.effective_date || finalIssuedDate;
+      const finalTitle = fetchedDoc?.title || metadata.title || `Văn bản ${finalNumber}`;
+      const finalHtml = fetchedDoc?.html_content || `<div class="document-full-body">
+<div class="document-letterhead" role="region" aria-label="Đầu văn bản hành chính">
+  <div class="letterhead-left">
+    <p class="letterhead-agency">${finalBody.toUpperCase()}</p>
+    <div class="letterhead-rule letterhead-rule-agency" aria-hidden="true"></div>
+    <p class="letterhead-number">Số: ${finalNumber}</p>
+    <p class="letterhead-subject"><em>V/v: ${finalTitle}</em></p>
+  </div>
+  <div class="letterhead-right">
+    <p class="letterhead-motto-country">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+    <p class="letterhead-motto-slogan">Độc lập - Tự do - Hạnh phúc</p>
+    <div class="letterhead-rule letterhead-rule-motto" aria-hidden="true"></div>
+    <p class="letterhead-date"><em>Ngày ${finalIssuedDate.slice(8, 10)} tháng ${finalIssuedDate.slice(5, 7)} năm ${finalIssuedDate.slice(0, 4)}</em></p>
+  </div>
 </div>
-<div id="dieu-2">
-  <p><strong>Điều 2. Đối tượng chịu thuế</strong></p>
-  <p>Hàng hóa, dịch vụ sử dụng cho sản xuất, kinh doanh và tiêu dùng ở Việt Nam là đối tượng chịu thuế giá trị gia tăng, trừ các đối tượng quy định tại Điều 5 của Luật này.</p>
+<p class="text-center font-bold text-base my-4"><strong>${finalTitle.toUpperCase()}</strong></p>
+<div class="document-section">
+  <p>Văn bản được thu thập và trích xuất từ nguồn liên kết: <a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-700 underline">${cleanUrl}</a>.</p>
+  <p>Vui lòng rà soát và đối chiếu toàn văn trên bảng kiểm duyệt trước khi lưu vào Thư viện Pháp luật.</p>
 </div>
 </div>`;
 
@@ -304,25 +311,28 @@ export function DocumentImportModal({
       const newDoc: ImportedDocument = {
         id: newDocId,
         originalFileName: urlFileName,
-        originalMimeType: 'application/pdf',
-        originalSize: 185000,
+        originalMimeType: 'text/html',
+        originalSize: 125000,
         originalHash: `hash_url_${Date.now()}`,
         originalStorageKey: `imports/${newDocId}/${urlFileName}`,
         fileExtension: 'pdf',
         extractionStatus: 'review',
-        statusMessage: 'Đã trích xuất toàn văn từ URL.',
+        statusMessage: fetchedDoc ? 'Đã trích xuất toàn văn thực tế từ URL.' : 'Đã nhận diện metadata từ liên kết URL.',
         rawText: finalHtml.replace(/<[^>]+>/g, ' '),
         cleanText: finalHtml.replace(/<[^>]+>/g, ' '),
         normalizedText: finalHtml.replace(/<[^>]+>/g, ' '),
         htmlContent: finalHtml,
         detectedDocumentType: finalType,
         detectedDocumentNumber: finalNumber,
-        detectedYear: parseInt(finalIssuedDate.slice(0, 4), 10),
+        detectedYear: parseInt(finalIssuedDate.slice(0, 4), 10) || new Date().getFullYear(),
         detectedIssuingBody: finalBody,
+        detectedSigner: finalSigner,
+        detectedIssuedDate: finalIssuedDate,
+        detectedEffectiveDate: finalEffectiveDate,
         detectedTitle: finalTitle,
         standardTitle: finalTitle,
-        suggestedFileName: `${finalType}_${finalNumber.replace(/[\/\\:\*\?"<>\|]/g, '-')}_${urlFileName}`,
-        detectedSummary: matchedCorpusDoc?.summary_main || 'Quy định về đối tượng chịu thuế, giá tính thuế, thuế suất và khấu trừ thuế GTGT.',
+        suggestedFileName: `${finalType}_${finalNumber.replace(/[\/\\:\*\?"<>\|]/g, '-')}`,
+        detectedSummary: fetchedDoc?.summary_main || `Toàn văn văn bản ${finalNumber} - ${finalTitle}.`,
         changes: [],
         warnings: [],
         createdBy: 'Chuyên viên Pháp chế',
@@ -331,11 +341,14 @@ export function DocumentImportModal({
       };
 
       setQueue((prev) => [newDoc, ...prev]);
-      setIsProcessingUrl(false);
       setActiveTab('upload');
       setReviewingDocId(newDocId);
       setSourceUrl('');
-    }, 400);
+    } catch (err) {
+      console.error('Error processing URL import:', err);
+    } finally {
+      setIsProcessingUrl(false);
+    }
   };
 
   return (

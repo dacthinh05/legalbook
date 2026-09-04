@@ -99,13 +99,40 @@ function formatAdministrativeMasthead(html: string, doc?: Partial<LegalDocument>
     return cleanHtml;
   }
 
+  // Case A: Table-based letterhead (common in Word imports & TVPL tables)
+  const tableLetterheadRegex = /<table[^>]*>[\s\S]*?(?:CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM|Độc\s+lập\s*[-–—]\s*Tự\s+do\s*[-–—]\s*Hạnh\s+phúc)[\s\S]*?<\/table>/i;
+  if (tableLetterheadRegex.test(cleanHtml)) {
+    const extractedAgency = extractAgencyFromHtml(cleanHtml);
+    const agencyName = (extractedAgency || doc?.issuing_body || 'CƠ QUAN BAN HÀNH').trim();
+    const extractedDocNumber = extractDocNumberFromHtml(cleanHtml);
+    const docNumber = (extractedDocNumber || doc?.document_number || '').trim();
+    const extractedDate = extractDateFromHtml(cleanHtml);
+    const placeAndDate = extractedDate || (doc?.issued_date ? formatLegalDate(doc.issued_date) : '');
+
+    const letterheadHtml = `
+<div class="document-letterhead" role="region" aria-label="Đầu văn bản hành chính">
+  <div class="letterhead-left">
+    <p class="letterhead-agency">${agencyName.toUpperCase()}</p>
+    <div class="letterhead-rule letterhead-rule-agency" aria-hidden="true"></div>
+    ${docNumber ? `<p class="letterhead-number">${docNumber.startsWith('Số:') ? docNumber : 'Số: ' + docNumber}</p>` : ''}
+  </div>
+  <div class="letterhead-right">
+    <p class="letterhead-motto-country">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+    <p class="letterhead-motto-slogan">Độc lập - Tự do - Hạnh phúc</p>
+    <div class="letterhead-rule letterhead-rule-motto" aria-hidden="true"></div>
+    ${placeAndDate ? `<p class="letterhead-date">${placeAndDate}</p>` : ''}
+  </div>
+</div>`;
+    return cleanHtml.replace(tableLetterheadRegex, letterheadHtml);
+  }
+
   // Case 0: Merged OCR/single-paragraph header (e.g. TỔNG CỤC THUẾ ... CỘNG HÒA XÃ HỘI ...)
-  const mergedHeaderRegex = /<p[^>]*>([\s\S]*?(?:TỔNG\s+CỤC|CỤC|BỘ|ỦY\s+BAN|SỞ|CHI\s+CỤC|CHÍNH\s+PHỦ)[\s\S]*?CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA[\s\S]*?<\/p>)/i;
+  const mergedHeaderRegex = /<p[^>]*>((?:(?!<\/p>)[\s\S])*?(?:TỔNG\s+CỤC|CỤC\s+THUẾ|BỘ\s+[A-ZÀ-Ỹ]+|ỦY\s+BAN|CHI\s+CỤC)(?:(?!<\/p>)[\s\S])*?CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI(?:(?!<\/p>)[\s\S])*?)<\/p>/i;
   const mergedMatch = cleanHtml.match(mergedHeaderRegex);
   if (mergedMatch) {
     const rawHeaderText = mergedMatch[1].replace(/<[^>]+>/g, ' ').replace(/_{2,}|—{2,}|-{2,}/g, ' ').replace(/\s+/g, ' ');
     
-    const agencyMatch = rawHeaderText.match(/(TỔNG\s+CỤC\s+THUẾ|CỤC\s+THUẾ\s+(?:TỈNH|THÀNH\s+PHỐ|TP)?\s*[A-ZÀ-Ỹ\s]+|BỘ\s+[A-ZÀ-Ỹ\s]+|ỦY\s+BAN\s+NHÂN\s+DÂN\s+[A-ZÀ-Ỹ\s]+|CHI\s+CỤC\s+THUẾ\s+[A-ZÀ-Ỹ\s]+)/i);
+    const agencyMatch = rawHeaderText.match(/(?:^|\s)(TỔNG\s+CỤC\s+[A-ZÀ-Ỹ\s]+?|CỤC\s+[A-ZÀ-Ỹ\s]+?|BỘ\s+[A-ZÀ-Ỹ\s]+?|ỦY\s+BAN\s+NHÂN\s+DÂN\s+[A-ZÀ-Ỹ\s]+?|UBND\s+[A-ZÀ-Ỹ\.\s]+?|CHÍNH\s+PHỦ|QUỐC\s+HỘI|CHI\s+CỤC\s+[A-ZÀ-Ỹ\s]+?)(?=\s+Số:|\s+CỘNG\s+H[ÒO]A|\s+Độc\s+lập|\s+___|\s+Hà\s+Nội|\s+ngày|\s+V\/v|\s+Về\s+việc|$)/i);
     let agency = agencyMatch ? agencyMatch[1].trim() : (doc?.issuing_body || 'TỔNG CỤC THUẾ');
     agency = agency.replace(/\s+Số:?$/i, '').replace(/\s+_+$/i, '').trim();
     
@@ -141,7 +168,7 @@ ${recipient ? `<p class="dispatch-recipient"><strong>Kính gửi:</strong> ${rec
     return cleanHtml.replace(mergedMatch[0], formattedHeader);
   }
 
-  // Extract parts from HTML or doc metadata
+  // Case B: Boundary-safe paragraph-based vertical letterhead
   const extractedAgency = extractAgencyFromHtml(cleanHtml);
   const agencyName = (extractedAgency || doc?.issuing_body || 'CƠ QUAN BAN HÀNH').trim();
 
@@ -165,13 +192,6 @@ ${recipient ? `<p class="dispatch-recipient"><strong>Kính gửi:</strong> ${rec
   </div>
 </div>`;
 
-  // Case A: Table-based letterhead (common in Word imports & TVPL tables)
-  const tableLetterheadRegex = /<table[^>]*>[\s\S]*?(?:CỘNG\s+H[ÒO]A\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM|Độc\s+lập\s*[-–—]\s*Tự\s+do\s*[-–—]\s*Hạnh\s+phúc)[\s\S]*?<\/table>/i;
-  if (tableLetterheadRegex.test(cleanHtml)) {
-    return cleanHtml.replace(tableLetterheadRegex, letterheadHtml);
-  }
-
-  // Case B: Boundary-safe paragraph-based vertical letterhead
   const boundaryRegex = /(<(?:h[1-6]|p)[^>]*>\s*(?:<strong>|<b>|<em>|<i>)?\s*(?:Căn cứ|LUẬT|BỘ LUẬT|NGHỊ ĐỊNH|THÔNG TƯ|QUYẾT ĐỊNH|CÔNG VĂN|NGHỊ QUYẾT|CHỈ THỊ|Chương\s+[IVXLCDM\d]+|Điều\s+\d+|Kính gửi))/i;
   const matchBoundary = cleanHtml.match(boundaryRegex);
 
@@ -179,8 +199,9 @@ ${recipient ? `<p class="dispatch-recipient"><strong>Kính gửi:</strong> ${rec
   if (matchBoundary && matchBoundary.index !== undefined && matchBoundary.index >= 0) {
     bodySection = cleanHtml.slice(matchBoundary.index);
   } else {
-    bodySection = cleanHtml;
+    bodySection = '';
   }
+
   const hasBodyWrapper = cleanHtml.startsWith('<div class="document-full-body">');
   if (bodySection) {
     const cleanBody = bodySection.replace(/<\/div>\s*$/, '');
@@ -574,7 +595,8 @@ function formatOfficialDispatchElements(html: string): string {
 }
 
 function extractAgencyFromHtml(html: string): string | null {
-  const match = html.match(/(?:<strong>|<b>|<p[^>]*>)\s*(BỘ\s+[A-ZÀ-Ỹ\s]+|TỔNG\s+CỤC\s+[A-ZÀ-Ỹ\s]+|CỤC\s+[A-ZÀ-Ỹ\s]+|ỦY\s+BAN\s+NHÂN\s+DÂN\s+[A-ZÀ-Ỹ\s]+|CHÍNH\s+PHỦ|QUỐC\s+HỘI|TÒA\s+ÁN\s+[A-ZÀ-Ỹ\s]+|VIỆN\s+KIỂM\s+SÁT\s+[A-ZÀ-Ỹ\s]+)\s*(?:<\/strong>|<\/b>|<\/p>)/i);
+  const plain = html.replace(/<[^>]+>/g, ' ').replace(/_{2,}|—{2,}|-{2,}/g, ' ').replace(/\s+/g, ' ');
+  const match = plain.match(/(?:^|\s)(TỔNG\s+CỤC\s+[A-ZÀ-Ỹ\s]+?|CỤC\s+[A-ZÀ-Ỹ\s]+?|BỘ\s+[A-ZÀ-Ỹ\s]+?|ỦY\s+BAN\s+NHÂN\s+DÂN\s+[A-ZÀ-Ỹ\s]+?|UBND\s+[A-ZÀ-Ỹ\.\s]+?|CHÍNH\s+PHỦ|QUỐC\s+HỘI|TÒA\s+ÁN\s+[A-ZÀ-Ỹ\s]+?|VIỆN\s+KIỂM\s+SÁT\s+[A-ZÀ-Ỹ\s]+?|CHI\s+CỤC\s+[A-ZÀ-Ỹ\s]+?)(?=\s+Số:|\s+CỘNG\s+H[ÒO]A|\s+Độc\s+lập|\s+___|\s+Hà\s+Nội|\s+ngày|\s+V\/v|\s+Về\s+việc|$)/i);
   return match ? match[1].trim() : null;
 }
 function extractDocNumberFromHtml(html: string): string | null {
@@ -590,14 +612,16 @@ function extractDocNumberFromHtml(html: string): string | null {
 }
 
 function extractDateFromHtml(html: string): string | null {
+  const plainText = html.replace(/<[^>]+>/g, ' ').replace(/_{2,}|—{2,}|-{2,}/g, ' ').replace(/\s+/g, ' ');
+  
   // Match full location and date e.g. "Hà Nội, ngày 18 tháng 8 năm 2026" or "TP. Hồ Chí Minh, ngày 25 tháng 05 năm 2026"
-  const matchWithPlace = html.match(/(?:Hạnh\s+phúc\s+|________*\s*|^|\s+)((?:Hà\s+Nội|TP\.\s*Hồ\s+Chí\s+Minh|Đà\s+Nẵng|Hải\s+Phòng|Cần\s+Thơ|[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+){0,2}),\s*ngày\s+\d{1,2}\s+tháng\s+\d{1,2}\s+năm\s+\d{4})/u);
+  const matchWithPlace = plainText.match(/(?:Hạnh\s+phúc\s+|^|\s+)((?:Hà\s+Nội|TP\.\s*Hồ\s+Chí\s+Minh|Đà\s+Nẵng|Hải\s+Phòng|Cần\s+Thơ|[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+){0,2}),\s*ngày\s+\d{1,2}\s+tháng\s+\d{1,2}\s+năm\s+\d{4})/u);
   if (matchWithPlace) {
     return matchWithPlace[1].trim();
   }
 
   // Match date only without location
-  const matchDateOnly = html.match(/(ngày\s+\d{1,2}\s+tháng\s+\d{1,2}\s+năm\s+\d{4})/i);
+  const matchDateOnly = plainText.match(/(?:^|\s+)(ngày\s+\d{1,2}\s+tháng\s+\d{1,2}\s+năm\s+\d{4})/i);
   return matchDateOnly ? matchDateOnly[1].trim() : null;
 }
 

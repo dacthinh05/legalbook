@@ -64,7 +64,7 @@ export const DOCUMENT_TYPE_COLORS: Record<DocumentType, string> = {
 };
 
 export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
-  hieu_luc: 'Còn hiệu lực',
+  hieu_luc: 'Đang có hiệu lực',
   chua_hieu_luc: 'Sắp có hiệu lực',
   het_hieu_luc_mot_phan: 'Hết hiệu lực một phần',
   het_hieu_luc_toan_bo: 'Hết hiệu lực',
@@ -89,7 +89,7 @@ export function formatShortTitle(title: string, _docType?: DocumentType | string
   if (!title) return '';
   let clean = title.trim();
 
-  // 0. Normalize typos common in imports: V-v-, V-v:, with -> với
+  // 0. Normalize typos common in imports: V-v-, V-v: -> V/v:
   clean = clean.replace(/\bV-v-?\s*:?/gi, 'V/v: ');
   clean = clean.replace(/\bwith\b/gi, 'với');
   clean = clean.replace(/\s+/g, ' ');
@@ -105,7 +105,7 @@ export function formatShortTitle(title: string, _docType?: DocumentType | string
       .join('|');
 
     const startNumRegex = new RegExp(
-      `^(?:(?:CV|ND|NĐ|TT|QD|QĐ|Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\\s+)?(?:số\\s+)?(?:${escaped})\\s*[-–—:.]*\\s*(?:V\\/v:|Về\\s+việc:?)?\\s*`,
+      `^(?:(?:CV|ND|NĐ|TT|QD|QĐ|Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\\s+)?(?:số\\s+)?(?:${escaped})\\s*[-–—:.]*\\s*(?:V\\/v:\\s*)?`,
       'iu'
     );
     clean = clean.replace(startNumRegex, '');
@@ -116,12 +116,12 @@ export function formatShortTitle(title: string, _docType?: DocumentType | string
 
   // 2. Strip standard leading type + actual number containing digits
   clean = clean.replace(
-    /^(?:(?:CV|ND|NĐ|TT|QD|QĐ|Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\s+)?(?:số\\s+)?(?:\d+[\w/.-]*)\s*[-–—:.]*\s*(?:V\/v:|Về\s+việc:?)?\s*/iu,
+    /^(?:(?:CV|ND|NĐ|TT|QD|QĐ|Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\s+)?(?:số\\s+)?(?:\d+[\w/.-]*)\s*[-–—:.]*\s*(?:V\/v:\s*)?/iu,
     ''
   );
 
-  // 3. Strip standalone leading "V/v:" or "Về việc:"
-  clean = clean.replace(/^(?:V\/v:|Về\s+việc:?)\s*/iu, '');
+  // 3. Strip standalone leading "V/v:"
+  clean = clean.replace(/^(?:V\/v:)\s*/iu, '');
 
   // 4. Strip leading generic "Luật " when followed by specific law subject (preserving full subject word e.g. "Thuế", "Đất đai")
   clean = clean.replace(/^Luật\s+(Thuế\s+|Đất\s+|Đầu\s+|Doanh\s+|Kế\s+|Kiểm\s+|Bảo\s+|Quản\s+|Khám\s+|Đấu\s+)/iu, '$1');
