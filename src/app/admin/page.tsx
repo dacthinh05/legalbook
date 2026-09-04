@@ -85,7 +85,7 @@ export default function AdminDocumentsPage() {
   };
 
   const handleDeleteSingle = async (id: string, docNumber?: string) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn văn bản ${docNumber || ''} không? Văn bản sẽ bị gỡ bỏ ngay lập tức khỏi kết quả tìm kiếm và danh mục.`)) {
+    if (confirm(`Xác nhận xóa văn bản ${docNumber || ''}? Văn bản sẽ bị gỡ bỏ khỏi cơ sở dữ liệu và không thể hoàn tác.`)) {
       await deleteDocument(id);
       setDocuments((prev) => prev.filter((d) => d.id !== id));
       setSelectedIds((prev) => {
@@ -100,7 +100,7 @@ export default function AdminDocumentsPage() {
   const handleBatchDelete = async () => {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
-    if (confirm(`Bạn có chắc chắn muốn XÓA NHANH ${count} văn bản đã chọn không? Toàn bộ văn bản này sẽ biến mất ngay khỏi hệ thống và bộ tìm kiếm.`)) {
+    if (confirm(`Xác nhận xóa ${count} văn bản đã chọn? Toàn bộ văn bản này sẽ bị gỡ bỏ khỏi cơ sở dữ liệu và không thể hoàn tác.`)) {
       const idsArray = Array.from(selectedIds);
       await batchDeleteDocuments(idsArray);
       setDocuments((prev) => prev.filter((d) => !selectedIds.has(d.id)));

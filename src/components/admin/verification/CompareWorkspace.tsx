@@ -77,11 +77,11 @@ export function CompareWorkspace({
       {/* Top Workspace Toolbar */}
       <div className="h-12 bg-white border-b border-slate-200 px-4 flex items-center justify-between shrink-0 gap-3 z-10">
         {/* Left: View Mode Tabs */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0">
           <button
             type="button"
             onClick={() => setViewMode('compare')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               viewMode === 'compare'
                 ? 'bg-white text-blue-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -94,7 +94,7 @@ export function CompareWorkspace({
           <button
             type="button"
             onClick={() => setViewMode('original')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               viewMode === 'original'
                 ? 'bg-white text-blue-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -107,7 +107,7 @@ export function CompareWorkspace({
           <button
             type="button"
             onClick={() => setViewMode('extracted')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               viewMode === 'extracted'
                 ? 'bg-white text-blue-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -302,7 +302,9 @@ export function CompareWorkspace({
                             onClick={() => onSelectField?.('issued_date')}
                             className={`mt-1.5 p-1.5 rounded cursor-pointer transition-all inline-block border text-left ${
                               activeFieldKey === 'issued_date'
-                                ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-500/40 shadow-xs'
+                                ? targetField?.conflictReason
+                                  ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-500/40 shadow-xs'
+                                  : 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/40 shadow-xs'
                                 : 'border-transparent hover:border-slate-300 hover:bg-slate-50/60'
                             }`}
                           >
@@ -310,8 +312,14 @@ export function CompareWorkspace({
                               {activePageData?.blocks.find((b) => b.blockType === 'date')?.text || 'Thái Nguyên, ngày 26 tháng 01 năm 2026'}
                             </span>
                             {activeFieldKey === 'issued_date' && (
-                              <span className="px-1.5 py-0.2 bg-amber-600 text-white text-[9px] font-bold rounded shadow-xs block mt-0.5">
-                                Cảnh báo: Scan 26/01/2026 vs Meta 10/05/2025
+                              <span
+                                className={`px-1.5 py-0.2 text-[9px] font-bold rounded shadow-xs block mt-0.5 ${
+                                  targetField?.conflictReason ? 'bg-amber-600 text-white' : 'bg-blue-600 text-white'
+                                }`}
+                              >
+                                {targetField?.conflictReason
+                                  ? `Cảnh báo: ${targetField.conflictReason}`
+                                  : `Ngày ban hành (${targetField?.status === 'confirmed' || targetField?.status === 'edited' ? 'Đã xác nhận' : 'Khớp'})`}
                               </span>
                             )}
                           </div>

@@ -12,10 +12,10 @@ interface SortSelectProps {
 }
 
 const SORT_LABELS: Record<SortField, string> = {
-  updated_at: 'Mới cập nhật',
-  issued_date: 'Ngày ban hành',
-  effective_date: 'Ngày hiệu lực',
-  document_number: 'Số ký hiệu',
+  updated_at: 'Cập nhật gần nhất',
+  issued_date: 'Ngày ban hành (Mới nhất)',
+  effective_date: 'Ngày hiệu lực (Mới nhất)',
+  document_number: 'Số hiệu (A-Z)',
 };
 
 export function SortSelect({ field, dir, onFieldChange, onDirChange }: SortSelectProps) {

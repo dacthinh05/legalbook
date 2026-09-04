@@ -239,9 +239,9 @@ export default function DataQualityAdminPage() {
         </div>
 
         <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl shadow-2xs space-y-1">
-          <div className="text-[10px] font-bold text-amber-700 uppercase">Nghi ngờ nội dung giả</div>
+          <div className="text-[10px] font-bold text-amber-700 uppercase">Dữ liệu Placeholder / Mẫu</div>
           <div className="text-lg font-bold text-amber-900">{metrics.fakePlaceholderCount}</div>
-          <div className="text-[10px] text-amber-700">Văn bản mẫu/Trùng summary</div>
+          <div className="text-[10px] text-amber-700">Văn bản mẫu / Chưa đồng bộ toàn văn</div>
         </div>
 
         <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl shadow-2xs space-y-1">
@@ -284,7 +284,7 @@ export default function DataQualityAdminPage() {
               filterMode === 'fake_placeholder' ? 'bg-amber-700 text-white font-semibold' : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200'
             }`}
           >
-            Nghi ngờ nội dung giả ({metrics.fakePlaceholderCount})
+            Dữ liệu mẫu ({metrics.fakePlaceholderCount})
           </button>
 
           <button

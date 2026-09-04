@@ -31,7 +31,21 @@ export class LegalDocumentAnalyzer {
   private runInitialAnalysis() {
     const engine = new LegalRuleEngine();
 
-    for (const doc of DEMO_DOCUMENTS) {
+    // Bounded initial queue: only analyze unverified or priority sample queue docs on startup
+    // to prevent freezing main thread with hundreds of heavy fulltext statutes
+    const targetDocs = DEMO_DOCUMENTS.filter(
+      (d) =>
+        d.review_status !== 'published' ||
+        d.content_status !== 'verified' ||
+        d.document_number?.includes('110') ||
+        d.document_number?.includes('118') ||
+        d.document_number?.includes('123') ||
+        d.document_number?.includes('78')
+    ).slice(0, 15);
+
+    const initialDocs = targetDocs.length > 0 ? targetDocs : DEMO_DOCUMENTS.slice(0, 10);
+
+    for (const doc of initialDocs) {
       if (!doc.id || !doc.html_content) continue;
 
       const parser = new DocumentStructureParser(doc.id, doc.id);
@@ -61,7 +75,18 @@ export class LegalDocumentAnalyzer {
   }
 
   public getParsedNodes(documentId: string): DocumentNode[] {
-    return this.parsedNodesMap.get(documentId) || [];
+    if (this.parsedNodesMap.has(documentId)) {
+      return this.parsedNodesMap.get(documentId)!;
+    }
+    // Lazy on-demand parse when a specific document is opened in viewer
+    const doc = DEMO_DOCUMENTS.find(d => d.id === documentId);
+    if (doc?.html_content) {
+      const parser = new DocumentStructureParser(doc.id, doc.id);
+      const nodes = parser.parseHtml(doc.html_content);
+      this.parsedNodesMap.set(doc.id, nodes);
+      return nodes;
+    }
+    return [];
   }
 
   public updateReviewStatus(

@@ -64,9 +64,9 @@ export const DOCUMENT_TYPE_COLORS: Record<DocumentType, string> = {
 };
 
 export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
-  hieu_luc: 'Đang có hiệu lực',
+  hieu_luc: 'Còn hiệu lực',
   chua_hieu_luc: 'Sắp có hiệu lực',
-  het_hieu_luc_mot_phan: 'Thay đổi hiệu lực',
+  het_hieu_luc_mot_phan: 'Hết hiệu lực một phần',
   het_hieu_luc_toan_bo: 'Hết hiệu lực',
   chua_xac_dinh: 'Chưa xác định',
 };
@@ -89,20 +89,41 @@ export function formatShortTitle(title: string, _docType?: DocumentType | string
   if (!title) return '';
   let clean = title.trim();
 
-  // 1. If explicit docNumber is provided, strip prefix containing docNumber
+  // 0. Normalize typos common in imports: V-v-, V-v:, with -> với
+  clean = clean.replace(/\bV-v-?\s*:?/gi, 'V/v: ');
+  clean = clean.replace(/\bwith\b/gi, 'với');
+  clean = clean.replace(/\s+/g, ' ');
+
+  // 1. If explicit docNumber is provided (e.g. 1567/TCT-CS, 1567-TCT-CS, 1567.TCT-CS)
   if (docNumber) {
-    const escapedNum = docNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const startNumRegex = new RegExp(`^(?:Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)?\\s*(?:số\\s+)?${escapedNum}\\s*[-–—:]?\\s*`, 'iu');
+    const numClean = docNumber.trim();
+    const numDash = numClean.replace(/\//g, '-');
+    const numDot = numClean.replace(/\//g, '.');
+    const numSlash = numClean.replace(/[-.]/g, '/');
+    const escaped = [numClean, numDash, numDot, numSlash]
+      .map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|');
+
+    const startNumRegex = new RegExp(
+      `^(?:(?:CV|ND|NĐ|TT|QD|QĐ|Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\\s+)?(?:số\\s+)?(?:${escaped})\\s*[-–—:.]*\\s*(?:V\\/v:|Về\\s+việc:?)?\\s*`,
+      'iu'
+    );
     clean = clean.replace(startNumRegex, '');
 
-    const endNumRegex = new RegExp(`\\s+(?:số\\s+)?${escapedNum}$`, 'iu');
+    const endNumRegex = new RegExp(`\\s+(?:số\\s+)?(?:${escaped})$`, 'iu');
     clean = clean.replace(endNumRegex, '');
   }
 
   // 2. Strip standard leading type + actual number containing digits
-  clean = clean.replace(/^(?:Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\s+(?:số\s+)?(?:\d+[\w/.-]*)\s*[-–—:]?\s*/iu, '');
+  clean = clean.replace(
+    /^(?:(?:CV|ND|NĐ|TT|QD|QĐ|Luật|Bộ luật|Nghị định|Thông tư|Quyết định|Công văn|Văn bản hợp nhất)\s+)?(?:số\\s+)?(?:\d+[\w/.-]*)\s*[-–—:.]*\s*(?:V\/v:|Về\s+việc:?)?\s*/iu,
+    ''
+  );
 
-  // 3. Strip leading generic "Luật " when followed by specific law subject (preserving full subject word e.g. "Thuế", "Đất đai")
+  // 3. Strip standalone leading "V/v:" or "Về việc:"
+  clean = clean.replace(/^(?:V\/v:|Về\s+việc:?)\s*/iu, '');
+
+  // 4. Strip leading generic "Luật " when followed by specific law subject (preserving full subject word e.g. "Thuế", "Đất đai")
   clean = clean.replace(/^Luật\s+(Thuế\s+|Đất\s+|Đầu\s+|Doanh\s+|Kế\s+|Kiểm\s+|Bảo\s+|Quản\s+|Khám\s+|Đấu\s+)/iu, '$1');
 
   clean = clean.trim();

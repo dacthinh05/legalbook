@@ -50,11 +50,11 @@ export function AuditLogTab({ auditLogs }: AuditLogTabProps) {
   const getActionBadge = (action: string) => {
     switch (action) {
       case 'verified':
-        return { label: 'Xác nhận (Verified)', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
+        return { label: 'Đã duyệt', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
       case 'rejected':
-        return { label: 'Từ chối (Rejected)', bg: 'bg-red-100 text-red-800 border-red-200' };
+        return { label: 'Từ chối', bg: 'bg-red-100 text-red-800 border-red-200' };
       case 'draft_saved':
-        return { label: 'Lưu nháp (Draft)', bg: 'bg-slate-100 text-slate-800 border-slate-200' };
+        return { label: 'Bản nháp', bg: 'bg-slate-100 text-slate-800 border-slate-200' };
       case 'metadata_modified':
         return { label: 'Sửa metadata', bg: 'bg-purple-100 text-purple-800 border-purple-200' };
       case 'ocr_requested':
@@ -75,7 +75,7 @@ export function AuditLogTab({ auditLogs }: AuditLogTabProps) {
           <div className="flex items-center gap-2">
             <History className="w-4 h-4 text-blue-700" />
             <span className="font-bold text-xs text-slate-900">
-              Nhật ký kiểm duyệt & Audit Log ({filteredLogs.length})
+              Nhật ký kiểm duyệt hệ thống ({filteredLogs.length})
             </span>
           </div>
 
@@ -233,12 +233,12 @@ export function AuditLogTab({ auditLogs }: AuditLogTabProps) {
             {(selectedLog.beforeValue != null || selectedLog.afterValue != null) ? (
               <div className="space-y-2 pt-2 border-t border-slate-200">
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                  Thay đổi dữ liệu (Before / After Snapshot):
+                  So sánh dữ liệu trước & sau sửa đổi:
                 </span>
                 <div className="space-y-2 font-mono text-[10px]">
                   {selectedLog.beforeValue != null ? (
                     <div className="p-2 bg-red-50/60 border border-red-200 rounded-lg">
-                      <span className="text-red-700 font-bold block mb-1">DỮ LIỆU TRƯỚC (BEFORE):</span>
+                      <span className="text-red-700 font-bold block mb-1">DỮ LIỆU BAN ĐẦU:</span>
                       <pre className="overflow-x-auto whitespace-pre-wrap text-red-950">
                         {typeof selectedLog.beforeValue === 'object'
                           ? JSON.stringify(selectedLog.beforeValue, null, 2)
@@ -249,7 +249,7 @@ export function AuditLogTab({ auditLogs }: AuditLogTabProps) {
 
                   {selectedLog.afterValue != null ? (
                     <div className="p-2 bg-emerald-50/60 border border-emerald-200 rounded-lg">
-                      <span className="text-emerald-700 font-bold block mb-1">DỮ LIỆU SAU (AFTER):</span>
+                      <span className="text-emerald-700 font-bold block mb-1">DỮ LIỆU SAU ĐIỀU CHỈNH:</span>
                       <pre className="overflow-x-auto whitespace-pre-wrap text-emerald-950">
                         {typeof selectedLog.afterValue === 'object'
                           ? JSON.stringify(selectedLog.afterValue, null, 2)

@@ -106,7 +106,7 @@ export function AppHeader({
         >
           <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors shrink-0" />
           <span className="flex-1 truncate text-slate-500 group-hover:text-slate-700 min-w-0">
-            Tìm số hiệu, tên luật, nghị định, thông tư...
+            Tra cứu số hiệu, tên văn bản, chủ đề...
           </span>
           <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10.5px] font-mono text-slate-500 shadow-2xs group-hover:border-slate-300 shrink-0">
             <span className="text-[11px]">⌘</span>K
@@ -122,10 +122,10 @@ export function AppHeader({
           target="_blank"
           rel="noopener noreferrer"
           className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-md transition-all cursor-pointer shadow-2xs group"
-          title="Mở Sổ tay NotebookLM tổng quan pháp luật"
+          title="Sổ tay Tổng hợp AI (Nghiên cứu & Đối chiếu đa văn bản qua Google NotebookLM)"
         >
           <BookOpen className="w-3.5 h-3.5 text-slate-600" />
-          <span className="truncate">Sổ tay NotebookLM</span>
+          <span className="truncate">Sổ tay Tổng hợp AI</span>
           <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-slate-700" />
         </a>
         <div className="relative" ref={adminMenuRef}>
@@ -144,6 +144,7 @@ export function AppHeader({
               </div>
               <Link
                 href="/admin"
+                prefetch={false}
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
@@ -152,6 +153,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/admin/verification-queue"
+                prefetch={false}
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
@@ -160,6 +162,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/admin/data-quality"
+                prefetch={false}
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
@@ -168,6 +171,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/admin/categories"
+                prefetch={false}
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
@@ -176,6 +180,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/admin/crawler"
+                prefetch={false}
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >
@@ -184,6 +189,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/admin/upload"
+                prefetch={false}
                 onClick={() => setAdminMenuOpen(false)}
                 className="w-full px-3 py-2 text-left text-slate-700 hover:bg-blue-50 hover:text-blue-900 flex items-center gap-2.5 transition-colors cursor-pointer rounded-md font-medium"
               >

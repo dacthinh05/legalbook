@@ -432,10 +432,24 @@ class VerificationDataService {
     // Update field values
     Object.entries(updatedFields).forEach(([key, patch]) => {
       if (doc.fields[key]) {
+        const nextStatus = patch.status || 'edited';
         doc.fields[key] = {
           ...doc.fields[key],
           ...patch,
-          status: 'edited',
+          status: nextStatus,
+          ...(patch.currentValue !== undefined
+            ? {
+                confidence: 0.99,
+                conflictReason: undefined,
+                severity: undefined,
+              }
+            : {}),
+          ...(nextStatus === 'confirmed'
+            ? {
+                conflictReason: undefined,
+                severity: undefined,
+              }
+            : {}),
         };
       }
     });
@@ -453,6 +467,18 @@ class VerificationDataService {
       },
       doc.fields
     );
+
+    // Sync field conflict notices with re-detected conflicts
+    Object.keys(doc.fields).forEach((key) => {
+      const activeConflict = doc.conflicts.find((c) => c.fieldKey === key && !c.isResolved);
+      if (activeConflict) {
+        doc.fields[key].conflictReason = activeConflict.message;
+        doc.fields[key].severity = activeConflict.severity;
+      } else {
+        doc.fields[key].conflictReason = undefined;
+        doc.fields[key].severity = undefined;
+      }
+    });
 
     doc.overallConfidence = calculateOverallConfidence(doc.fields, doc.conflicts);
     doc.isDirty = false;

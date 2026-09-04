@@ -1685,7 +1685,7 @@ export function DocumentReader({
           onScroll={handleScroll}
           className={cn(
             "reader-viewport flex-1 overflow-y-auto relative min-w-0 flex flex-col",
-            activeTab === 'banggoc' ? 'p-0 flex flex-col h-full overflow-hidden bg-slate-900/5' : ''
+            activeTab === 'banggoc' ? 'p-0 flex flex-col h-full bg-slate-100' : ''
           )}
         >
           {/* ── TAB: NOIDUNG ── */}
@@ -1931,20 +1931,20 @@ export function DocumentReader({
                 : `#zoom=${pdfZoomMode}`;
             const finalPdfUrl = primaryPdfUrl ? `${primaryPdfUrl}${pdfHashParam}` : '';
             return (
-              <div className="flex-1 flex flex-col h-full w-full bg-slate-100 overflow-hidden">
+              <div className="flex-1 flex flex-col h-full w-full bg-slate-100/90 overflow-hidden">
                 {/* Top Control Header */}
-                <div className="bg-slate-900 text-white px-3 sm:px-4 py-2 flex items-center justify-between gap-2 text-xs shrink-0 flex-wrap z-10 shadow-sm border-b border-slate-800">
+                <div className="bg-white text-slate-800 px-3 sm:px-4 py-2 flex items-center justify-between gap-2 text-xs shrink-0 flex-wrap z-10 shadow-2xs border-b border-slate-200">
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className={cn(
-                        'px-2 py-0.5 rounded font-mono uppercase text-[10.5px] font-bold shrink-0',
-                        hasDocx && !hasPdf ? 'bg-emerald-600 text-white' : 'bg-blue-600 text-white'
+                        'px-2 py-0.5 rounded font-mono uppercase text-[10.5px] font-bold shrink-0 border',
+                        hasDocx && !hasPdf ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-blue-50 text-blue-800 border-blue-200'
                       )}
                     >
                       {primaryFile?.file_type?.toUpperCase() || (hasDocx ? 'DOCX' : 'PDF')}
                     </span>
                     <span
-                      className="text-slate-200 font-medium truncate max-w-[200px] sm:max-w-[360px]"
+                      className="text-slate-800 font-semibold truncate max-w-[200px] sm:max-w-[360px]"
                       title={primaryFile?.original_filename || doc.title}
                     >
                       {primaryFile?.original_filename || `${doc.document_number || 'Van-ban'}.${hasDocx ? 'docx' : 'pdf'}`}
@@ -1954,7 +1954,7 @@ export function DocumentReader({
                       <select
                         value={selectedPdfFileIndex}
                         onChange={(e) => setSelectedPdfFileIndex(Number(e.target.value))}
-                        className="bg-slate-800 text-slate-200 border border-slate-700 rounded px-2 py-0.5 text-[11px] outline-none"
+                        className="bg-slate-50 text-slate-700 border border-slate-200 rounded px-2 py-0.5 text-[11px] outline-none"
                       >
                         {pdfFiles.map((f, idx) => (
                           <option key={f.id} value={idx}>
@@ -1964,16 +1964,15 @@ export function DocumentReader({
                       </select>
                     )}
                   </div>
-
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                     {hasPdf && (
-                      <div className="flex items-center bg-slate-800 rounded p-0.5 border border-slate-700 text-[11px]">
+                      <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 text-[11px]">
                         <button
                           type="button"
                           onClick={() => setPdfZoomMode('FitH')}
                           className={cn(
-                            'px-2 py-1 rounded transition-colors font-medium',
-                            pdfZoomMode === 'FitH' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-300 hover:text-white'
+                            'px-2 py-1 rounded-md transition-colors font-medium cursor-pointer',
+                            pdfZoomMode === 'FitH' ? 'bg-white text-blue-700 font-semibold shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                           )}
                           title="Tự động vừa chiều ngang để đọc chữ to và rõ nhất"
                         >
@@ -1983,8 +1982,8 @@ export function DocumentReader({
                           type="button"
                           onClick={() => setPdfZoomMode('125')}
                           className={cn(
-                            'px-2 py-1 rounded transition-colors font-medium',
-                            pdfZoomMode === '125' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-300 hover:text-white'
+                            'px-2 py-1 rounded-md transition-colors font-medium cursor-pointer',
+                            pdfZoomMode === '125' ? 'bg-white text-blue-700 font-semibold shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                           )}
                           title="Phóng to 125%"
                         >
@@ -1994,8 +1993,8 @@ export function DocumentReader({
                           type="button"
                           onClick={() => setPdfZoomMode('150')}
                           className={cn(
-                            'px-2 py-1 rounded transition-colors font-medium hidden sm:inline-block',
-                            pdfZoomMode === '150' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-300 hover:text-white'
+                            'px-2 py-1 rounded-md transition-colors font-medium hidden sm:inline-block cursor-pointer',
+                            pdfZoomMode === '150' ? 'bg-white text-blue-700 font-semibold shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                           )}
                           title="Phóng to 150%"
                         >
@@ -2005,8 +2004,8 @@ export function DocumentReader({
                           type="button"
                           onClick={() => setPdfZoomMode('Fit')}
                           className={cn(
-                            'px-2 py-1 rounded transition-colors font-medium hidden md:inline-block',
-                            pdfZoomMode === 'Fit' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-300 hover:text-white'
+                            'px-2 py-1 rounded-md transition-colors font-medium hidden md:inline-block cursor-pointer',
+                            pdfZoomMode === 'Fit' ? 'bg-white text-blue-700 font-semibold shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                           )}
                           title="Hiển thị vừa toàn bộ trang"
                         >
@@ -2019,7 +2018,7 @@ export function DocumentReader({
                       <a
                         href={primaryDocxUrl}
                         download={currentDocx?.original_filename || `${doc.document_number}.docx`}
-                        className="px-3 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded flex items-center gap-1.5 text-[11px] font-semibold transition-colors shadow-xs"
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded flex items-center gap-1.5 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
                         title="Tải tệp Word (.docx) về máy tính"
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -2032,7 +2031,7 @@ export function DocumentReader({
                         href={primaryPdfUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded flex items-center gap-1 text-[11px] font-medium transition-colors"
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer"
                         title="Mở tệp PDF trong tab riêng của trình duyệt"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -2044,7 +2043,7 @@ export function DocumentReader({
                       <a
                         href={primaryPdfUrl}
                         download={currentPdf?.original_filename || 'document.pdf'}
-                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded flex items-center gap-1 text-[11px] font-medium transition-colors"
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer"
                         title="Tải tệp PDF về máy tính"
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -2056,7 +2055,7 @@ export function DocumentReader({
                       <button
                         type="button"
                         onClick={onFullscreen}
-                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded flex items-center gap-1 text-[11px] font-semibold transition-colors shadow-xs"
+                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center gap-1 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
                         title={isFullscreen ? 'Thu nhỏ cửa sổ đọc' : 'Phóng to toàn màn hình'}
                       >
                         {isFullscreen ? (

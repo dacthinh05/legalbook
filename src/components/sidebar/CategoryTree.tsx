@@ -317,26 +317,34 @@ function TopicTreeNode({
       {/* Children Subtree with 1px spacing */}
       {hasChildren && isExpanded && category.children && (
         <div className="space-y-[1px] relative mt-[1px]">
-          {category.children.map((child) => {
-            const isChildExpanded = expandedIds.has(child.id) || filterText.length > 0;
-            const isChildSelected = selectedCategoryId === child.id;
-            return (
-              <TopicTreeNode
-                key={child.id}
-                category={child}
-                depth={depth + 1}
-                isSelected={isChildSelected}
-                isExpanded={isChildExpanded}
-                expandedIds={expandedIds}
-                filterText={filterText}
-                categoryCounts={categoryCounts}
-                selectedCategoryId={selectedCategoryId}
-                onToggleExpand={onToggleExpand}
-                onSelectCategory={onSelectCategory}
-                onDropDocumentOnCategory={onDropDocumentOnCategory}
-              />
-            );
-          })}
+          {category.children
+            .filter((child) => {
+              if (filterText.length > 0 || selectedCategoryId === child.id) return true;
+              const childCount = categoryCounts.get(child.id);
+              if (typeof childCount === 'number' && childCount > 0) return true;
+              if (child.children && child.children.some((c) => (categoryCounts.get(c.id) || 0) > 0)) return true;
+              return false;
+            })
+            .map((child) => {
+              const isChildExpanded = expandedIds.has(child.id) || filterText.length > 0;
+              const isChildSelected = selectedCategoryId === child.id;
+              return (
+                <TopicTreeNode
+                  key={child.id}
+                  category={child}
+                  depth={depth + 1}
+                  isSelected={isChildSelected}
+                  isExpanded={isChildExpanded}
+                  expandedIds={expandedIds}
+                  filterText={filterText}
+                  categoryCounts={categoryCounts}
+                  selectedCategoryId={selectedCategoryId}
+                  onToggleExpand={onToggleExpand}
+                  onSelectCategory={onSelectCategory}
+                  onDropDocumentOnCategory={onDropDocumentOnCategory}
+                />
+              );
+            })}
         </div>
       )}
     </div>

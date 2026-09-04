@@ -7,10 +7,10 @@ type FilterStatus = DocumentStatus | 'all' | 'bookmarked' | 'new';
 
 const FILTERS: { value: FilterStatus; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
-  { value: 'hieu_luc', label: 'Đang HLực' },
-  { value: 'chua_hieu_luc', label: 'Chưa HLực' },
-  { value: 'het_hieu_luc_mot_phan', label: 'HLực một phần' },
-  { value: 'het_hieu_luc_toan_bo', label: 'Hết HLực' },
+  { value: 'hieu_luc', label: 'Còn hiệu lực' },
+  { value: 'chua_hieu_luc', label: 'Chưa hiệu lực' },
+  { value: 'het_hieu_luc_mot_phan', label: 'Hết HL một phần' },
+  { value: 'het_hieu_luc_toan_bo', label: 'Hết hiệu lực' },
   { value: 'bookmarked', label: 'Đã ghim' },
   { value: 'new', label: 'Mới' },
 ];
