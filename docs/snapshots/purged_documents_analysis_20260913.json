@@ -1,0 +1,560 @@
+{
+  "purgedCount": 66,
+  "authenticCount": 113,
+  "purged": [
+    {
+      "id": "35382f32-3032-462f-8454-2d4254430000",
+      "num": "58/2026/TT-BTC",
+      "title": "Thông tư 58/2026/TT-BTC hướng dẫn Chế độ kế toán đối với doanh nghiệp siêu nhỏ",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"58/2026/TT-BTC\""
+      ]
+    },
+    {
+      "id": "3134342f-3230-4236-8f4e-1102d4350000",
+      "num": "144/2026/NĐ-CP",
+      "title": "Nghị định 144/2026/NĐ-CP sửa đổi, bổ sung một số điều của Nghị định 181/2025/NĐ-CP về thuế GTGT",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"144/2026/NĐ-CP\""
+      ]
+    },
+    {
+      "id": "30382f32-3032-462f-8454-2d424c110544",
+      "num": "08/2026/TT-BLĐTBXH",
+      "title": "Thông tư 08/2026/TT-BLĐTBXH hướng dẫn thi hành quy định về hợp đồng lao động điện tử",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"08/2026/TT-BLĐTBXH\""
+      ]
+    },
+    {
+      "id": "32302f32-3032-462f-8454-2d4254430000",
+      "num": "20/2026/TT-BTC",
+      "title": "Thông tư 20/2026/TT-BTC hướng dẫn chi tiết thi hành Luật Thuế Thu nhập doanh nghiệp năm 2025",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"20/2026/TT-BTC\""
+      ]
+    },
+    {
+      "id": "32303236-0000-4000-8000-000000000000",
+      "num": "2026",
+      "title": "58 HD che do ke toan cho DN sieu nho",
+      "reasons": [
+        "Malformed document number: \"2026\"",
+        "Draft/slang title: \"58 HD che do ke toan cho DN sieu nho\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3132312f-3230-4236-8f54-542d424b4811",
+      "num": "121/2026/TT-BKHĐT",
+      "title": "121-2026-TT-BKHĐT sửa đổi, bổ sung một số điều của Thông tư",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"121/2026/TT-BKHĐT\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "38372f32-3032-462f-8454-2d4254430000",
+      "num": "87/2026/TT-BTC",
+      "title": "Thông tư 87/2026/TT-BTC hướng dẫn quản lý tài chính và thủ tục hoàn thuế điện tử",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"87/2026/TT-BTC\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "32302d32-3032-462d-8454-2d4254430000",
+      "num": "20-2026-TT-BTC",
+      "title": "Công văn 20-2026-TT-BTC V/v: thực hiện nhiệm vụ giáo dục quốc phòng và an ninh, huấn luyện, hoạt động của lực lượng dân quân tự vệ và phục vụ các nhiệm vụ quốc phòng, an ninh khác;",
+      "reasons": [
+        "Malformed document number: \"20-2026-TT-BTC\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "32333031-2f51-4102-8554-24e440000000",
+      "num": "2301/QĐ-UBND",
+      "title": "Quyết định 2301/QĐ-UBND phê duyệt danh mục dự án thu hút đầu tư tại TP. Hồ Chí Minh giai đoạn 2026 - 2030",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"2301/QĐ-UBND\""
+      ]
+    },
+    {
+      "id": "39392f32-3032-452f-8454-2d4254430000",
+      "num": "99/2025/TT-BTC",
+      "title": "Chế độ kế toán doanh nghiệp (thay thế TT 200)",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"99/2025/TT-BTC\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3136382f-3230-4235-8f4e-1102d4350000",
+      "num": "168/2025/NĐ-CP",
+      "title": "168-2025-NĐ-CP quy định về đăng ký doanh nghiệp",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"168/2025/NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "32302f32-3032-454e-8102-d43500000000",
+      "num": "20/2025NĐ-CP",
+      "title": "Sửa đổi NĐ 1322020 về giao dịch liên kết",
+      "reasons": [
+        "Malformed document number: \"20/2025NĐ-CP\"",
+        "Draft/slang title: \"Sửa đổi NĐ 1322020 về giao dịch liên kết\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3234382f-3230-4235-8f4e-1102d4350000",
+      "num": "248/2025/NĐ-CP",
+      "title": "Nghị định 248/2025/NĐ-CP quy định chế độ tiền lương, thù lao, tiền thưởng của người quản lý doanh nghiệp và đại diện vốn nhà nước",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"248/2025/NĐ-CP\""
+      ]
+    },
+    {
+      "id": "3231302f-3230-4235-8f4e-1102d4350000",
+      "num": "210/2025/NĐ-CP",
+      "title": "Nghị định 210/2025/NĐ-CP sửa đổi, bổ sung một số điều của Nghị định 38/2018/NĐ-CP về đầu tư cho doanh nghiệp nhỏ và vừa khởi nghiệp sáng tạo",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"210/2025/NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "37362f32-3032-452f-8148-313500000000",
+      "num": "76/2025/QH15",
+      "title": "Luật số 76/2025/QH15 sửa đổi, bổ sung một số điều của Luật Doanh nghiệp",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"76/2025/QH15\""
+      ]
+    },
+    {
+      "id": "3131302f-3230-4235-8f55-425456514831",
+      "num": "110/2025/UBTVQH15",
+      "title": "Nghị quyết số 110/2025/UBTVQH15 về điều chỉnh mức giảm trừ gia cảnh",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"110/2025/UBTVQH15\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3130372f-3230-4235-8f54-542d42544300",
+      "num": "107/2025/TT-BTC",
+      "title": "107-2025-TT-BTC hướng dẫn chế độ kế toán các quỹ tài chính n",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"107/2025/TT-BTC\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "36382f32-3032-452f-8454-2d424b481105",
+      "num": "68/2025/TT-BKHĐT",
+      "title": "68-2025-TT-BKHĐT quy định hệ thống biểu mẫu điện tử sử dụng",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"68/2025/TT-BKHĐT\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "34383530-2f54-4354-8d43-530000000000",
+      "num": "4850/TCT-CS",
+      "title": "Công văn 4850/TCT-CS V/v: Hướng dẫn phân bổ thuế GTGT đầu vào dùng chung theo tỷ lệ doanh thu",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "33393730-2f54-4354-8d43-530000000000",
+      "num": "3970/TCT-CS",
+      "title": "Công văn 3970/TCT-CS V/v: Xác định doanh thu tính thuế đối với hợp đồng xây dựng có bảo hành",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "33363433-2f54-4e49-8f51-4c444e000000",
+      "num": "3643/TNI/QLDN",
+      "title": "Công văn Xuất hóa đơn chuyển nhượng quyền sử dụng đất",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "33343930-2f54-4354-8d43-530000000000",
+      "num": "3490/TCT-CS",
+      "title": "Công văn 3490/TCT-CS V/v: Hạch toán tiền thu được từ thanh lý xe ô tô chở người dưới 9 chỗ",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "32323330-2f54-4354-8d43-530000000000",
+      "num": "2230/TCT-CS",
+      "title": "Công văn 2230/TCT-CS V/v: Chi phí kiểm định an toàn máy móc thiết bị có yêu cầu nghiêm ngặt",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "32383130-2f54-4354-8d43-530000000000",
+      "num": "2810/TCT-CS",
+      "title": "Công văn 2810/TCT-CS V/v: Khấu trừ thuế TNCN đối with tiền thưởng nhân viên đạt thành tích xuất sắc",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "31323730-2f54-4354-8d43-530000000000",
+      "num": "1270/TCT-CS",
+      "title": "Công văn 1270/TCT-CS V/v: Thuế TNDN đối with khoản chi trả lãi vay trả chậm cho nhà cung cấp",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3332302f-3230-4235-8f4e-1102d4350000",
+      "num": "320/2025/NĐ-CP",
+      "title": "Hướng dẫn chi tiết Luật Thuế TNDN",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"320/2025/NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3136372f-3230-4235-8f4e-1102d4350000",
+      "num": "167/2025/NĐ-CP",
+      "title": "Sửa đổi quy định về thủ tục hải quan",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"167/2025/NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "36392f32-3032-452f-8454-2d4254430000",
+      "num": "69/2025/TT-BTC",
+      "title": "Hướng dẫn chi tiết Luật Thuế GTGT NĐ 181",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"69/2025/TT-BTC\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3130312f-3230-4235-8f54-542d42544300",
+      "num": "101/2025/TT-BTC",
+      "title": "101-2025-TT-BTC hướng dẫn chế độ kế toán đối với doanh nghiệ",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"101/2025/TT-BTC\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3137342f-3230-4235-8f4e-1102d4350000",
+      "num": "174/2025/NĐ-CP",
+      "title": "Chính sách giảm thuế GTGT",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"174/2025/NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "36372f32-3032-452f-8148-313500000000",
+      "num": "67/2025/QH15",
+      "title": "Luật Thuế TNDN",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"67/2025/QH15\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "32302f32-3032-452f-8e11-02d435000000",
+      "num": "20/2025/NĐ-CP",
+      "title": "20-2025-NĐ-CP sửa đổi, bổ sung một số điều của Ngh",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"20/2025/NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3131322f-5642-484e-8d56-505148000000",
+      "num": "112/VBHN-VPQH",
+      "title": "Văn bản hợp nhất 112-VBHN-VPQH — Luật Thuế Thu nhậ",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3138312f-3230-4235-8f4e-1102d4350000",
+      "num": "181/2025/NĐ-CP",
+      "title": "Hướng dẫn chi tiết Luật Thuế GTGT",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"181/2025/NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3130392f-3230-4235-8f51-483135000000",
+      "num": "109/2025/QH15",
+      "title": "Luật thuế TNCN 2025",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"109/2025/QH15\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "37302f32-3032-452f-8e11-02d435000000",
+      "num": "70/2025/NĐ-CP",
+      "title": "70-2025-NĐ-CP sửa đổi, bổ sung một số điều của Ngh",
+      "reasons": [
+        "Unpromulgated/synthetic future number: \"70/2025/NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "37302f32-3032-454e-8102-d43500000000",
+      "num": "70/2025NĐ-CP",
+      "title": "Sửa đổi quy định về hóa đơn, chứng từ",
+      "reasons": [
+        "Malformed document number: \"70/2025NĐ-CP\"",
+        "Unpromulgated/synthetic future number: \"70/2025NĐ-CP\"",
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "35362f32-3032-442f-8148-313500000000",
+      "num": "56/2024/QH15",
+      "title": "số 56-2024-QH15 sửa đổi, bổ sung 9 luật trong lĩnh",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "33312f32-3032-442f-8148-313500000000",
+      "num": "31/2024/QH15",
+      "title": "Đất đai số 31-2024-QH15",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "34312f32-3032-442f-8148-313500000000",
+      "num": "41/2024/QH15",
+      "title": "Bảo hiểm xã hội số 41-2024-QH15",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "37342f32-3032-442f-8e11-02d435000000",
+      "num": "74/2024/NĐ-CP",
+      "title": "74-2024-NĐ-CP quy định mức lương tối thiểu đối với",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "34382f32-3032-442f-8148-313500000000",
+      "num": "48/2024/QH15",
+      "title": "Luật Thuế Giá trị gia tăng số 48/2024/QH15",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "30322f32-3032-432f-8454-2d424b481105",
+      "num": "02/2023/TT-BKHĐT",
+      "title": "02-2023-TT-BKHĐT sửa đổi, bổ sung một số điều của",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "30312f32-3032-412f-8e11-02d435000000",
+      "num": "01/2021/NĐ-CP",
+      "title": "01-2021-NĐ-CP quy định về đăng ký doanh nghiệp",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "38302f32-3032-412f-8454-2d4254430000",
+      "num": "80/2021/TT-BTC",
+      "title": "80-2021-TT-BTC hướng dẫn thi hành Luật Quản lý thu",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "30312f32-3032-412f-8454-2d424b481105",
+      "num": "01/2021/TT-BKHĐT",
+      "title": "01-2021-TT-BKHĐT hướng dẫn về đăng ký doanh nghiệp",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3132332f-3230-4230-8f4e-000000000000",
+      "num": "123/2020/N",
+      "title": "Công văn 123/2020/N V/v: hủy hóa đơn điện tử có mã đã lập có sai sót và lập hóa đơn điện tử mới, ký số gửi cơ quan thuế để cấp mã hóa đơn mới thay thế hóa đơn đã lập để gửi cho người mua.",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\"",
+        "Truncated document number: \"123/2020/N\""
+      ]
+    },
+    {
+      "id": "3134352f-3230-4230-8f4e-1102d4350000",
+      "num": "145/2020/NĐ-CP",
+      "title": "145-2020-NĐ-CP hướng dẫn chi tiết một số điều của Bộ luật La",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "36312f32-3032-402f-8148-313400000000",
+      "num": "61/2020/QH14",
+      "title": "Đầu tư số 61-2020-QH14",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "35392f32-3032-402f-8148-313400000000",
+      "num": "59/2020/QH14",
+      "title": "LUAT_59.2020.QH14_-_Luat_Doanh_nghiep_so_59_2020_QH14",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3132352f-3230-4230-8f4e-1102d4350000",
+      "num": "125/2020/NĐ-CP",
+      "title": "Quy định xử phạt vi phạm hành chính về thuế, hóa đơn",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3133322f-3230-4230-8f4e-1102d4350000",
+      "num": "132/2020/NĐ-CP",
+      "title": "Quản lý thuế đối với doanh nghiệp có giao dịch liên kết",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3132332f-3230-4230-8f4e-1102d4350000",
+      "num": "123/2020/NĐ-CP",
+      "title": "123-2020-NĐ-CP quy định về hóa đơn, chứng từ",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "34382f32-3031-492f-8454-2d4254430000",
+      "num": "48/2019/TT-BTC",
+      "title": "48-2019-TT-BTC hướng dẫn việc trích lập và xử lý c",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "34352f32-3031-492f-8148-313400000000",
+      "num": "45/2019/QH14",
+      "title": "Bộ luật Lao động số 45-2019-QH14",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "33382f32-3031-492f-8148-313400000000",
+      "num": "38/2019/QH14",
+      "title": "LUAT_38.2019.QH14_-_Luat_Quan_ly_thue_so_38_2019_QH14",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "38342f32-3031-462f-8454-2d4254430000",
+      "num": "84/2016/TT-BTC",
+      "title": "84-2016-TT-BTC & Thông tư 19-2021-TT-BTC ban hành",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "38342f32-3031-462f-8e11-02d435000000",
+      "num": "84/2016/NĐ-CP",
+      "title": "84-2016-NĐ-CP quy định về tiêu chuẩn, điều kiện đối với kiểm",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "35392f32-3031-452f-8454-2d424c110544",
+      "num": "59/2015/TT-BLĐTBXH",
+      "title": "59-2015-TT-BLĐTBXH quy định chi tiết và hướng dẫn thi hành m",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3131352f-3230-4135-8f4e-1102d4350000",
+      "num": "115/2015/NĐ-CP",
+      "title": "115-2015-NĐ-CP quy định chi tiết một số điều của Luật Bảo hi",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "38382f32-3031-452f-8148-313300000000",
+      "num": "88/2015/QH13",
+      "title": "LUAT_88.2015.QH13_-_Luat_Ke_toan_so_88_2015_QH13",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "39362f32-3031-452f-8454-2d4254430000",
+      "num": "96/2015/TT-BTC",
+      "title": "96-2015-TT-BTC hướng dẫn về Thuế Thu nhập doanh ng",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3230302f-3230-4134-8f54-542d42544300",
+      "num": "200/2014/TT-BTC",
+      "title": "200-2014-TT-BTC hướng dẫn Chế độ kế toán Doanh nghiệp",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "34352f32-3031-432f-8454-2d4254430000",
+      "num": "45/2013/TT-BTC",
+      "title": "45-2013-TT-BTC hướng dẫn Chế độ quản lý, sử dụng v",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "3231342f-3230-4132-8f54-542d42544300",
+      "num": "214/2012/TT-BTC",
+      "title": "214-2012-TT-BTC ban hành Hệ thống Chuẩn mực kiểm toán Việt N",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    },
+    {
+      "id": "36372f32-3031-412f-8148-313200000000",
+      "num": "67/2011/QH12",
+      "title": "Kiểm toán độc lập số 67-2011-QH12",
+      "reasons": [
+        "Generic placeholder signer: \"Lãnh đạo cơ quan ban hành\""
+      ]
+    }
+  ]
+}
