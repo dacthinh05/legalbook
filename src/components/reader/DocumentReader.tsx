@@ -37,7 +37,9 @@ import {
   Loader2,
   X,
   Link2,
+  Columns2,
 } from 'lucide-react';
+import { DualCompareSplitView } from './DualCompareSplitView';
 import {
   cn,
   DOCUMENT_STATUS_LABELS,
@@ -176,6 +178,7 @@ export function DocumentReader({
   const [showCrossDocAnalysisModal, setShowCrossDocAnalysisModal] = useState(false);
   const [hoverCitation, setHoverCitation] = useState<CitationPreviewData | null>(null);
   const hoverCitationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showDualSplitView, setShowDualSplitView] = useState(false);
 
   const handleCitationMouseEnter = useCallback((e: React.MouseEvent) => {
     const target = (e.target as HTMLElement).closest('.legal-citation-link') as HTMLElement | null;
@@ -1047,6 +1050,23 @@ export function DocumentReader({
               <Bookmark className={cn('w-3.5 h-3.5', isBookmarked ? 'fill-amber-500 text-amber-600' : 'text-slate-400')} />
               <span className="hidden xl:inline">{isBookmarked ? 'Đã lưu' : 'Lưu'}</span>
             </button>
+            {/* Dual Document Split Compare Button */}
+            <button
+              type="button"
+              onClick={() => setShowDualSplitView(!showDualSplitView)}
+              className={cn(
+                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded border text-xs font-semibold transition-all cursor-pointer shrink-0',
+                showDualSplitView
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                  : 'text-blue-700 bg-blue-50/80 hover:bg-blue-100/90 border-blue-200'
+              )}
+              title={showDualSplitView ? 'Đang bật đọc đối chiếu — Bấm để đóng' : 'Mở đọc đối chiếu 2 văn bản song song'}
+              aria-label="Đọc đối chiếu song song"
+            >
+              <Columns2 className="w-3.5 h-3.5" />
+              <span>Đọc đối chiếu</span>
+            </button>
+
 
             {/* Focus Mode action */}
             {onToggleFocusMode && (
@@ -1663,8 +1683,16 @@ export function DocumentReader({
           </div>
         </div>
       )}
+      {/* ── DUAL DOCUMENT SPLIT VIEW (50% - 50%) ── */}
+      {showDualSplitView ? (
+        <DualCompareSplitView
+          documentA={doc}
+          allDocuments={allDocuments && allDocuments.length > 0 ? allDocuments : (DEMO_DOCUMENTS as unknown as LegalDocument[])}
+          onClose={() => setShowDualSplitView(false)}
+          onSelectDocumentA={(id) => onSelectRelatedDocument?.(id)}
+        />
+      ) : (
       <div className="reader-workspace flex flex-1 overflow-hidden h-full">
-        {/* ── Scrollable Document Viewport (Centered Canvas) ── */}
         <div
           ref={viewportRef}
           onScroll={handleScroll}
@@ -2317,7 +2345,7 @@ export function DocumentReader({
           </>
         )}
       </div>
-
+      )}
       {/* ── Undo / Redo Floating Feedback Toast ── */}
       {undoToast && (
         <div

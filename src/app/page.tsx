@@ -197,17 +197,13 @@ export default function MainPage() {
   }, [isFocusMode, setListOpen, setSidebarOpen, handleToggleFocusMode, showFocusToast]);
 
   // Auto-collapse logic when viewport is tight to preserve Reader >= 680px
+  // Auto-collapse Category sidebar when selecting a document to read, giving wide A4 reading space
   useEffect(() => {
-    const handleResize = () => {
-      const w = window.innerWidth;
-      // If viewport < 1440px and reader is active, auto-collapse Category sidebar first
-      if (w < 1440 && sidebarOpen && listOpen && selectedDocumentId) {
-        setSidebarOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [sidebarOpen, listOpen, selectedDocumentId, setSidebarOpen]);
+    if (selectedDocumentId && sidebarOpen) {
+      // Collapse sidebar on desktop when reading to expand main reading area
+      setSidebarOpen(false);
+    }
+  }, [selectedDocumentId, setSidebarOpen]);
 
   // Resizing logic for sidebars
   const resizingSidebar = useRef(false);
